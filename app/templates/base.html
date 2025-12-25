@@ -68,8 +68,10 @@
                         </div>
 
                         <div class="theme-filters" id="theme-filters">
-                            <h4 onclick="toggleThemeFilters()">
-                                <i class="fas fa-tags"></i> Темы
+                            <h4 class="accordion-header" onclick="toggleAccordion()">
+                                <i class="fas fa-tags"></i>
+                                <span>Темы</span>
+                                <i class="accordion-icon fas fa-chevron-down"></i>
                             </h4>
                             <div class="theme-list" id="theme-list">
                                 <a href="{{ url_for('index') }}"
@@ -79,11 +81,10 @@
                                 </a>
 
                                 {% for theme in all_themes %}
-                                {% set theme_count = cards|selectattr('theme', 'equalto', theme)|list|length if cards else 0 %}
                                 <a href="{{ url_for('index', theme=theme) }}"
                                    class="theme-filter {% if current_theme == theme %}active{% endif %}">
                                     <i class="fas fa-tag"></i> {{ theme }}
-                                    <span class="theme-count">{{ theme_count }}</span>
+                                    <span class="theme-count">{{ theme_counts.get(theme, 0) if theme_counts else 0 }}</span>
                                 </a>
                                 {% endfor %}
                             </div>
@@ -96,13 +97,13 @@
                                 <span class="stat-value">{{ total_cards }}</span>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-label">Тем:</span>
+                                <span class="stat-label">Уникальных тем:</span>
                                 <span class="stat-value">{{ all_themes|length }}</span>
                             </div>
                             {% if current_theme %}
                             <div class="stat-item">
-                                <span class="stat-label">В этой теме:</span>
-                                <span class="stat-value">{{ cards|length }}</span>
+                                <span class="stat-label">По теме "{{ current_theme }}":</span>
+                                <span class="stat-value">{{ theme_counts.get(current_theme, 0) if theme_counts else 0 }}</span>
                             </div>
                             {% endif %}
                         </div>
@@ -190,23 +191,6 @@
             }
         }
 
-        // Плавная прокрутка
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
-
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    targetElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
         // Автоматическое скрытие flash сообщений через 5 секунд
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(alert => {
@@ -216,98 +200,77 @@
                 }, 5000);
             });
         }, 100);
+
+        // Функция переключения аккордеона
+        function toggleAccordion() {
+            // Работает только на мобильных
+            if (window.innerWidth <= 768) {
+                const themeFilters = document.getElementById('theme-filters');
+                const themeList = document.getElementById('theme-list');
+
+                themeFilters.classList.toggle('collapsed');
+
+                // Если открываем, прокручиваем к активной теме
+                if (!themeFilters.classList.contains('collapsed')) {
+                    setTimeout(() => {
+                        const activeTheme = document.querySelector('.theme-filter.active');
+                        if (activeTheme) {
+                            // Прокручиваем список к активной теме
+                            themeList.scrollTop = activeTheme.offsetTop - 20;
+                        }
+                    }, 100);
+                }
+
+                // Добавляем/убираем возможность скролла для body при открытом аккордеоне
+                if (!themeFilters.classList.contains('collapsed')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        // Закрываем аккордеон при клике на тему и возвращаем скролл
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.theme-filter').forEach(filter => {
+                filter.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        const themeFilters = document.getElementById('theme-filters');
+                        // Небольшая задержка перед закрытием
+                        setTimeout(() => {
+                            themeFilters.classList.add('collapsed');
+                            document.body.style.overflow = ''; // Восстанавливаем скролл
+                        }, 300);
+                    }
+                });
+            });
+
+            // Инициализируем аккордеон как свернутый на мобильных
+            if (window.innerWidth <= 768) {
+                const themeFilters = document.getElementById('theme-filters');
+                themeFilters.classList.add('collapsed');
+            }
+        });
+
+        // Восстанавливаем скролл при изменении размера окна
+        window.addEventListener('resize', function() {
+            document.body.style.overflow = '';
+
+            const themeFilters = document.getElementById('theme-filters');
+            if (!themeFilters) return;
+
+            if (window.innerWidth <= 768) {
+                // На мобильных - сворачиваем если не свернут
+                if (!themeFilters.classList.contains('collapsed')) {
+                    themeFilters.classList.add('collapsed');
+                }
+            } else {
+                // На десктопах - разворачиваем и убираем класс collapsed
+                themeFilters.classList.remove('collapsed');
+            }
+        });
     </script>
 
     {% block scripts %}{% endblock %}
-
-<script>
-    // Фиксация сайдбара с учетом прокрутки
-    function handleSidebarScroll() {
-        const sidebar = document.querySelector('.sidebar');
-        const contentArea = document.querySelector('.content-area');
-
-        if (!sidebar || !contentArea) return;
-
-        // Проверяем, нужно ли показывать/прятать сайдбар на мобильных
-        if (window.innerWidth <= 1200) {
-            sidebar.style.position = 'static';
-            sidebar.style.top = '0';
-            return;
-        }
-
-        // Рассчитываем, когда сайдбар должен перестать быть sticky
-        const sidebarHeight = sidebar.offsetHeight;
-        const contentHeight = contentArea.offsetHeight;
-        const footer = document.querySelector('.footer');
-        const footerOffset = footer ? footer.offsetTop : document.body.scrollHeight;
-
-        // Если контент короче сайдбара или страницы, убираем sticky
-        if (contentHeight < sidebarHeight || window.innerHeight >= footerOffset) {
-            sidebar.style.position = 'relative';
-            sidebar.style.top = '0';
-        } else {
-            sidebar.style.position = 'sticky';
-            sidebar.style.top = 'calc(var(--header-height) + 30px)';
-        }
-    }
-
-    // Вызываем при загрузке и изменении размера окна
-    document.addEventListener('DOMContentLoaded', handleSidebarScroll);
-    window.addEventListener('resize', handleSidebarScroll);
-    window.addEventListener('scroll', handleSidebarScroll);
-
-    // Плавная прокрутка к активной теме в сайдбаре
-    function scrollToActiveTheme() {
-        const activeTheme = document.querySelector('.theme-filter.active');
-        const themeList = document.querySelector('.theme-list');
-
-        if (activeTheme && themeList) {
-            const themeListRect = themeList.getBoundingClientRect();
-            const activeThemeRect = activeTheme.getBoundingClientRect();
-
-            // Если активная тема не видна, прокручиваем к ней
-            if (activeThemeRect.bottom > themeListRect.bottom ||
-                activeThemeRect.top < themeListRect.top) {
-                activeTheme.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest'
-                });
-            }
-        }
-    }
-
-    // Прокручиваем к активной теме после загрузки
-    setTimeout(scrollToActiveTheme, 300);
-
-        // Переключение аккордеона тем на мобильных
-    function toggleThemeFilters() {
-        if (window.innerWidth <= 768px) {
-            const themeFilters = document.getElementById('theme-filters');
-            themeFilters.classList.toggle('collapsed');
-        }
-    }
-
-    // Автоматически сворачиваем на мобильных при загрузке
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.innerWidth <= 768px) {
-            const themeFilters = document.getElementById('theme-filters');
-            if (themeFilters) {
-                themeFilters.classList.add('collapsed');
-            }
-        }
-    });
-
-    // Пересворачиваем при изменении размера
-    window.addEventListener('resize', function() {
-        const themeFilters = document.getElementById('theme-filters');
-        if (!themeFilters) return;
-
-        if (window.innerWidth <= 768px && !themeFilters.classList.contains('collapsed')) {
-            themeFilters.classList.add('collapsed');
-        } else if (window.innerWidth > 768px) {
-            themeFilters.classList.remove('collapsed');
-        }
-    });
-</script>
 </body>
 </html>

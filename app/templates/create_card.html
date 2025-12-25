@@ -12,19 +12,24 @@
     <form method="POST" action="{{ url_for('create_card') }}" class="card-form">
         <div class="form-group">
             <label for="theme">
-                <i class="fas fa-tag"></i> Тема *
+                <i class="fas fa-tags"></i> Темы *
+                <small class="form-hint">(разделяйте запятыми)</small>
             </label>
             <input type="text"
                    id="theme"
                    name="theme"
                    required
                    placeholder="Например: Растения, Животные, Минералы..."
-                   list="theme-suggestions">
+                   list="theme-suggestions"
+                   class="theme-input">
             <datalist id="theme-suggestions">
                 {% for theme in all_themes %}
                 <option value="{{ theme }}">
                 {% endfor %}
             </datalist>
+            <div class="form-hint">
+                Пример: "Гомеопатия, Диагностика, Симптомы"
+            </div>
         </div>
 
         <div class="form-group">
@@ -82,13 +87,77 @@
 </div>
 
 <script>
-// Автоматический подбор темы
+// Автодополнение и нормализация тем
 const themeInput = document.getElementById('theme');
-const questionInput = document.getElementById('question');
 
+// Очистка и нормализация тем при вводе
+themeInput.addEventListener('blur', function() {
+    // Убираем лишние пробелы и дубликаты
+    let themes = this.value.split(',')
+        .map(theme => theme.trim())
+        .filter(theme => theme.length > 0);
+
+    // Убираем дубликаты
+    themes = [...new Set(themes)];
+
+    this.value = themes.join(', ');
+});
+
+// Автоподбор тем по ключевым словам в вопросе
+const questionInput = document.getElementById('question');
 questionInput.addEventListener('blur', function() {
-    // Можно добавить логику для автоподбора темы
-    // на основе ключевых слов в вопросе
+    const question = this.value.toLowerCase();
+
+    // Если темы уже заполнены, не трогаем
+    if (themeInput.value.trim()) return;
+
+    // Простая логика подбора тем по ключевым словам
+    const keywordMap = {
+        'растени': 'Растения',
+        'трав': 'Растения, Фитопрепараты',
+        'гомеопат': 'Гомеопатия',
+        'препарат': 'Препараты',
+        'симптом': 'Симптомы',
+        'диагност': 'Диагностика',
+        'лечени': 'Лечение',
+        'профилакт': 'Профилактика',
+        'животн': 'Животные',
+        'минерал': 'Минералы',
+        'клиник': 'Клиника',
+        'исследова': 'Исследования',
+        'анализ': 'Анализы',
+        'терапи': 'Терапия'
+    };
+
+    let suggestedThemes = [];
+    for (const [keyword, theme] of Object.entries(keywordMap)) {
+        if (question.includes(keyword)) {
+            suggestedThemes.push(theme);
+        }
+    }
+
+    if (suggestedThemes.length > 0) {
+        // Объединяем темы, убираем дубликаты
+        const allThemes = suggestedThemes.join(', ')
+            .split(',')
+            .map(t => t.trim())
+            .filter((t, i, arr) => arr.indexOf(t) === i);
+
+        themeInput.value = allThemes.join(', ');
+    }
 });
 </script>
+
+<style>
+.form-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.theme-input {
+    position: relative;
+}
+</style>
 {% endblock %}

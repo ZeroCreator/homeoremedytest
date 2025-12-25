@@ -1129,3 +1129,549 @@ body {
 .visible {
     display: block !important;
 }
+
+/* ==================== АДАПТИВНЫЕ СТИЛИ ДЛЯ САЙДБАРА ==================== */
+
+/* Статистика - скрываем на мобильных */
+@media (max-width: 768px) {
+    .stats {
+        display: none !important;
+    }
+
+    /* Улучшаем отступы для мобильных */
+    .sidebar-section {
+        padding: 20px 15px;
+    }
+
+    .theme-filters h4 {
+        background-color: var(--bg-light);
+        border-radius: var(--border-radius);
+        padding: 14px 16px;
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-fast);
+    }
+
+    .theme-filters h4:hover {
+        background-color: var(--bg-secondary);
+    }
+
+    /* Стрелка справа */
+    .theme-filters h4::after {
+        content: '▼';
+        font-size: 0.9rem;
+        color: var(--text-light);
+        transition: transform var(--transition-normal);
+        margin-left: auto;
+        padding-left: 10px;
+    }
+
+    .theme-filters.collapsed h4::after {
+        transform: rotate(-90deg);
+    }
+
+    /* Скрываем список тем по умолчанию на мобильных */
+    .theme-filters .theme-list {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all var(--transition-normal);
+        margin: 0;
+        padding: 0;
+    }
+
+    .theme-filters:not(.collapsed) .theme-list {
+        max-height: 400px;
+        opacity: 1;
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Улучшаем отображение тем в аккордеоне */
+    .theme-filter {
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        background-color: var(--bg-light);
+        border: 1px solid var(--border-color);
+    }
+
+    .theme-filter:hover {
+        transform: translateX(3px);
+        background-color: var(--bg-secondary);
+    }
+
+    /* Улучшаем отображение счетчиков */
+    .theme-count {
+        font-size: 0.85rem;
+        padding: 3px 8px;
+        min-width: 28px;
+    }
+}
+
+/* Для планшетов и десктопов - показываем всегда развернутым */
+@media (min-width: 769px) {
+    .theme-filters h4 {
+        cursor: default !important;
+    }
+
+    .theme-filters h4::after {
+        display: none !important;
+    }
+
+    .theme-filters .theme-list {
+        max-height: none !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+    .theme-filters h4 {
+        padding: 12px;
+        font-size: 1rem;
+    }
+
+    .theme-filter {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+
+    .theme-count {
+        padding: 2px 6px;
+        min-width: 25px;
+        font-size: 0.8rem;
+    }
+
+    .search-field {
+        padding: 10px 10px 10px 35px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Плавная анимация для аккордеона */
+.accordion-transition {
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+}
+
+/* Иконка активного фильтра */
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: rgba(74, 111, 165, 0.1);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin: 0 8px;
+    border: 1px solid rgba(74, 111, 165, 0.3);
+}
+
+.clear-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-left: 15px;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.clear-filters:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+    text-decoration: none;
+}
+
+.active-filters {
+    background-color: rgba(74, 111, 165, 0.05);
+    border: 1px solid rgba(74, 111, 165, 0.1);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.active-filters strong {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+}
+
+/* ==================== АККОРДЕОН ФИЛЬТРОВ ==================== */
+
+/* Базовые стили для всех устройств */
+.theme-filters {
+    margin-bottom: 20px;
+}
+
+.theme-filters h4 {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.theme-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Стили только для мобильных */
+@media (max-width: 768px) {
+    .theme-filters {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: var(--bg-primary);
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+
+    .theme-filters h4 {
+        margin: 0;
+        padding: 16px 20px;
+        background: var(--bg-light);
+        color: var(--primary-color);
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color var(--transition-fast);
+        position: relative; /* Для границы */
+    }
+
+    /* Добавляем псевдоэлемент для границы */
+    .theme-filters.collapsed h4::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 20px;
+        right: 20px;
+        height: 1px;
+        background-color: var(--border-color);
+    }
+
+    .theme-filters:not(.collapsed) h4 {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .theme-filters h4:hover {
+        background: var(--bg-secondary);
+    }
+
+    /* Иконка аккордеона */
+    .accordion-icon {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        transition: transform var(--transition-normal);
+        margin-left: auto;
+    }
+
+    .theme-filters.collapsed .accordion-icon {
+        transform: rotate(-90deg);
+    }
+
+    /* Список тем - скрываем по умолчанию на мобильных */
+    .theme-filters .theme-list {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        padding: 0;
+        margin: 0;
+        transition: all var(--transition-normal);
+    }
+
+    .theme-filters:not(.collapsed) .theme-list {
+        max-height: 400px;
+        opacity: 1;
+        padding: 20px 20px 15px;
+        margin: 0;
+        overflow-y: auto; /* Добавляем скролл если много тем */
+    }
+
+    /* Прокрутка для списка тем */
+    .theme-filters:not(.collapsed) .theme-list {
+        max-height: 60vh; /* Максимум 60% высоты экрана */
+    }
+
+    /* Темы внутри аккордеона */
+    .theme-list .theme-filter {
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: var(--border-radius);
+        background: var(--bg-light);
+        border: 1px solid transparent;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .theme-list .theme-filter:last-child {
+        margin-bottom: 0;
+    }
+
+    .theme-list .theme-filter:hover {
+        background: var(--bg-secondary);
+        border-color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .theme-list .theme-filter.active {
+        background: rgba(74, 111, 165, 0.1);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    /* Скрываем статистику на мобильных */
+    .stats {
+        display: none;
+    }
+
+    /* Улучшаем отображение счетчика */
+    .theme-count {
+        background-color: var(--border-color);
+        color: var(--text-primary);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        min-width: 28px;
+        text-align: center;
+        transition: all var(--transition-fast);
+    }
+
+    .theme-filter.active .theme-count {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .theme-filter:hover .theme-count {
+        background-color: var(--primary-color);
+        color: white;
+    }
+}
+
+/* Десктоп - скрываем иконку аккордеона */
+@media (min-width: 769px) {
+    .theme-filters h4 {
+        cursor: default;
+    }
+
+    .accordion-icon {
+        display: none;
+    }
+
+    .theme-filters {
+        border: none;
+        background: none;
+    }
+
+    .theme-filters .theme-list {
+        max-height: none !important;
+        opacity: 1 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+
+    /* Возвращаем обычные стили для десктопа */
+    .theme-filter {
+        padding: 12px 15px;
+        text-decoration: none;
+        color: var(--text-primary);
+        border-radius: var(--border-radius);
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: var(--bg-light);
+        border: 1px solid transparent;
+    }
+
+    .theme-filter:hover {
+        background-color: var(--bg-secondary);
+        border-color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .theme-filter.active {
+        background-color: rgba(74, 111, 165, 0.1);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .theme-count {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        min-width: 25px;
+        text-align: center;
+    }
+}
+
+/* Плавные переходы для аккордеона */
+.theme-filters .theme-list {
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease 0.1s,
+                padding 0.3s ease;
+}
+
+.theme-filters.collapsed .theme-list {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease,
+                padding 0.2s ease;
+}
+
+/* Улучшаем визуал заголовка при наведении */
+.theme-filters h4:hover .accordion-icon {
+    color: var(--primary-color);
+}
+
+/* Убираем синий фон при тапе на мобильных */
+.theme-filters h4 {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.theme-filter {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Анимация для счетчика */
+.theme-count {
+    transition: background-color var(--transition-fast),
+                color var(--transition-fast),
+                transform var(--transition-fast);
+}
+
+.theme-filter:hover .theme-count {
+    transform: scale(1.05);
+}
+
+/* ==================== СТИЛИ ДЛЯ НЕСКОЛЬКИХ ТЕМ ==================== */
+
+/* Стили для отображения нескольких тем в карточке */
+.card-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 30%;
+}
+
+.theme-tag {
+    background-color: rgba(74, 111, 165, 0.1);
+    color: var(--primary-color);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-block;
+    transition: all var(--transition-fast);
+}
+
+.theme-tag:hover {
+    background-color: rgba(74, 111, 165, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Обновляем структуру card-meta для мобильных */
+@media (max-width: 768px) {
+    .card-meta {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card-themes {
+        max-width: 100%;
+        order: 1;
+        margin-bottom: 10px;
+        justify-content: flex-start;
+    }
+
+    .card-number {
+        order: 2;
+        max-width: 30%;
+        text-align: left;
+        justify-content: flex-start;
+        padding-left: 0;
+    }
+
+    .card-difficulty {
+        order: 3;
+        max-width: 40%;
+        justify-content: flex-end;
+    }
+}
+
+/* Подсказки в формах */
+.form-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Стили для активных фильтров */
+.active-filters {
+    background-color: rgba(74, 111, 165, 0.05);
+    border: 1px solid rgba(74, 111, 165, 0.1);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.active-filters strong {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: rgba(74, 111, 165, 0.1);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(74, 111, 165, 0.3);
+}
+
+.clear-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-left: 15px;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.clear-filters:hover {
+    background-color: rgba(255, 107, 107, 0.1);
+    text-decoration: none;
+}

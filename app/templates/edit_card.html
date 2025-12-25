@@ -5,26 +5,32 @@
 {% block content %}
 <div class="create-form-container">
     <div class="form-header">
-        <h1><i class="fas fa-edit"></i> Редактировать вопрос #{{ card.id }}</h1>
-        <p>Внесите изменения в форму ниже</p>
+        <h1><i class="fas fa-edit"></i> Редактировать вопрос</h1>
+        <p>Внесите изменения в тестовый вопрос</p>
     </div>
 
     <form method="POST" action="{{ url_for('edit_card', card_id=card.id) }}" class="card-form">
         <div class="form-group">
             <label for="theme">
-                <i class="fas fa-tag"></i> Тема *
+                <i class="fas fa-tags"></i> Темы *
+                <small class="form-hint">(разделяйте запятыми)</small>
             </label>
             <input type="text"
                    id="theme"
                    name="theme"
-                   required
                    value="{{ card.theme }}"
-                   list="theme-suggestions">
+                   required
+                   placeholder="Например: Растения, Животные, Минералы..."
+                   list="theme-suggestions"
+                   class="theme-input">
             <datalist id="theme-suggestions">
                 {% for theme in all_themes %}
                 <option value="{{ theme }}">
                 {% endfor %}
             </datalist>
+            <div class="form-hint">
+                Пример: "Гомеопатия, Диагностика, Симптомы"
+            </div>
         </div>
 
         <div class="form-group">
@@ -34,7 +40,8 @@
             <textarea id="question"
                       name="question"
                       rows="3"
-                      required>{{ card.question }}</textarea>
+                      required
+                      placeholder="Введите вопрос для тестирования...">{{ card.question }}</textarea>
         </div>
 
         <div class="form-group">
@@ -44,16 +51,18 @@
             <textarea id="answer"
                       name="answer"
                       rows="3"
-                      required>{{ card.answer }}</textarea>
+                      required
+                      placeholder="Введите правильный ответ...">{{ card.answer }}</textarea>
         </div>
 
         <div class="form-group">
             <label for="explanation">
-                <i class="fas fa-lightbulb"></i> Объяснение
+                <i class="fas fa-lightbulb"></i> Объяснение (опционально)
             </label>
             <textarea id="explanation"
                       name="explanation"
-                      rows="4">{{ card.explanation }}</textarea>
+                      rows="4"
+                      placeholder="Дополнительное объяснение ответа...">{{ card.explanation or '' }}</textarea>
         </div>
 
         <div class="form-group">
@@ -61,11 +70,9 @@
                 <i class="fas fa-chart-line"></i> Сложность
             </label>
             <select id="difficulty" name="difficulty">
-                {% for key, value in difficulty_levels.items() %}
-                <option value="{{ key }}" {% if card.difficulty == key %}selected{% endif %}>
-                    {{ value.name }}
-                </option>
-                {% endfor %}
+                <option value="easy" {% if card.difficulty == 'easy' %}selected{% endif %}>Легкий</option>
+                <option value="medium" {% if card.difficulty == 'medium' %}selected{% endif %}>Средний</option>
+                <option value="hard" {% if card.difficulty == 'hard' %}selected{% endif %}>Сложный</option>
             </select>
         </div>
 
@@ -79,4 +86,35 @@
         </div>
     </form>
 </div>
+
+<script>
+// Автодополнение и нормализация тем
+const themeInput = document.getElementById('theme');
+
+// Очистка и нормализация тем при вводе
+themeInput.addEventListener('blur', function() {
+    // Убираем лишние пробелы и дубликаты
+    let themes = this.value.split(',')
+        .map(theme => theme.trim())
+        .filter(theme => theme.length > 0);
+
+    // Убираем дубликаты
+    themes = [...new Set(themes)];
+
+    this.value = themes.join(', ');
+});
+</script>
+
+<style>
+.form-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.theme-input {
+    position: relative;
+}
+</style>
 {% endblock %}

@@ -47,12 +47,28 @@ def save_cards(data):
 
 
 def extract_themes(cards_data):
-    """Извлечение уникальных тем"""
+    """Извлечение уникальных тем (поддержка нескольких тем через запятую)"""
     themes = set()
     for card in cards_data.get('cards', []):
         if 'theme' in card and card['theme']:
-            themes.add(card['theme'])
+            # Разделяем темы по запятым
+            card_themes = [t.strip() for t in card['theme'].split(',')]
+            for theme in card_themes:
+                if theme:  # Проверяем, что тема не пустая
+                    themes.add(theme)
     return sorted(list(themes))
+
+
+def get_theme_counts(cards_data):
+    """Подсчет количества карточек для каждой темы"""
+    theme_counts = {}
+    for card in cards_data.get('cards', []):
+        if 'theme' in card and card['theme']:
+            card_themes = [t.strip() for t in card['theme'].split(',')]
+            for theme in card_themes:
+                if theme:
+                    theme_counts[theme] = theme_counts.get(theme, 0) + 1
+    return theme_counts
 
 
 # Маршруты
@@ -63,15 +79,23 @@ def index():
         cards_data = load_cards()
 
         # Фильтры
-        theme_filter = request.args.get('theme', '')
+        theme_filter = request.args.get('theme', '').strip()
         search_query = request.args.get('search', '').lower()
+
+        # Получаем все уникальные темы для сайдбара
+        all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)
 
         # Фильтрация
         filtered_cards = []
         for card in cards_data.get('cards', []):
-            if theme_filter and card.get('theme') != theme_filter:
-                continue
+            # Фильтр по теме
+            if theme_filter:
+                card_themes = [t.strip() for t in card.get('theme', '').split(',')]
+                if theme_filter not in card_themes:
+                    continue
 
+            # Поиск по тексту
             if search_query:
                 question = card.get('question', '').lower()
                 answer = card.get('answer', '').lower()
@@ -83,11 +107,13 @@ def index():
 
             filtered_cards.append(card)
 
-        all_themes = extract_themes(cards_data)
+        # Сортировка тем по популярности (по количеству карточек)
+        sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
 
         return render_template('index.html',
                                cards=filtered_cards,
-                               all_themes=all_themes,
+                               all_themes=sorted_themes,
+                               theme_counts=theme_counts,
                                current_theme=theme_filter,
                                search_query=search_query,
                                total_cards=len(cards_data.get('cards', []))
@@ -116,9 +142,11 @@ def create_card():
             # Валидация
             if not theme or not question or not answer:
                 all_themes = extract_themes(cards_data)
+                theme_counts = get_theme_counts(cards_data)  # Добавляем
                 flash('Все поля обязательны для заполнения', 'error')
                 return render_template('create_card.html',
                                        all_themes=all_themes,
+                                       theme_counts=theme_counts,  # Добавляем
                                        difficulty_levels=Config.DIFFICULTY_LEVELS)
 
             # Создаем карточку
@@ -136,11 +164,6 @@ def create_card():
             cards_data['cards'].append(new_card)
             cards_data['next_id'] += 1
 
-            # Обновляем темы
-            if theme not in cards_data['themes']:
-                cards_data['themes'].append(theme)
-                cards_data['themes'].sort()
-
             save_cards(cards_data)
             flash('Вопрос успешно добавлен!', 'success')
             return redirect(url_for('index'))
@@ -148,9 +171,11 @@ def create_card():
         # GET запрос
         cards_data = load_cards()
         all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)  # Добавляем
 
         return render_template('create_card.html',
                                all_themes=all_themes,
+                               theme_counts=theme_counts,  # Добавляем
                                difficulty_levels=Config.DIFFICULTY_LEVELS
                                )
     except Exception as e:
@@ -218,11 +243,13 @@ def edit_card(card_id):
             # Валидация
             if not theme or not question or not answer:
                 all_themes = extract_themes(cards_data)
+                theme_counts = get_theme_counts(cards_data)  # Добавляем
                 flash('Все поля обязательны для заполнения', 'error')
                 return render_template('edit_card.html',
-                                      card=card,
-                                      all_themes=all_themes,
-                                      difficulty_levels=Config.DIFFICULTY_LEVELS)
+                                       card=card,
+                                       all_themes=all_themes,
+                                       theme_counts=theme_counts,  # Добавляем
+                                       difficulty_levels=Config.DIFFICULTY_LEVELS)
 
             # Обновляем данные
             card['theme'] = theme
@@ -232,26 +259,23 @@ def edit_card(card_id):
             card['difficulty'] = request.form.get('difficulty', 'medium')
             card['updated_at'] = datetime.now().isoformat()
 
-            # Обновляем темы
-            if theme not in cards_data['themes']:
-                cards_data['themes'].append(theme)
-                cards_data['themes'].sort()
-
             save_cards(cards_data)
             flash('Вопрос успешно обновлен!', 'success')
             return redirect(url_for('card_detail', card_id=card_id))
 
         # GET запрос
         all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)  # Добавляем
+
         return render_template('edit_card.html',
-                              card=card,
-                              all_themes=all_themes,
-                              difficulty_levels=Config.DIFFICULTY_LEVELS)
+                               card=card,
+                               all_themes=all_themes,
+                               theme_counts=theme_counts,  # Добавляем
+                               difficulty_levels=Config.DIFFICULTY_LEVELS)
     except Exception as e:
         print(f"Ошибка в edit_card: {e}")
         flash('Произошла ошибка при редактировании', 'error')
         return redirect(url_for('index'))
-
 
 @app.route('/card/<int:card_id>/delete', methods=['POST'])
 def delete_card(card_id):
@@ -264,8 +288,6 @@ def delete_card(card_id):
         cards_data['cards'] = [c for c in cards_data.get('cards', []) if c['id'] != card_id]
 
         if len(cards_data.get('cards', [])) < initial_count:
-            # Обновляем темы
-            cards_data['themes'] = extract_themes(cards_data)
             save_cards(cards_data)
             flash('Вопрос успешно удален!', 'success')
         else:
@@ -278,78 +300,6 @@ def delete_card(card_id):
         return redirect(url_for('index'))
 
 
-# API endpoints
-@app.route('/api/cards')
-def api_cards():
-    """API для получения всех карточек"""
-    try:
-        cards_data = load_cards()
-        return jsonify(cards_data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/cards/<int:card_id>', methods=['DELETE'])
-def api_delete_card(card_id):
-    """API для удаления карточки (через fetch)"""
-    try:
-        cards_data = load_cards()
-
-        # Удаляем карточку
-        initial_count = len(cards_data.get('cards', []))
-        cards_data['cards'] = [c for c in cards_data.get('cards', []) if c['id'] != card_id]
-
-        if len(cards_data.get('cards', [])) < initial_count:
-            # Обновляем темы
-            cards_data['themes'] = extract_themes(cards_data)
-            save_cards(cards_data)
-            return jsonify({"success": True, "message": "Карточка удалена"}), 200
-        else:
-            return jsonify({"success": False, "error": "Карточка не найдена"}), 404
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route('/api/cards', methods=['POST'])
-def api_create_card():
-    """API для создания карточки"""
-    try:
-        if not request.is_json:
-            return jsonify({"success": False, "error": "Content-Type должен быть application/json"}), 400
-
-        cards_data = load_cards()
-        data = request.get_json()
-
-        # Валидация
-        if not data.get('theme') or not data.get('question') or not data.get('answer'):
-            return jsonify({"success": False, "error": "Все поля обязательны"}), 400
-
-        # Создаем карточку
-        new_card = {
-            "id": cards_data['next_id'],
-            "theme": data.get('theme', '').strip(),
-            "question": data.get('question', '').strip(),
-            "answer": data.get('answer', '').strip(),
-            "explanation": data.get('explanation', '').strip(),
-            "difficulty": data.get('difficulty', 'medium'),
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat()
-        }
-
-        cards_data['cards'].append(new_card)
-        cards_data['next_id'] += 1
-
-        if new_card['theme'] not in cards_data['themes']:
-            cards_data['themes'].append(new_card['theme'])
-            cards_data['themes'].sort()
-
-        save_cards(cards_data)
-
-        return jsonify({"success": True, "data": new_card}), 201
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
 # Контекстный процессор для шаблонов
 @app.context_processor
 def inject_globals():
@@ -359,17 +309,5 @@ def inject_globals():
     }
 
 
-# Обработчики ошибок
-@app.errorhandler(404)
-def not_found(error):
-    return render_template('404.html'), 404
-
-
-@app.errorhandler(500)
-def server_error(error):
-    return render_template('500.html'), 500
-
-
-# Для локального запуска
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

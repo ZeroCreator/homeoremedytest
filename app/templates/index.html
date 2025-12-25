@@ -30,8 +30,13 @@
     <div class="test-card" data-id="{{ card.id }}">
         <div class="card-header">
             <div class="card-meta">
-                <!-- ТЕМА СЛЕВА -->
-                <span class="card-theme">{{ card.theme }}</span>
+                <!-- ТЕМЫ СЛЕВА -->
+                <div class="card-themes">
+                    {% set themes_list = card.theme.split(',') %}
+                    {% for theme in themes_list %}
+                    <span class="theme-tag">{{ theme.strip() }}</span>
+                    {% endfor %}
+                </div>
 
                 <!-- НОМЕР ПО ЦЕНТРУ -->
                 <span class="card-number">-{{ card.id }}-</span>
@@ -119,4 +124,66 @@ function toggleAnswer(cardId) {
     }
 }
 </script>
+
+<style>
+/* Стили для отображения нескольких тем в карточке */
+.card-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 30%;
+}
+
+.theme-tag {
+    background-color: rgba(74, 111, 165, 0.1);
+    color: var(--primary-color);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Обновляем структуру card-meta для мобильных */
+@media (max-width: 768px) {
+    .card-meta {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card-themes {
+        max-width: 100%;
+        order: 1;
+        margin-bottom: 10px;
+        justify-content: flex-start;
+    }
+
+    .card-number {
+        order: 2;
+        max-width: 30%;
+        text-align: left;
+        justify-content: flex-start;
+        padding-left: 0;
+    }
+
+    .card-difficulty {
+        order: 3;
+        max-width: 40%;
+        justify-content: flex-end;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+    .card-number {
+        max-width: 25%;
+        font-size: 1rem;
+    }
+
+    .card-difficulty {
+        max-width: 35%;
+        font-size: 0.8rem;
+    }
+}
+</style>
 {% endblock %}
