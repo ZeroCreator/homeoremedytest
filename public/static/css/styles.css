@@ -243,7 +243,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* Десктопная версия */
+/* Базовые стили для всех устройств */
 .theme-filters h4 {
     color: var(--text-secondary);
     margin-bottom: 15px;
@@ -396,18 +396,28 @@ body {
     gap: 10px;
 }
 
-/* Тема слева */
-.card-theme {
+/* СТИЛИ ДЛЯ НЕСКОЛЬКИХ ТЕМ В КАРТОЧКЕ */
+.card-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 30%;
+}
+
+.theme-tag {
     background-color: rgba(74, 111, 165, 0.1);
     color: var(--primary-color);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-block;
+    transition: all var(--transition-fast);
+}
+
+.theme-tag:hover {
+    background-color: rgba(74, 111, 165, 0.2);
+    transform: translateY(-1px);
 }
 
 /* Номер по центру */
@@ -765,6 +775,14 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+/* Подсказки в формах */
+.form-hint {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 5px;
+    font-style: italic;
+}
+
 /* ==================== FOOTER ==================== */
 .footer {
     background-color: var(--bg-dark);
@@ -914,23 +932,6 @@ body {
         justify-content: center;
         margin-top: 15px;
     }
-
-    .card-meta {
-        justify-content: space-between;
-        flex-wrap: nowrap;
-    }
-
-    .card-theme {
-        max-width: 30%;
-    }
-
-    .card-number {
-        max-width: 40%;
-    }
-
-    .card-difficulty {
-        max-width: 30%;
-    }
 }
 
 /* ==================== МОБИЛЬНАЯ ВЕРСИЯ (АККОРДЕОН) ==================== */
@@ -939,61 +940,121 @@ body {
         columns: 1;
     }
 
-    /* АККОРДЕОН - теперь он работает! */
+    /* АККОРДЕОН (оставляем как есть) */
+    .theme-filters {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: var(--bg-primary);
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+
     .theme-filters h4 {
-        cursor: pointer;
-        user-select: none;
+        margin: 0;
+        padding: 16px 20px;
+        background: var(--bg-light);
         color: var(--primary-color);
         font-weight: 600;
-        margin-bottom: 0;
-        padding: 12px 15px;
-        background: var(--bg-light);
-        border-radius: var(--border-radius);
+        cursor: pointer;
+        user-select: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
         position: relative;
+        border-bottom: 1px solid transparent;
     }
 
-    /* Стрелка справа */
     .theme-filters h4::after {
         content: '▼';
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         color: var(--text-light);
-        transition: transform var(--transition-fast);
+        transition: transform var(--transition-normal);
     }
 
     .theme-filters.collapsed h4::after {
         transform: rotate(-90deg);
     }
 
-    /* Список тем скрывается/показывается */
+    .theme-filters:not(.collapsed) h4 {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .theme-filters h4:hover {
+        background: var(--bg-secondary);
+    }
+
     .theme-filters .theme-list {
         max-height: 0;
         overflow: hidden;
         opacity: 0;
-        margin: 0;
         padding: 0;
+        margin: 0;
         transition: all var(--transition-normal);
     }
 
     .theme-filters:not(.collapsed) .theme-list {
-        max-height: 400px;
+        max-height: 60vh;
         opacity: 1;
-        margin-top: 10px;
-        padding-top: 10px;
+        padding: 20px 20px 15px;
+        margin: 0;
+        overflow-y: auto;
         border-top: 1px solid var(--border-color);
     }
 
-    .theme-filter {
-        padding: 10px 12px;
-        font-size: 0.9rem;
+    .theme-list .theme-filter {
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: var(--border-radius);
+        background: var(--bg-light);
+        border: 1px solid transparent;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .theme-list .theme-filter:last-child {
+        margin-bottom: 0;
+    }
+
+    .theme-list .theme-filter:hover {
+        background: var(--bg-secondary);
+        border-color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .theme-list .theme-filter.active {
+        background: rgba(74, 111, 165, 0.1);
+        border-color: var(--primary-color);
+        font-weight: 600;
+        color: var(--primary-color);
     }
 
     .theme-count {
-        font-size: 0.75rem;
-        padding: 1px 6px;
-        min-width: 20px;
+        background-color: var(--border-color);
+        color: var(--text-primary);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        min-width: 28px;
+        text-align: center;
+        transition: all var(--transition-fast);
+    }
+
+    .theme-filter.active .theme-count {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .theme-filter:hover .theme-count {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Скрываем статистику на мобильных */
+    .stats {
+        display: none;
     }
 
     .create-form-container {
@@ -1009,32 +1070,59 @@ body {
         justify-content: center;
     }
 
+    /* ИСПРАВЛЕНИЕ: Адаптивное отображение тем в карточке */
     .card-meta {
+        display: flex;
         justify-content: space-between;
-        flex-wrap: nowrap;
-        align-items: center;
+        align-items: flex-start; /* Изменено на flex-start */
+        margin-bottom: 15px;
+        flex-wrap: wrap; /* Разрешаем перенос */
+        gap: 10px;
     }
 
-    .card-theme {
-        font-size: 0.8rem;
-        padding: 5px 10px;
-        max-width: 30%;
+    /* Темы в карточке - показываем все, но компактно */
+    .card-themes {
+        order: 1;
+        width: 100%; /* Занимаем всю ширину */
+        margin-bottom: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    /* Компактные теги для мобильных */
+    .theme-tag {
+        background-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
         white-space: nowrap;
+        display: inline-block;
+        transition: all var(--transition-fast);
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
+    /* Номер и сложность на одной линии под темами */
     .card-number {
-        font-size: 1rem;
-        padding: 0 5px;
-        max-width: 40%;
+        order: 2;
+        flex: 1; /* Занимаем доступное пространство */
+        text-align: left;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        padding: 0;
     }
 
     .card-difficulty {
+        order: 3;
+        flex: 1; /* Занимаем доступное пространство */
+        justify-content: flex-end;
         font-size: 0.8rem;
-        padding: 5px 10px;
-        max-width: 30%;
+        padding: 3px 8px;
         white-space: nowrap;
+        text-align: right;
     }
 
     .card-actions {
@@ -1066,25 +1154,25 @@ body {
     }
 
     .card-meta {
-        gap: 5px;
+        gap: 8px;
     }
 
-    .card-theme {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-        max-width: 28%;
+    .card-themes {
+        gap: 4px;
+    }
+
+    .theme-tag {
+        font-size: 0.7rem;
+        padding: 2px 6px;
     }
 
     .card-number {
-        font-size: 0.9rem;
-        padding: 0 3px;
-        max-width: 44%;
+        font-size: 0.85rem;
     }
 
     .card-difficulty {
         font-size: 0.75rem;
-        padding: 4px 8px;
-        max-width: 28%;
+        padding: 2px 6px;
     }
 
     .card-question {
@@ -1095,6 +1183,13 @@ body {
         font-size: 1.5rem;
         flex-direction: column;
         gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .theme-tag {
+        font-size: 0.65rem;
+        padding: 2px 5px;
     }
 }
 
@@ -1130,134 +1225,24 @@ body {
     display: block !important;
 }
 
-/* ==================== АДАПТИВНЫЕ СТИЛИ ДЛЯ САЙДБАРА ==================== */
-
-/* Статистика - скрываем на мобильных */
-@media (max-width: 768px) {
-    .stats {
-        display: none !important;
-    }
-
-    /* Улучшаем отступы для мобильных */
-    .sidebar-section {
-        padding: 20px 15px;
-    }
-
-    .theme-filters h4 {
-        background-color: var(--bg-light);
-        border-radius: var(--border-radius);
-        padding: 14px 16px;
-        margin: 0;
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-        border: 1px solid var(--border-color);
-        transition: all var(--transition-fast);
-    }
-
-    .theme-filters h4:hover {
-        background-color: var(--bg-secondary);
-    }
-
-    /* Стрелка справа */
-    .theme-filters h4::after {
-        content: '▼';
-        font-size: 0.9rem;
-        color: var(--text-light);
-        transition: transform var(--transition-normal);
-        margin-left: auto;
-        padding-left: 10px;
-    }
-
-    .theme-filters.collapsed h4::after {
-        transform: rotate(-90deg);
-    }
-
-    /* Скрываем список тем по умолчанию на мобильных */
-    .theme-filters .theme-list {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        transition: all var(--transition-normal);
-        margin: 0;
-        padding: 0;
-    }
-
-    .theme-filters:not(.collapsed) .theme-list {
-        max-height: 400px;
-        opacity: 1;
-        margin-top: 15px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border-color);
-    }
-
-    /* Улучшаем отображение тем в аккордеоне */
-    .theme-filter {
-        padding: 12px 15px;
-        margin-bottom: 5px;
-        background-color: var(--bg-light);
-        border: 1px solid var(--border-color);
-    }
-
-    .theme-filter:hover {
-        transform: translateX(3px);
-        background-color: var(--bg-secondary);
-    }
-
-    /* Улучшаем отображение счетчиков */
-    .theme-count {
-        font-size: 0.85rem;
-        padding: 3px 8px;
-        min-width: 28px;
-    }
+/* ==================== СТИЛИ ДЛЯ АКТИВНЫХ ФИЛЬТРОВ ==================== */
+.active-filters {
+    background-color: rgba(74, 111, 165, 0.05);
+    border: 1px solid rgba(74, 111, 165, 0.1);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-/* Для планшетов и десктопов - показываем всегда развернутым */
-@media (min-width: 769px) {
-    .theme-filters h4 {
-        cursor: default !important;
-    }
-
-    .theme-filters h4::after {
-        display: none !important;
-    }
-
-    .theme-filters .theme-list {
-        max-height: none !important;
-        opacity: 1 !important;
-    }
+.active-filters strong {
+    color: var(--primary-color);
+    font-size: 0.95rem;
 }
 
-/* Для очень маленьких экранов */
-@media (max-width: 480px) {
-    .theme-filters h4 {
-        padding: 12px;
-        font-size: 1rem;
-    }
-
-    .theme-filter {
-        padding: 10px 12px;
-        font-size: 0.95rem;
-    }
-
-    .theme-count {
-        padding: 2px 6px;
-        min-width: 25px;
-        font-size: 0.8rem;
-    }
-
-    .search-field {
-        padding: 10px 10px 10px 35px;
-        font-size: 0.95rem;
-    }
-}
-
-/* Плавная анимация для аккордеона */
-.accordion-transition {
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
-}
-
-/* Иконка активного фильтра */
 .filter-badge {
     display: inline-flex;
     align-items: center;
@@ -1267,7 +1252,6 @@ body {
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.9rem;
-    margin: 0 8px;
     border: 1px solid rgba(74, 111, 165, 0.3);
 }
 
@@ -1289,180 +1273,114 @@ body {
     text-decoration: none;
 }
 
-.active-filters {
-    background-color: rgba(74, 111, 165, 0.05);
-    border: 1px solid rgba(74, 111, 165, 0.1);
-    border-radius: var(--border-radius);
-    padding: 15px;
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.active-filters strong {
-    color: var(--primary-color);
-    font-size: 0.95rem;
-}
-
-/* ==================== АККОРДЕОН ФИЛЬТРОВ ==================== */
-
-/* Базовые стили для всех устройств */
-.theme-filters {
-    margin-bottom: 20px;
-}
-
+/* Убираем синий фон при тапе на мобильных */
 .theme-filters h4 {
-    color: var(--text-secondary);
-    margin-bottom: 15px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.theme-filter {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Анимация для счетчика */
+.theme-count {
+    transition: background-color var(--transition-fast),
+                color var(--transition-fast),
+                transform var(--transition-fast);
+}
+
+.theme-filter:hover .theme-count {
+    transform: scale(1.05);
+}
+
+/* Стили для отображения всех тем в развернутом ответе */
+.all-themes {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.all-themes strong {
+    color: var(--primary-light);
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 10px;
     font-size: 1rem;
 }
 
-.theme-list {
+.theme-list-inline {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 8px;
+    margin-top: 10px;
 }
 
-/* Стили только для мобильных */
-@media (max-width: 768px) {
-    .theme-filters {
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        background: var(--bg-primary);
-        overflow: hidden;
+.theme-tag-full {
+    background-color: rgba(74, 111, 165, 0.15);
+    color: var(--primary-color);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* ==================== ДЕСКТОПНАЯ ВЕРСИЯ ==================== */
+@media (min-width: 769px) {
+    /* Стандартное отображение для десктопа */
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 15px;
+        gap: 10px;
     }
 
-    .theme-filters h4 {
-        margin: 0;
-        padding: 16px 20px;
-        background: var(--bg-light);
-        color: var(--primary-color);
-        font-weight: 600;
-        cursor: pointer;
-        user-select: none;
+    .card-themes {
         display: flex;
-        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-width: 30%;
         align-items: center;
-        transition: background-color var(--transition-fast);
-        position: relative; /* Для границы */
     }
 
-    /* Добавляем псевдоэлемент для границы */
-    .theme-filters.collapsed h4::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 20px;
-        right: 20px;
-        height: 1px;
-        background-color: var(--border-color);
-    }
-
-    .theme-filters:not(.collapsed) h4 {
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .theme-filters h4:hover {
-        background: var(--bg-secondary);
-    }
-
-    /* Иконка аккордеона */
-    .accordion-icon {
-        font-size: 0.9rem;
-        color: var(--text-light);
-        transition: transform var(--transition-normal);
-        margin-left: auto;
-    }
-
-    .theme-filters.collapsed .accordion-icon {
-        transform: rotate(-90deg);
-    }
-
-    /* Список тем - скрываем по умолчанию на мобильных */
-    .theme-filters .theme-list {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        padding: 0;
-        margin: 0;
-        transition: all var(--transition-normal);
-    }
-
-    .theme-filters:not(.collapsed) .theme-list {
-        max-height: 400px;
-        opacity: 1;
-        padding: 20px 20px 15px;
-        margin: 0;
-        overflow-y: auto; /* Добавляем скролл если много тем */
-    }
-
-    /* Прокрутка для списка тем */
-    .theme-filters:not(.collapsed) .theme-list {
-        max-height: 60vh; /* Максимум 60% высоты экрана */
-    }
-
-    /* Темы внутри аккордеона */
-    .theme-list .theme-filter {
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        border-radius: var(--border-radius);
-        background: var(--bg-light);
-        border: 1px solid transparent;
+    .theme-tag {
+        background-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        display: inline-block;
         transition: all var(--transition-fast);
+    }
+
+    .theme-tag:hover {
+        background-color: rgba(74, 111, 165, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .card-number {
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-    }
-
-    .theme-list .theme-filter:last-child {
-        margin-bottom: 0;
-    }
-
-    .theme-list .theme-filter:hover {
-        background: var(--bg-secondary);
-        border-color: var(--primary-color);
-        transform: translateX(5px);
-    }
-
-    .theme-list .theme-filter.active {
-        background: rgba(74, 111, 165, 0.1);
-        border-color: var(--primary-color);
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-
-    /* Скрываем статистику на мобильных */
-    .stats {
-        display: none;
-    }
-
-    /* Улучшаем отображение счетчика */
-    .theme-count {
-        background-color: var(--border-color);
-        color: var(--text-primary);
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        min-width: 28px;
+        justify-content: center;
+        flex-grow: 1;
         text-align: center;
-        transition: all var(--transition-fast);
+        padding: 0 10px;
     }
 
-    .theme-filter.active .theme-count {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    .theme-filter:hover .theme-count {
-        background-color: var(--primary-color);
-        color: white;
+    .card-difficulty {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 500;
+        flex-shrink: 0;
     }
 }
 
@@ -1472,7 +1390,7 @@ body {
         cursor: default;
     }
 
-    .accordion-icon {
+    .theme-filters h4::after {
         display: none;
     }
 
@@ -1489,7 +1407,6 @@ body {
         border: none !important;
     }
 
-    /* Возвращаем обычные стили для десктопа */
     .theme-filter {
         padding: 12px 15px;
         text-decoration: none;
@@ -1527,151 +1444,232 @@ body {
     }
 }
 
-/* Плавные переходы для аккордеона */
-.theme-filters .theme-list {
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease 0.1s,
-                padding 0.3s ease;
-}
+/* ==================== ФИКС НОМЕРОВ КАРТОЧЕК ==================== */
 
-.theme-filters.collapsed .theme-list {
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.2s ease,
-                padding 0.2s ease;
-}
-
-/* Улучшаем визуал заголовка при наведении */
-.theme-filters h4:hover .accordion-icon {
-    color: var(--primary-color);
-}
-
-/* Убираем синий фон при тапе на мобильных */
-.theme-filters h4 {
-    -webkit-tap-highlight-color: transparent;
-}
-
-.theme-filter {
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Анимация для счетчика */
-.theme-count {
-    transition: background-color var(--transition-fast),
-                color var(--transition-fast),
-                transform var(--transition-fast);
-}
-
-.theme-filter:hover .theme-count {
-    transform: scale(1.05);
-}
-
-/* ==================== СТИЛИ ДЛЯ НЕСКОЛЬКИХ ТЕМ ==================== */
-
-/* Стили для отображения нескольких тем в карточке */
-.card-themes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    max-width: 30%;
-}
-
-.theme-tag {
-    background-color: rgba(74, 111, 165, 0.1);
-    color: var(--primary-color);
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    display: inline-block;
-    transition: all var(--transition-fast);
-}
-
-.theme-tag:hover {
-    background-color: rgba(74, 111, 165, 0.2);
-    transform: translateY(-1px);
-}
-
-/* Обновляем структуру card-meta для мобильных */
-@media (max-width: 768px) {
+@media (min-width: 769px) {
     .card-meta {
-        flex-wrap: wrap;
-        gap: 10px;
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr !important;
+        align-items: center !important;
+        margin-bottom: 15px !important;
     }
 
     .card-themes {
-        max-width: 100%;
-        order: 1;
-        margin-bottom: 10px;
-        justify-content: flex-start;
+        grid-column: 1;
+        justify-self: start !important;
+        max-width: 100% !important;
     }
 
     .card-number {
-        order: 2;
-        max-width: 30%;
-        text-align: left;
-        justify-content: flex-start;
-        padding-left: 0;
+        grid-column: 2;
+        justify-self: center !important;
+        flex-grow: 0 !important;
+        padding: 0 10px !important;
     }
 
     .card-difficulty {
-        order: 3;
-        max-width: 40%;
-        justify-content: flex-end;
+        grid-column: 3;
+        justify-self: end !important;
     }
 }
 
-/* Подсказки в формах */
-.form-hint {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    margin-top: 5px;
-    font-style: italic;
+/* ==================== ФИКС СЛОЖНОСТИ НА МОБИЛЬНЫХ ==================== */
+
+@media (max-width: 768px) {
+    .card-difficulty {
+        /* Сбрасываем все размеры */
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+
+        /* Сбрасываем отступы */
+        padding: 0 !important;
+        margin: 0 !important;
+
+        /* Круглая форма */
+        border-radius: 50% !important;
+
+        /* Центрируем содержимое */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+
+        /* Убираем растягивание */
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+
+        /* Скрываем текст */
+        font-size: 0 !important;
+        line-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Явно задаем размеры для всех состояний сложности */
+    .card-difficulty.easy,
+    .card-difficulty.medium,
+    .card-difficulty.hard {
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Скрываем текст */
+    .card-difficulty span:not(.fas):not(.fa):not(.far):not(.fab) {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    /* Иконка */
+    .card-difficulty i {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        display: block !important;
+        line-height: 1 !important;
+    }
+
+    /* Обновляем фон - делаем круглым */
+    .card-difficulty.easy {
+        background-color: rgba(46, 125, 50, 0.15) !important;
+    }
+
+    .card-difficulty.medium {
+        background-color: rgba(239, 108, 0, 0.15) !important;
+    }
+
+    .card-difficulty.hard {
+        background-color: rgba(198, 40, 40, 0.15) !important;
+    }
 }
 
-/* Стили для активных фильтров */
-.active-filters {
-    background-color: rgba(74, 111, 165, 0.05);
-    border: 1px solid rgba(74, 111, 165, 0.1);
-    border-radius: var(--border-radius);
-    padding: 15px;
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
+/* ==================== ЦЕНТРИРОВАНИЕ ИКОНКИ ==================== */
+
+@media (max-width: 768px) {
+    .card-difficulty i {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        line-height: 1 !important;
+    }
+
+    /* Дополнительное центрирование */
+    .card-difficulty {
+        position: relative !important;
+    }
+
+    .card-difficulty i {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
 }
 
-.active-filters strong {
-    color: var(--primary-color);
-    font-size: 0.95rem;
+/* ==================== ФИКС МОБИЛЬНОЙ ВЕРСИИ ==================== */
+
+@media (max-width: 768px) {
+    .card-meta {
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr !important;
+        align-items: center !important;
+        margin-bottom: 15px !important;
+        gap: 10px !important;
+    }
+
+    .card-themes {
+        grid-column: 1;
+        justify-self: start !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        max-width: 100% !important;
+    }
+
+    .card-number {
+        grid-column: 2;
+        justify-self: center !important;
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        color: var(--primary-color) !important;
+        white-space: nowrap !important;
+        padding: 0 5px !important;
+    }
+
+    .card-difficulty {
+        grid-column: 3;
+        justify-self: end !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
 }
 
-.filter-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background-color: rgba(74, 111, 165, 0.1);
-    color: var(--primary-color);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    border: 1px solid rgba(74, 111, 165, 0.3);
-}
+/* ==================== ФИКС ФУТЕРА ДЛЯ ДЕСКТОПА ==================== */
 
-.clear-filters {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-size: 0.9rem;
-    margin-left: 15px;
-    padding: 6px 12px;
-    border-radius: var(--border-radius-sm);
-    transition: all var(--transition-fast);
-}
+@media (min-width: 769px) {
+    .footer-container {
+        max-width: var(--max-content-width) !important;
+        margin: 0 auto !important;
+        padding: 40px 20px 20px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
 
-.clear-filters:hover {
-    background-color: rgba(255, 107, 107, 0.1);
-    text-decoration: none;
+    .footer-content {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 40px !important;
+        margin-bottom: 30px !important;
+        justify-items: center !important;
+    }
+
+    .footer-section {
+        text-align: center !important;
+        max-width: 300px !important;
+    }
+
+    .footer-section h4 {
+        text-align: center !important;
+        margin-bottom: 20px !important;
+        width: 100% !important;
+    }
+
+    .footer-section p {
+        text-align: center !important;
+        margin-bottom: 15px !important;
+    }
+
+    .footer-section a {
+        text-align: center !important;
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+
+    .footer-bottom {
+        width: 100% !important;
+        text-align: center !important;
+        padding-top: 20px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .footer-bottom p {
+        text-align: center !important;
+        margin: 0 auto !important;
+    }
 }
