@@ -3,6 +3,7 @@
 {% block title %}Главная - Тесты по гомеопатии{% endblock %}
 
 {% block content %}
+<!-- ЗАГОЛОВКИ ПО ЦЕНТРУ -->
 <div class="content-header">
     <h1>Вопросы для тестирования</h1>
     <p class="subtitle">Проверьте свои знания по гомеопатии</p>
@@ -29,7 +30,13 @@
     <div class="test-card" data-id="{{ card.id }}">
         <div class="card-header">
             <div class="card-meta">
+                <!-- ТЕМА СЛЕВА -->
                 <span class="card-theme">{{ card.theme }}</span>
+
+                <!-- НОМЕР ПО ЦЕНТРУ -->
+                <span class="card-number">-{{ card.id }}-</span>
+
+                <!-- СЛОЖНОСТЬ СПРАВА -->
                 <span class="card-difficulty {{ card.difficulty }}">
                     {% if card.difficulty == 'easy' %}
                     <i class="fas fa-leaf"></i> Легкий
@@ -110,51 +117,6 @@ function toggleAnswer(cardId) {
         button.innerHTML = '<i class="fas fa-eye"></i> Показать ответ';
         button.classList.remove('active');
     }
-}
-
-// AJAX удаление (альтернатива форме)
-function deleteCard(cardId) {
-    if (confirm('Вы уверены, что хотите удалить этот вопрос?')) {
-        fetch(`/api/cards/${cardId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.querySelector(`.test-card[data-id="${cardId}"]`).remove();
-                showNotification('Вопрос успешно удален', 'success');
-            } else {
-                showNotification(data.error || 'Ошибка при удалении', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Ошибка при удалении', 'error');
-        });
-    }
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
-        ${message}
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
-
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
 }
 </script>
 {% endblock %}

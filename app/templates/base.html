@@ -67,9 +67,11 @@
                             </form>
                         </div>
 
-                        <div class="theme-filters">
-                            <h4><i class="fas fa-tags"></i> Темы</h4>
-                            <div class="theme-list">
+                        <div class="theme-filters" id="theme-filters">
+                            <h4 onclick="toggleThemeFilters()">
+                                <i class="fas fa-tags"></i> Темы
+                            </h4>
+                            <div class="theme-list" id="theme-list">
                                 <a href="{{ url_for('index') }}"
                                    class="theme-filter {% if not current_theme %}active{% endif %}">
                                     <i class="fas fa-layer-group"></i> Все темы
@@ -217,5 +219,95 @@
     </script>
 
     {% block scripts %}{% endblock %}
+
+<script>
+    // Фиксация сайдбара с учетом прокрутки
+    function handleSidebarScroll() {
+        const sidebar = document.querySelector('.sidebar');
+        const contentArea = document.querySelector('.content-area');
+
+        if (!sidebar || !contentArea) return;
+
+        // Проверяем, нужно ли показывать/прятать сайдбар на мобильных
+        if (window.innerWidth <= 1200) {
+            sidebar.style.position = 'static';
+            sidebar.style.top = '0';
+            return;
+        }
+
+        // Рассчитываем, когда сайдбар должен перестать быть sticky
+        const sidebarHeight = sidebar.offsetHeight;
+        const contentHeight = contentArea.offsetHeight;
+        const footer = document.querySelector('.footer');
+        const footerOffset = footer ? footer.offsetTop : document.body.scrollHeight;
+
+        // Если контент короче сайдбара или страницы, убираем sticky
+        if (contentHeight < sidebarHeight || window.innerHeight >= footerOffset) {
+            sidebar.style.position = 'relative';
+            sidebar.style.top = '0';
+        } else {
+            sidebar.style.position = 'sticky';
+            sidebar.style.top = 'calc(var(--header-height) + 30px)';
+        }
+    }
+
+    // Вызываем при загрузке и изменении размера окна
+    document.addEventListener('DOMContentLoaded', handleSidebarScroll);
+    window.addEventListener('resize', handleSidebarScroll);
+    window.addEventListener('scroll', handleSidebarScroll);
+
+    // Плавная прокрутка к активной теме в сайдбаре
+    function scrollToActiveTheme() {
+        const activeTheme = document.querySelector('.theme-filter.active');
+        const themeList = document.querySelector('.theme-list');
+
+        if (activeTheme && themeList) {
+            const themeListRect = themeList.getBoundingClientRect();
+            const activeThemeRect = activeTheme.getBoundingClientRect();
+
+            // Если активная тема не видна, прокручиваем к ней
+            if (activeThemeRect.bottom > themeListRect.bottom ||
+                activeThemeRect.top < themeListRect.top) {
+                activeTheme.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }
+    }
+
+    // Прокручиваем к активной теме после загрузки
+    setTimeout(scrollToActiveTheme, 300);
+
+        // Переключение аккордеона тем на мобильных
+    function toggleThemeFilters() {
+        if (window.innerWidth <= 768px) {
+            const themeFilters = document.getElementById('theme-filters');
+            themeFilters.classList.toggle('collapsed');
+        }
+    }
+
+    // Автоматически сворачиваем на мобильных при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.innerWidth <= 768px) {
+            const themeFilters = document.getElementById('theme-filters');
+            if (themeFilters) {
+                themeFilters.classList.add('collapsed');
+            }
+        }
+    });
+
+    // Пересворачиваем при изменении размера
+    window.addEventListener('resize', function() {
+        const themeFilters = document.getElementById('theme-filters');
+        if (!themeFilters) return;
+
+        if (window.innerWidth <= 768px && !themeFilters.classList.contains('collapsed')) {
+            themeFilters.classList.add('collapsed');
+        } else if (window.innerWidth > 768px) {
+            themeFilters.classList.remove('collapsed');
+        }
+    });
+</script>
 </body>
 </html>
