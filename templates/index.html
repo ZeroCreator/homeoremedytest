@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Тесты по гомеопатии{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Вопросы для тестирования</h1>
+    <p class="subtitle">Проверьте свои знания по гомеопатии</p>
+
+    {% if current_theme or search_query %}
+    <div class="active-filters">
+        <strong>Активные фильтры:</strong>
+        {% if current_theme %}
+        <span class="filter-badge">{{ current_theme }}</span>
+        {% endif %}
+        {% if search_query %}
+        <span class="filter-badge">Поиск: "{{ search_query }}"</span>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="clear-filters">
+            <i class="fas fa-times"></i> Сбросить
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if cards %}
+<div class="cards-grid">
+    {% for card in cards %}
+    <div class="test-card" data-id="{{ card.id }}">
+        <div class="card-header">
+            <div class="card-meta">
+                <span class="card-theme">{{ card.theme }}</span>
+                <span class="card-difficulty {{ card.difficulty }}">
+                    {% if card.difficulty == 'easy' %}
+                    <i class="fas fa-leaf"></i> Легкий
+                    {% elif card.difficulty == 'hard' %}
+                    <i class="fas fa-fire"></i> Сложный
+                    {% else %}
+                    <i class="fas fa-balance-scale"></i> Средний
+                    {% endif %}
+                </span>
+            </div>
+            <h3 class="card-question">
+                <i class="fas fa-question-circle"></i> {{ card.question }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+            <div class="answer-section">
+                <button class="toggle-answer" onclick="toggleAnswer({{ card.id }})">
+                    <i class="fas fa-eye"></i> Показать ответ
+                </button>
+                <div class="answer-content" id="answer-{{ card.id }}" style="display: none;">
+                    <div class="answer-text">
+                        <strong><i class="fas fa-check-circle"></i> Ответ:</strong>
+                        <p>{{ card.answer }}</p>
+                    </div>
+
+                    {% if card.explanation %}
+                    <div class="explanation">
+                        <strong><i class="fas fa-lightbulb"></i> Объяснение:</strong>
+                        <p>{{ card.explanation }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <button class="action-btn edit-btn" onclick="editCard({{ card.id }})">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteCard({{ card.id }})">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-inbox"></i>
+    </div>
+    <h3>Нет вопросов</h3>
+    <p>{% if current_theme or search_query %}
+        Попробуйте изменить параметры фильтрации
+        {% else %}
+        Добавьте первый вопрос, нажав на кнопку "+" в правом верхнем углу
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+<script>
+function toggleAnswer(cardId) {
+    const answerElement = document.getElementById(`answer-${cardId}`);
+    const button = answerElement.previousElementSibling;
+
+    if (answerElement.style.display === 'none') {
+        answerElement.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-eye-slash"></i> Скрыть ответ';
+        button.classList.add('active');
+    } else {
+        answerElement.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-eye"></i> Показать ответ';
+        button.classList.remove('active');
+    }
+}
+
+function editCard(cardId) {
+    // Реализация редактирования
+    alert(`Редактирование карточки #${cardId}`);
+    // window.location.href = `/edit/${cardId}`;
+}
+
+function deleteCard(cardId) {
+    if (confirm('Вы уверены, что хотите удалить этот вопрос?')) {
+        fetch(`/api/cards/${cardId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector(`.test-card[data-id="${cardId}"]`).remove();
+            showNotification('Вопрос успешно удален', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка при удалении', 'error');
+        });
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+        ${message}
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
