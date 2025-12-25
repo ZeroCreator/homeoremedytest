@@ -1,156 +1,205 @@
 import os
 import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from werkzeug.utils import secure_filename
+from datetime import datetime
+from pathlib import Path
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['JSON_FILE'] = 'data/test_cards.json'
+# Импортируем конфигурацию
+from config import Config
 
-# Создаем необходимые директории
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs('data', exist_ok=True)
+# Создаем Flask приложение с ПРАВИЛЬНЫМИ путями
+app = Flask(__name__,
+            static_folder=str(Config.STATIC_DIR),
+            template_folder=str(Config.TEMPLATE_DIR))
+
+app.config['SECRET_KEY'] = Config.SECRET_KEY
 
 
-# Загружаем или создаем JSON файл
+# Функции для работы с данными
 def load_cards():
-    if os.path.exists(app.config['JSON_FILE']):
-        with open(app.config['JSON_FILE'], 'r', encoding='utf-8') as f:
-            return json.load(f)
-    else:
-        # Создаем базовую структуру
-        data = {
-            "cards": [],
-            "themes": [],
-            "next_id": 1
-        }
-        save_cards(data)
-        return data
+    """Загрузка карточек из JSON файла"""
+    try:
+        # Проверяем и создаем директорию если нужно
+        Config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        if Config.JSON_FILE.exists():
+            with open(Config.JSON_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Ошибка загрузки: {e}")
+
+    # Данные по умолчанию
+    return {
+        "cards": [],
+        "themes": Config.DEFAULT_THEMES.copy(),
+        "next_id": 1
+    }
 
 
 def save_cards(data):
-    with open(app.config['JSON_FILE'], 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    """Сохранение карточек"""
+    try:
+        with open(Config.JSON_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Ошибка сохранения: {e}")
 
 
 def extract_themes(cards_data):
+    """Извлечение уникальных тем"""
     themes = set()
-    for card in cards_data['cards']:
-        if 'theme' in card:
+    for card in cards_data.get('cards', []):
+        if 'theme' in card and card['theme']:
             themes.add(card['theme'])
     return sorted(list(themes))
 
 
+# Маршруты
 @app.route('/')
 def index():
-    cards_data = load_cards()
+    """Главная страница"""
+    try:
+        cards_data = load_cards()
 
-    # Получаем фильтры из GET-параметров
-    theme_filter = request.args.get('theme', '')
-    search_query = request.args.get('search', '').lower()
+        # Фильтры
+        theme_filter = request.args.get('theme', '')
+        search_query = request.args.get('search', '').lower()
 
-    # Фильтруем карточки
-    filtered_cards = []
-    for card in cards_data['cards']:
-        # Применяем фильтр по теме
-        if theme_filter and card.get('theme') != theme_filter:
-            continue
-
-        # Применяем поиск по вопросу и ответу
-        if search_query:
-            if (search_query not in card.get('question', '').lower() and
-                    search_query not in card.get('answer', '').lower()):
+        # Фильтрация
+        filtered_cards = []
+        for card in cards_data.get('cards', []):
+            if theme_filter and card.get('theme') != theme_filter:
                 continue
 
-        filtered_cards.append(card)
+            if search_query:
+                question = card.get('question', '').lower()
+                answer = card.get('answer', '').lower()
+                if search_query not in question and search_query not in answer:
+                    continue
 
-    # Извлекаем все темы
-    all_themes = extract_themes(cards_data)
+            filtered_cards.append(card)
 
-    return render_template('index.html',
-                           cards=filtered_cards,
-                           all_themes=all_themes,
-                           current_theme=theme_filter,
-                           search_query=search_query)
+        all_themes = extract_themes(cards_data)
+
+        return render_template('index.html',
+                               cards=filtered_cards,
+                               all_themes=all_themes,
+                               current_theme=theme_filter,
+                               search_query=search_query,
+                               total_cards=len(cards_data.get('cards', []))
+                               )
+    except Exception as e:
+        print(f"Ошибка в index: {e}")
+        return render_template('500.html'), 500
 
 
 @app.route('/create', methods=['GET', 'POST'])
 def create_card():
-    if request.method == 'POST':
+    """Создание карточки"""
+    try:
+        if request.method == 'POST':
+            cards_data = load_cards()
+
+            # Получаем данные
+            theme = request.form.get('theme', '').strip()
+            question = request.form.get('question', '').strip()
+            answer = request.form.get('answer', '').strip()
+
+            # Валидация
+            if not theme or not question or not answer:
+                all_themes = extract_themes(load_cards())
+                return render_template('create_card.html',
+                                       all_themes=all_themes,
+                                       error="Все поля обязательны для заполнения"
+                                       )
+
+            # Создаем карточку
+            new_card = {
+                "id": cards_data['next_id'],
+                "theme": theme,
+                "question": question,
+                "answer": answer,
+                "explanation": request.form.get('explanation', '').strip(),
+                "difficulty": request.form.get('difficulty', 'medium'),
+                "created_at": datetime.now().isoformat()
+            }
+
+            cards_data['cards'].append(new_card)
+            cards_data['next_id'] += 1
+
+            # Обновляем темы
+            if theme not in cards_data['themes']:
+                cards_data['themes'].append(theme)
+                cards_data['themes'].sort()
+
+            save_cards(cards_data)
+            return redirect(url_for('index'))
+
+        # GET запрос
         cards_data = load_cards()
+        all_themes = extract_themes(cards_data)
 
-        # Создаем новую карточку
-        new_card = {
-            "id": cards_data['next_id'],
-            "theme": request.form.get('theme'),
-            "question": request.form.get('question'),
-            "answer": request.form.get('answer'),
-            "explanation": request.form.get('explanation', ''),
-            "difficulty": request.form.get('difficulty', 'medium')
-        }
-
-        # Добавляем карточку
-        cards_data['cards'].append(new_card)
-        cards_data['next_id'] += 1
-
-        # Сохраняем
-        save_cards(cards_data)
-
-        return redirect(url_for('index'))
-
-    return render_template('create_card.html')
+        return render_template('create_card.html',
+                               all_themes=all_themes,
+                               difficulty_levels=Config.DIFFICULTY_LEVELS
+                               )
+    except Exception as e:
+        print(f"Ошибка в create_card: {e}")
+        return render_template('500.html'), 500
 
 
 @app.route('/card/<int:card_id>')
 def card_detail(card_id):
-    cards_data = load_cards()
+    """Детальная страница карточки"""
+    try:
+        cards_data = load_cards()
 
-    # Находим карточку по ID
-    card = next((c for c in cards_data['cards'] if c['id'] == card_id), None)
+        # Ищем карточку
+        card = None
+        for c in cards_data.get('cards', []):
+            if c.get('id') == card_id:
+                card = c
+                break
 
-    if card is None:
-        return "Карточка не найдена", 404
+        if not card:
+            return render_template('404.html'), 404
 
-    return render_template('card_detail.html', card=card)
+        # Получаем информацию о сложности
+        difficulty_info = Config.DIFFICULTY_LEVELS.get(
+            card.get('difficulty', 'medium'),
+            Config.DIFFICULTY_LEVELS['medium']
+        )
 
-
-@app.route('/api/cards', methods=['GET'])
-def api_get_cards():
-    cards_data = load_cards()
-    return jsonify(cards_data)
-
-
-@app.route('/api/cards', methods=['POST'])
-def api_create_card():
-    cards_data = load_cards()
-
-    new_card = {
-        "id": cards_data['next_id'],
-        "theme": request.json.get('theme'),
-        "question": request.json.get('question'),
-        "answer": request.json.get('answer'),
-        "explanation": request.json.get('explanation', ''),
-        "difficulty": request.json.get('difficulty', 'medium')
-    }
-
-    cards_data['cards'].append(new_card)
-    cards_data['next_id'] += 1
-    save_cards(cards_data)
-
-    return jsonify(new_card), 201
+        return render_template('card_detail.html',
+                               card=card,
+                               difficulty_info=difficulty_info
+                               )
+    except Exception as e:
+        print(f"Ошибка в card_detail: {e}")
+        return render_template('500.html'), 500
 
 
-@app.route('/api/cards/<int:card_id>', methods=['DELETE'])
-def api_delete_card(card_id):
-    cards_data = load_cards()
+# Простой API
+@app.route('/api/cards')
+def api_cards():
+    try:
+        cards_data = load_cards()
+        return jsonify(cards_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    # Находим и удаляем карточку
-    cards_data['cards'] = [c for c in cards_data['cards'] if c['id'] != card_id]
 
-    save_cards(cards_data)
-    return jsonify({"message": "Card deleted"}), 200
+# Обработчики ошибок
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
 
 
+@app.errorhandler(500)
+def server_error(error):
+    return render_template('500.html'), 500
+
+
+# Для Vercel
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5001)

@@ -43,43 +43,14 @@ ENV/
 ehthumbs.db
 Thumbs.db
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
 # Logs
 *.log
 logs/
 
-# Flask
-instance/
-.webassets-cache
-
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
+# Data files (можно добавить для тестовых данных)
+# app/data/test_data.json
+# app/data/test_*.json
 
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Data files (можно комментировать для включения в репозиторий)
-data/*.json
-!data/test_cards.json.example
-
-# Uploads
-static/uploads/*
-!static/uploads/.gitkeep
-
-# Temporary files
-tmp/
-temp/
-
-# Project specific
-*.bak
-*.backup

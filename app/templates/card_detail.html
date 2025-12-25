@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ card.question }} - Тесты по гомеопатии{% endblock %}
+
+{% block content %}
+<div class="card-detail-container">
+    <div class="card-detail-header">
+        <div class="card-detail-meta">
+            <span class="card-theme">{{ card.theme }}</span>
+            <span class="card-difficulty {{ card.difficulty }}">
+                {% if card.difficulty == 'easy' %}
+                <i class="fas fa-leaf"></i> Легкий
+                {% elif card.difficulty == 'hard' %}
+                <i class="fas fa-fire"></i> Сложный
+                {% else %}
+                <i class="fas fa-balance-scale"></i> Средний
+                {% endif %}
+            </span>
+            <span class="card-date">
+                <i class="far fa-clock"></i> {{ card.created_at[:10] }}
+            </span>
+        </div>
+
+        <h1 class="card-detail-question">
+            <i class="fas fa-question-circle"></i> {{ card.question }}
+        </h1>
+    </div>
+
+    <div class="card-detail-body">
+        <div class="detail-section">
+            <h2><i class="fas fa-check-circle"></i> Ответ</h2>
+            <div class="answer-content">
+                <p>{{ card.answer }}</p>
+            </div>
+        </div>
+
+        {% if card.explanation %}
+        <div class="detail-section">
+            <h2><i class="fas fa-lightbulb"></i> Объяснение</h2>
+            <div class="explanation-content">
+                <p>{{ card.explanation }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="detail-section">
+            <h2><i class="fas fa-info-circle"></i> Дополнительная информация</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">ID вопроса:</span>
+                    <span class="info-value">#{{ card.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Создан:</span>
+                    <span class="info-value">{{ card.created_at }}</span>
+                </div>
+                {% if card.updated_at and card.updated_at != card.created_at %}
+                <div class="info-item">
+                    <span class="info-label">Обновлен:</span>
+                    <span class="info-value">{{ card.updated_at }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-detail-actions">
+            <a href="{{ url_for('edit_card', card_id=card.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <form action="{{ url_for('delete_card', card_id=card.id) }}" method="POST"
+                  onsubmit="return confirm('Вы уверены, что хотите удалить этот вопрос?');"
+                  style="display: inline;">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+            </form>
+            <a href="{{ url_for('index') }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Назад к списку
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
