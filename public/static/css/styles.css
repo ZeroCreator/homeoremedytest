@@ -345,22 +345,23 @@ body {
 
 /* ==================== CARDS GRID ==================== */
 .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 25px;
+    columns: 2;
+    column-gap: 25px;
     margin-top: 20px;
 }
 
 .test-card {
+    break-inside: avoid; /* Не разрывать карточку между колонками */
+    page-break-inside: avoid; /* Для старых браузеров */
+    display: inline-block; /* Важно для columns */
+    width: 100%;
+    margin-bottom: 25px;
     background: var(--bg-primary);
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
     border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
 }
 
 .test-card:hover {
@@ -889,6 +890,7 @@ body {
 @media (max-width: 768px) {
     .cards-grid {
         grid-template-columns: 1fr;
+        columns: 1;
     }
 
     .create-form-container {

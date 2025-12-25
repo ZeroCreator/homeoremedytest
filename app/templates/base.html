@@ -6,7 +6,6 @@
     <title>{% block title %}Тесты по гомеопатии{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     {% block styles %}{% endblock %}
 </head>
 <body>
@@ -60,7 +59,7 @@
                                            class="search-field"
                                            id="search-input">
                                     {% if search_query %}
-                                    <button type="button" class="clear-search" onclick="clearSearch()">
+                                    <button type="button" class="clear-search" onclick="clearSearch()" title="Очистить поиск">
                                         <i class="fas fa-times"></i>
                                     </button>
                                     {% endif %}
@@ -78,7 +77,7 @@
                                 </a>
 
                                 {% for theme in all_themes %}
-                                {% set theme_count = cards|selectattr('theme', 'equalto', theme)|list|length %}
+                                {% set theme_count = cards|selectattr('theme', 'equalto', theme)|list|length if cards else 0 %}
                                 <a href="{{ url_for('index', theme=theme) }}"
                                    class="theme-filter {% if current_theme == theme %}active{% endif %}">
                                     <i class="fas fa-tag"></i> {{ theme }}
@@ -111,16 +110,28 @@
 
                 <!-- Основное содержимое -->
                 <section class="content-area">
+                    <!-- Flash сообщения -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">
-                                    {{ message }}
-                                    <button type="button" class="alert-close" onclick="this.parentElement.remove()">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            {% endfor %}
+                            <div class="flash-messages">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">
+                                        {% if category == 'success' %}
+                                            <i class="fas fa-check-circle"></i>
+                                        {% elif category == 'error' %}
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        {% elif category == 'info' %}
+                                            <i class="fas fa-info-circle"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        {% endif %}
+                                        {{ message }}
+                                        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     {% endwith %}
 
@@ -149,10 +160,7 @@
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p>&copy; 2024 HomeoRemedyTest. Все права защищены.
-                       <a href="/privacy">Политика конфиденциальности</a> |
-                       <a href="/terms">Условия использования</a>
-                    </p>
+                    <p>&copy; {{ current_year }} HomeoRemedyTest. Все права защищены.</p>
                 </div>
             </div>
         </footer>
@@ -162,17 +170,22 @@
     <script>
         // Автопоиск с задержкой
         let searchTimeout;
-        document.getElementById('search-input')?.addEventListener('input', function(e) {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                e.target.form.submit();
-            }, 500);
-        });
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    e.target.form.submit();
+                }, 500);
+            });
+        }
 
         function clearSearch() {
             const input = document.getElementById('search-input');
-            input.value = '';
-            input.form.submit();
+            if (input) {
+                input.value = '';
+                input.form.submit();
+            }
         }
 
         // Плавная прокрутка
@@ -192,28 +205,15 @@
             });
         });
 
-        // Подтверждение удаления
-        function confirmDelete(cardId) {
-            if (confirm('Вы уверены, что хотите удалить этот вопрос? Это действие нельзя отменить.')) {
-                fetch(`/api/cards/${cardId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert('Ошибка при удалении вопроса');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Ошибка при удалении вопроса');
-                });
-            }
-        }
+        // Автоматическое скрытие flash сообщений через 5 секунд
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        }, 100);
     </script>
 
     {% block scripts %}{% endblock %}

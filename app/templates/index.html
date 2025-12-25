@@ -64,12 +64,16 @@
                     {% endif %}
 
                     <div class="card-actions">
-                        <button class="action-btn edit-btn" onclick="editCard({{ card.id }})">
+                        <a href="{{ url_for('edit_card', card_id=card.id) }}" class="action-btn edit-btn">
                             <i class="fas fa-edit"></i> Редактировать
-                        </button>
-                        <button class="action-btn delete-btn" onclick="deleteCard({{ card.id }})">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
+                        </a>
+                        <form action="{{ url_for('delete_card', card_id=card.id) }}" method="POST"
+                              onsubmit="return confirm('Вы уверены, что хотите удалить этот вопрос?');"
+                              style="display: inline;">
+                            <button type="submit" class="action-btn delete-btn">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -108,12 +112,7 @@ function toggleAnswer(cardId) {
     }
 }
 
-function editCard(cardId) {
-    // Реализация редактирования
-    alert(`Редактирование карточки #${cardId}`);
-    // window.location.href = `/edit/${cardId}`;
-}
-
+// AJAX удаление (альтернатива форме)
 function deleteCard(cardId) {
     if (confirm('Вы уверены, что хотите удалить этот вопрос?')) {
         fetch(`/api/cards/${cardId}`, {
@@ -124,8 +123,12 @@ function deleteCard(cardId) {
         })
         .then(response => response.json())
         .then(data => {
-            document.querySelector(`.test-card[data-id="${cardId}"]`).remove();
-            showNotification('Вопрос успешно удален', 'success');
+            if (data.success) {
+                document.querySelector(`.test-card[data-id="${cardId}"]`).remove();
+                showNotification('Вопрос успешно удален', 'success');
+            } else {
+                showNotification(data.error || 'Ошибка при удалении', 'error');
+            }
         })
         .catch(error => {
             console.error('Error:', error);
