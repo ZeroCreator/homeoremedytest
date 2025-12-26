@@ -440,6 +440,15 @@
       "theme": "Минералы, Солнечный удар",
       "difficulty": "medium",
       "hidden": false
+    },
+    {
+      "id": 50,
+      "question": "Какое из лекарств будет рассматриваться в первую очередь, если болезнь наступила после того, как человек промок и замерз?",
+      "answer": "Dulcamara",
+      "explanation": "Паслен сладко-горький (Solanum dulcamara)",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
     }
   ],
   "themes": [
@@ -458,5 +467,5 @@
     "Укусы",
     "Химические"
   ],
-  "next_id": 50
+  "next_id": 51
 }

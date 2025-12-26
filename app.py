@@ -1,9 +1,13 @@
 import os
 import json
+import sys
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
 from datetime import datetime
 from pathlib import Path
 from werkzeug.utils import secure_filename
+
+# Импортируем пути из единого источника
+from paths import JSON_FILE, UPLOAD_DIR, STATIC_DIR, TEMPLATE_DIR, IS_VERCEL
 
 # Импортируем конфигурацию
 from config import Config
@@ -12,54 +16,112 @@ from config import Config
 from excel_utils.exporter import ExcelExporter
 from excel_utils.importer import ExcelImporter
 
+print(f"Starting app...")
+print(f"JSON file path: {JSON_FILE}")
+print(f"Upload dir: {UPLOAD_DIR}")
+print(f"Is Vercel: {IS_VERCEL}")
+
 # Создаем Flask приложение
 app = Flask(__name__,
-            static_folder=str(Config.STATIC_DIR),
-            template_folder=str(Config.TEMPLATE_DIR))
+            static_folder=str(STATIC_DIR),
+            template_folder=str(TEMPLATE_DIR))
 
 app.config['SECRET_KEY'] = Config.SECRET_KEY
-
-# Папка для загрузок
-UPLOAD_FOLDER = Path('uploads')
-UPLOAD_FOLDER.mkdir(exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['JSON_FILE'] = JSON_FILE
+app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
+
+
+# Создаем необходимые папки при запуске
+def init_folders():
+    try:
+        # Создаем папку для загрузок
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        print(f"Created upload dir: {UPLOAD_DIR}")
+
+        # Создаем JSON файл если не существует
+        if not JSON_FILE.exists():
+            data = {
+                "cards": [],
+                "themes": Config.DEFAULT_THEMES.copy(),
+                "next_id": 1
+            }
+            with open(JSON_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            print(f"Created JSON file with default data: {JSON_FILE}")
+        else:
+            # Проверяем содержимое файла
+            try:
+                with open(JSON_FILE, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    cards_count = len(data.get('cards', []))
+                    print(f"JSON file exists with {cards_count} cards: {JSON_FILE}")
+            except json.JSONDecodeError:
+                print(f"Warning: JSON file is corrupted, recreating: {JSON_FILE}")
+                data = {
+                    "cards": [],
+                    "themes": Config.DEFAULT_THEMES.copy(),
+                    "next_id": 1
+                }
+                with open(JSON_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+
+    except Exception as e:
+        print(f"Error in init_folders: {e}", file=sys.stderr)
+
+
+# Инициализируем папки
+init_folders()
+
 
 def allowed_file(filename):
     """Проверка расширения файла"""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # Функции для работы с данными
 def load_cards():
     """Загрузка карточек из JSON файла"""
     try:
-        # Проверяем и создаем директорию если нужно
-        Config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+        json_file = app.config['JSON_FILE']
+        print(f"DEBUG: Loading cards from {json_file}")
 
-        if Config.JSON_FILE.exists():
-            with open(Config.JSON_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        if json_file.exists():
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                print(f"DEBUG: Successfully loaded {len(data.get('cards', []))} cards")
+                return data
+        else:
+            print(f"DEBUG: JSON file not found, creating default")
+            data = {
+                "cards": [],
+                "themes": Config.DEFAULT_THEMES.copy(),
+                "next_id": 1
+            }
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            return data
+
     except Exception as e:
-        print(f"Ошибка загрузки: {e}")
-
-    # Данные по умолчанию
-    return {
-        "cards": [],
-        "themes": Config.DEFAULT_THEMES.copy(),
-        "next_id": 1
-    }
+        print(f"Ошибка загрузки: {e}", file=sys.stderr)
+        return {
+            "cards": [],
+            "themes": Config.DEFAULT_THEMES.copy(),
+            "next_id": 1
+        }
 
 
 def save_cards(data):
     """Сохранение карточек"""
     try:
-        with open(Config.JSON_FILE, 'w', encoding='utf-8') as f:
+        json_file = app.config['JSON_FILE']
+        print(f"DEBUG: Saving {len(data.get('cards', []))} cards to {json_file}")
+        with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Ошибка сохранения: {e}")
+        print(f"Ошибка сохранения: {e}", file=sys.stderr)
         flash('Ошибка сохранения данных', 'error')
 
 
@@ -355,8 +417,11 @@ def delete_card(card_id):
 def export_xlsx():
     """Экспорт карточек в Excel"""
     try:
+        # Используем путь из конфига приложения
+        json_file = str(app.config['JSON_FILE'])
+
         # Создаем экспортер
-        exporter = ExcelExporter(str(Config.JSON_FILE))
+        exporter = ExcelExporter(json_file)
 
         # Получаем Excel файл
         buffer, filename = exporter.export_to_excel()
@@ -374,7 +439,7 @@ def export_xlsx():
         return redirect(url_for('index'))
 
     except Exception as e:
-        print(f"Ошибка при экспорте в Excel: {e}")
+        print(f"Ошибка при экспорте в Excel: {e}", file=sys.stderr)
         flash('Произошла ошибка при экспорте данных в Excel', 'error')
         return redirect(url_for('index'))
 
@@ -408,11 +473,13 @@ def import_cards():
 
         # Сохраняем файл
         filename = secure_filename(file.filename)
-        file_path = UPLOAD_FOLDER / f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        upload_folder = app.config['UPLOAD_FOLDER']
+        file_path = upload_folder / f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
         file.save(file_path)
 
-        # Создаем импортер
-        importer = ExcelImporter(str(Config.JSON_FILE))
+        # Используем путь из конфига приложения
+        json_file = str(app.config['JSON_FILE'])
+        importer = ExcelImporter(json_file)
 
         # Валидируем файл
         is_valid, message = importer.validate_excel_file(file_path)
@@ -441,59 +508,6 @@ def import_cards():
         print(f"Ошибка импорта: {e}")
         flash(f'Произошла ошибка при импорте: {str(e)}', 'error')
         return redirect(request.url)
-
-
-@app.route('/import/preview', methods=['POST'])
-def import_preview():
-    """Предпросмотр файла перед импортом"""
-    try:
-        if 'file' not in request.files:
-            return jsonify({'success': False, 'error': 'Файл не выбран'}), 400
-
-        file = request.files['file']
-
-        if file.filename == '':
-            return jsonify({'success': False, 'error': 'Файл не выбран'}), 400
-
-        if not allowed_file(file.filename):
-            return jsonify({'success': False, 'error': 'Разрешены только файлы Excel (.xlsx, .xls)'}), 400
-
-        # Сохраняем файл временно
-        filename = secure_filename(file.filename)
-        file_path = UPLOAD_FOLDER / f"preview_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
-        file.save(file_path)
-
-        # Создаем импортер
-        importer = ExcelImporter(str(Config.JSON_FILE))
-
-        # Валидируем файл
-        is_valid, message = importer.validate_excel_file(file_path)
-        if not is_valid:
-            # Удаляем временный файл
-            if file_path.exists():
-                file_path.unlink()
-            return jsonify({'success': False, 'error': message}), 400
-
-        # Получаем предпросмотр
-        success, result = importer.get_import_preview(file_path)
-
-        # Удаляем временный файл
-        if file_path.exists():
-            file_path.unlink()
-
-        if success:
-            return jsonify({
-                'success': True,
-                'preview': result['preview'],
-                'total_rows': result['total_rows'],
-                'shown_rows': result['shown_rows']
-            })
-        else:
-            return jsonify({'success': False, 'error': result}), 400
-
-    except Exception as e:
-        print(f"Ошибка предпросмотра: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # Контекстный процессор для шаблонов

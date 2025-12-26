@@ -1,20 +1,13 @@
 import os
 from pathlib import Path
 
+
 class Config:
-    SECRET_KEY = 'secret'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'secret')
 
-    # Получаем абсолютный путь к текущему файлу (config.py)
-    BASE_DIR = Path(__file__).resolve().parent  # Корень проекта
-
-    # Пути для Flask
-    STATIC_DIR = BASE_DIR / 'public' / 'static'
-    TEMPLATE_DIR = BASE_DIR / 'app' / 'templates'
-    UPLOAD_DIR = BASE_DIR / 'uploads'
-
-    # Пути к данным
-    DATA_DIR = BASE_DIR / 'app' / 'data'
-    JSON_FILE = DATA_DIR / 'test_cards.json'
+    # Пути будут импортироваться из paths.py
+    # Импортируем здесь, чтобы избежать циклических импортов
+    from paths import STATIC_DIR, TEMPLATE_DIR, JSON_FILE, UPLOAD_DIR
 
     # Настройки приложения
     CARDS_PER_PAGE = 20
