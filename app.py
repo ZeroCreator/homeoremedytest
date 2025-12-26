@@ -1,11 +1,10 @@
-import os
 import json
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash
 from datetime import datetime
-from pathlib import Path
 
 # Импортируем конфигурацию
 from config import Config
+from exporter import create_exporter
 
 # Создаем Flask приложение с ПРАВИЛЬНЫМИ путями
 app = Flask(__name__,
@@ -331,6 +330,35 @@ def delete_card(card_id):
     except Exception as e:
         print(f"Ошибка в delete_card: {e}")
         flash('Произошла ошибка при удалении', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/export/xlsx')
+def export_xlsx():
+    """Экспорт карточек в Excel"""
+    try:
+        # Создаем экспортер
+        exporter = create_exporter(str(Config.JSON_FILE))
+
+        # Получаем Excel файл
+        buffer, filename = exporter.export_to_excel()
+
+        # Отправляем файл пользователю
+        return send_file(
+            buffer,
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    except ValueError as e:
+        # Нет данных для экспорта
+        flash(str(e), 'warning')
+        return redirect(url_for('index'))
+
+    except Exception as e:
+        print(f"Ошибка при экспорте в Excel: {e}")
+        flash('Произошла ошибка при экспорте данных в Excel', 'error')
         return redirect(url_for('index'))
 
 

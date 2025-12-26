@@ -29,10 +29,21 @@
                     </a>
                 </nav>
 
+                <!-- Выпадающее меню действий -->
                 <div class="header-actions">
-                    <a href="{{ url_for('create_card') }}" class="add-btn" title="Добавить новый вопрос">
-                        <i class="fas fa-plus"></i>
-                    </a>
+                    <div class="dropdown">
+                        <button class="header-btn dropdown-toggle" title="Действия">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('create_card') }}" class="dropdown-item">
+                                <i class="fas fa-plus"></i> Добавить вопрос
+                            </a>
+                            <a href="{{ url_for('export_xlsx') }}" class="dropdown-item">
+                                <i class="fas fa-file-excel"></i> Экспорт в Excel
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
