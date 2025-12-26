@@ -42,6 +42,9 @@
                             <a href="{{ url_for('export_xlsx') }}" class="dropdown-item">
                                 <i class="fas fa-file-excel"></i> Экспорт в Excel
                             </a>
+                            <a href="{{ url_for('import_cards') }}" class="dropdown-item">
+                                <i class="fas fa-file-import"></i> Импорт из Excel
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -192,6 +195,7 @@
                         <h4>Быстрые ссылки</h4>
                         <a href="{{ url_for('index') }}">Главная</a>
                         <a href="{{ url_for('create_card') }}">Добавить вопрос</a>
+                        <a href="{{ url_for('import_cards') }}">Импорт из Excel</a>
                     </div>
                     <div class="footer-section">
                         <h4>Контакты</h4>
@@ -229,10 +233,16 @@
         }
 
         // Переключение фильтра скрытых карточек
-        function toggleHiddenFilter() {
-            const showHidden = document.getElementById('show-hidden-toggle').checked;
+        function toggleHiddenFilter(checkbox) {
+            const showHidden = checkbox.checked;
             const url = new URL(window.location.href);
-            url.searchParams.set('show_hidden', showHidden);
+
+            if (showHidden) {
+                url.searchParams.set('show_hidden', 'true');
+            } else {
+                url.searchParams.delete('show_hidden');
+            }
+
             window.location.href = url.toString();
         }
 
@@ -314,24 +324,6 @@
                 themeFilters.classList.remove('collapsed');
             }
         });
-
-        function toggleHiddenFilter(checkbox) {
-            const showHidden = checkbox.checked;
-            const url = new URL(window.location.href);
-
-            if (showHidden) {
-                url.searchParams.set('show_hidden', 'true');
-            } else {
-                url.searchParams.delete('show_hidden');
-            }
-
-            // Также удаляем тему из URL при переключении
-            if (url.searchParams.get('theme')) {
-                url.searchParams.delete('theme');
-            }
-
-            window.location.href = url.toString();
-        }
     </script>
 
     {% block scripts %}{% endblock %}

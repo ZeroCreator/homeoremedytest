@@ -10,6 +10,7 @@ class Config:
     # Пути для Flask
     STATIC_DIR = BASE_DIR / 'public' / 'static'
     TEMPLATE_DIR = BASE_DIR / 'app' / 'templates'
+    UPLOAD_DIR = BASE_DIR / 'uploads'
 
     # Пути к данным
     DATA_DIR = BASE_DIR / 'app' / 'data'

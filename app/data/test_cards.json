@@ -1,5 +1,447 @@
 {
-  "next_id": 50,
+  "cards": [
+    {
+      "id": 1,
+      "question": "Какое растение используется при лечении тревоги и бессонницы?",
+      "answer": "Валериана лекарственная (Valeriana officinalis)",
+      "explanation": "Валериана обладает седативным действием, помогает при нервном возбуждении и нарушениях сна.",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": true
+    },
+    {
+      "id": 2,
+      "question": "Какой препарат готовят из яда пчелы?",
+      "answer": "Apis Мellifica",
+      "explanation": "Используется при состояниях с отеками, жжением и покраснением, подобных укусу пчелы.",
+      "theme": "Животные",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "question": "Какой препарат соответствует кремнию?",
+      "answer": "Силицея (Silicea)",
+      "explanation": "Используется при слабости соединительной ткани, гнойных процессах и недостатке уверенности.",
+      "theme": "Минералы",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "question": "Чрезвычайная сухость рта и зева, но отвращение к воде",
+      "answer": "Stramonium",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "question": "Подавленные эмоции",
+      "answer": "Staphisagria",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 6,
+      "question": "Перфекционизм и самокритика",
+      "answer": "Carcinosinum",
+      "explanation": "",
+      "theme": "Нозоды",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 7,
+      "question": "Острая, стреляющая боль, иррадиирующая вдоль нервов",
+      "answer": "Hypericum",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 8,
+      "question": "Перенапряжение глаз",
+      "answer": "Ruta",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 9,
+      "question": "Сладкий запах пота привлекает мух.\nУкусы мух сильно горят и зудят.",
+      "answer": "Caladium",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 10,
+      "question": "Холод в поврежденной области, место укуса бледнеет (или даже синеет).\nЛучше от холода.",
+      "answer": "Ledum",
+      "explanation": "",
+      "theme": "Растения, Укусы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 11,
+      "question": "Ощущение разбитости, страх прикосновений к больному месту",
+      "answer": "Arnica",
+      "explanation": "",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 12,
+      "question": "Ритмичный танец облегчает состояние",
+      "answer": "Tarentula Hispanica",
+      "explanation": "",
+      "theme": "Животные",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 13,
+      "question": "Укусы с распирающей болью, ощущением, что конечность вот-вот лопнет.\nВены набухшие, пульсирующие.",
+      "answer": "Vipera Berus",
+      "explanation": "Гадюка обыкновенная",
+      "theme": "Животные, Укусы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 14,
+      "question": "Нестерпимый зуд и жжение после укуса.\nЛучше от расчесывания.",
+      "answer": "Urtica Urens",
+      "explanation": "",
+      "theme": "Растения, Укусы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 15,
+      "question": "Стремительное развитие токсических симптомов.\nТемно-багровый отек, холодный пот, слабость.",
+      "answer": "Crotalus Horridus",
+      "explanation": "Полосатый гремучник",
+      "theme": "Животные",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 16,
+      "question": "Сильное сексуальное возбуждение с желанием рвать на себе одежду и кусаться.",
+      "answer": "Cantharis",
+      "explanation": "Шпанская мушка (Lytta vesicatoria)",
+      "theme": "Животные",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 17,
+      "question": "Анафилактический шок: очень быстрая реакция с отеком и затруднением дыхания.",
+      "answer": "Carbolicum Acidum",
+      "explanation": "Карболовая кислота",
+      "theme": "Минералы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 18,
+      "question": "Внезапная, острая, дергающая боль.",
+      "answer": "Plantago",
+      "explanation": "Подорожник",
+      "theme": "Растения, Боль",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 19,
+      "question": "Место укуса крайне чувствительно - от прикосновения к ране могут возникнуть конвульсии.",
+      "answer": "Staphisagria",
+      "explanation": "Жи́вокость апте́чная (лат. Delphinium officinale)",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 20,
+      "question": "Крайняя болезненность - боль как от занозы, усиливается от малейшего прикосновения.\nРаны быстро нагнаиваются, источая зловонный запах.",
+      "answer": "Hepar Sulphur",
+      "explanation": "",
+      "theme": "Минералы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 21,
+      "question": "Место укуса багрово-синее, пульсирующая жгучая боль в месте укуса с ощущением обожженности и обваренности.",
+      "answer": "Lachesis Muta",
+      "explanation": "Бушмейстер, сурукуку",
+      "theme": "Животные, Укусы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 22,
+      "question": "Страх отстрых пердметов и проникновения.\nСтрах врачей.",
+      "answer": "Apis Melifica",
+      "explanation": "Пчела медоносная",
+      "theme": "Животные, Страх",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 23,
+      "question": "Боль возникает точно по расписанию",
+      "answer": "Cedron",
+      "explanation": "Квассия цедрон",
+      "theme": "Растения, Боль",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 24,
+      "question": "Препарат после болезней от холодного ветра",
+      "answer": "Aconit",
+      "explanation": "Борец (сем. Лютиковых)",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 25,
+      "question": "Травма физическая или эмоциональная",
+      "answer": "Arnica Montana",
+      "explanation": "Арника горная",
+      "theme": "Растения, Травма",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 26,
+      "question": "Эмоциональное потрясение (плохие новости, горе, радость, испуг).\nПри шоке от дурных известий человека трясет, он ошарашен, теряется, не знает что делать дальше.",
+      "answer": "Gelsemium",
+      "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 27,
+      "question": "Гипоксия при подъеме на высоту",
+      "answer": "Coca",
+      "explanation": "Кокаиновый куст. Erythroxylum coca.",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 28,
+      "question": "Препарат при переедании",
+      "answer": "Lycopodium",
+      "explanation": "Плаун булавовидный",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 29,
+      "question": "Сопротивление жизни",
+      "answer": "Silicea",
+      "explanation": "Диоксид кремния (кремнезем)",
+      "theme": "Минералы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 30,
+      "question": "Тупая травма глаза без кровоизлияния, когда сохранена целостность мягких тканей.\nЕсть коющие боли после заживления раны, ухудщающие от прикосновения.",
+      "answer": "Symphitum",
+      "explanation": "Symphytum officinale (Окопник)",
+      "theme": "Растения, Травма глаза",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 31,
+      "question": "При коллапсе, если пациент покрыт холодным потом, очень выражена зябкость, сильно испуган, жажда холодных напитков.",
+      "answer": "Veratrum Album",
+      "explanation": "Чемерица белая",
+      "theme": "Растения, Коллапс",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 32,
+      "question": "При солнечном ударе, когда есть головная боль с чувством распирания изнутри.\nНе может лежать, лучше с приподнятой головой, либо ярко-красное.",
+      "answer": "Glonoinum",
+      "explanation": "Нитроглицерин (тринитрат глицерина)",
+      "theme": "Солнечный удар",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 33,
+      "question": "Лекарство войны",
+      "answer": "Gunpowder",
+      "explanation": "Порох",
+      "theme": "Химические",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 34,
+      "question": "Ощущение, что невозможно состояться и преуспеть, что он куда-то опаздывает",
+      "answer": "Medorrhinum",
+      "explanation": "",
+      "theme": "Нозоды",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 35,
+      "question": "Воскреситель из мертвых.\nПри переутомлении.",
+      "answer": "Carbo Vegetabilis",
+      "explanation": "Уголь растительный\nГомеопатический препарат, получаемый из древесного угля (чаще березового).",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 36,
+      "question": "Антидот любых укусов",
+      "answer": "Ledum",
+      "explanation": "Ledum palustre, Багульник болотный",
+      "theme": "Растения, Укусы",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 37,
+      "question": "Раздражение и гнев",
+      "answer": "Nux Vomica",
+      "explanation": "Рвотный орех",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 38,
+      "question": "Потеря жизненных соков",
+      "answer": "China Officinalis",
+      "explanation": "Кора хинного дерева",
+      "theme": "Растения",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 39,
+      "question": "Отравление алкоголем (или другими токсическими веществами)",
+      "answer": "Alcogol",
+      "explanation": "Алкоголь",
+      "theme": "Химические, Отравление",
+      "difficulty": "easy",
+      "hidden": false
+    },
+    {
+      "id": 40,
+      "question": "В случае возникновения отека, если кожа над отеком розовая, глянцевая.\nЗуд, жжение облегчается от холодного, жажда отсутствует.",
+      "answer": "Apis Melifica",
+      "explanation": "Пчела медоносная",
+      "theme": "Животные",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 41,
+      "question": "Перенапряжение ума",
+      "answer": "Picricum Acidum",
+      "explanation": "Пикриновая кислота",
+      "theme": "Химические",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 42,
+      "question": "Тропный печени.\nКоньюктивит, все гнойные.\nДетокс. После химиотерапии.",
+      "answer": "Okoubaka",
+      "explanation": "Окоубака аубревиллеи",
+      "theme": "Растения",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 43,
+      "question": "Кожа в месте укуса багрово-красная и отечная с ощущением холода вокруг укуса.\nЛучше от умывания лица и рук холодной водой.",
+      "answer": "Vespa Crabro",
+      "explanation": "Шершень, оса",
+      "theme": "Животные, Укусы",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 44,
+      "question": "Заболевание развилось постепенно, есть озноб, очень сильная слабость, тяжело даже открыть глаза. Головная боль, жажда отсутствует.",
+      "answer": "Gelsemium",
+      "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 45,
+      "question": "Первый препарат после анастезии",
+      "answer": "Aceticum Acidum",
+      "explanation": "Кислота уксусная",
+      "theme": "Химические",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 46,
+      "question": "Какие лекарства наиболее часто используются при аллергии на солнце?",
+      "answer": "Natrum muriaticum\nNatrum carbonicum",
+      "explanation": "",
+      "theme": "Минералы",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 47,
+      "question": "Наиболее часто используются в стадии разгара пневмонии.",
+      "answer": "Phosphorus\nChelidonium",
+      "explanation": "Фосфор\nХелидониум (Chelidonium majus) - чистотел большой",
+      "theme": "Минералы, Растения, Пневмония",
+      "difficulty": "hard",
+      "hidden": false
+    },
+    {
+      "id": 48,
+      "question": "Препарат при заболеваниях, связанных с переменой погоды (магнитными бурями)",
+      "answer": "Rhus Toxicodendron",
+      "explanation": "Сумах ядовитый",
+      "theme": "Растения",
+      "difficulty": "medium",
+      "hidden": false
+    },
+    {
+      "id": 49,
+      "question": "При солнечном ударе (перегреве)",
+      "answer": "Natrum carbonicum",
+      "explanation": "Натрия карбонат",
+      "theme": "Минералы, Солнечный удар",
+      "difficulty": "medium",
+      "hidden": false
+    }
+  ],
   "themes": [
     "Боль",
     "Животные",
@@ -16,447 +458,5 @@
     "Укусы",
     "Химические"
   ],
-  "cards": [
-    {
-      "id": 1,
-      "theme": "Растения",
-      "question": "Какое растение используется при лечении тревоги и бессонницы?",
-      "answer": "Валериана лекарственная (Valeriana officinalis)",
-      "explanation": "Валериана обладает седативным действием, помогает при нервном возбуждении и нарушениях сна.",
-      "difficulty": "easy",
-      "hidden": true
-    },
-    {
-      "id": 2,
-      "theme": "Животные",
-      "question": "Какой препарат готовят из яда пчелы?",
-      "answer": "Apis Мellifica",
-      "explanation": "Используется при состояниях с отеками, жжением и покраснением, подобных укусу пчелы.",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 3,
-      "theme": "Минералы",
-      "question": "Какой препарат соответствует кремнию?",
-      "answer": "Силицея (Silicea)",
-      "explanation": "Используется при слабости соединительной ткани, гнойных процессах и недостатке уверенности.",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 4,
-      "theme": "Растения",
-      "question": "Чрезвычайная сухость рта и зева, но отвращение к воде",
-      "answer": "Stramonium",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 5,
-      "theme": "Растения",
-      "question": "Подавленные эмоции",
-      "answer": "Staphisagria",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 6,
-      "theme": "Нозоды",
-      "question": "Перфекционизм и самокритика",
-      "answer": "Carcinosinum",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 7,
-      "theme": "Растения",
-      "question": "Острая, стреляющая боль, иррадиирующая вдоль нервов",
-      "answer": "Hypericum",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 8,
-      "theme": "Растения",
-      "question": "Перенапряжение глаз",
-      "answer": "Ruta",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 9,
-      "theme": "Растения",
-      "question": "Сладкий запах пота привлекает мух.\r\nУкусы мух сильно горят и зудят.",
-      "answer": "Caladium",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 10,
-      "theme": "Растения, Укусы",
-      "question": "Холод в поврежденной области, место укуса бледнеет (или даже синеет).\r\nЛучше от холода.",
-      "answer": "Ledum",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 11,
-      "theme": "Растения",
-      "question": "Ощущение разбитости, страх прикосновений к больному месту",
-      "answer": "Arnica",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 12,
-      "theme": "Животные",
-      "question": "Ритмичный танец облегчает состояние",
-      "answer": "Tarentula Hispanica",
-      "explanation": "",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 13,
-      "theme": "Животные, Укусы",
-      "question": "Укусы с распирающей болью, ощущением, что конечность вот-вот лопнет.\r\nВены набухшие, пульсирующие.",
-      "answer": "Vipera Berus",
-      "explanation": "Гадюка обыкновенная",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 14,
-      "theme": "Растения, Укусы",
-      "question": "Нестерпимый зуд и жжение после укуса.\r\nЛучше от расчесывания.",
-      "answer": "Urtica Urens",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 15,
-      "theme": "Животные",
-      "question": "Стремительное развитие токсических симптомов.\r\nТемно-багровый отек, холодный пот, слабость.",
-      "answer": "Crotalus Horridus",
-      "explanation": "Полосатый гремучник",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 16,
-      "theme": "Животные",
-      "question": "Сильное сексуальное возбуждение с желанием рвать на себе одежду и кусаться.",
-      "answer": "Cantharis",
-      "explanation": "Шпанская мушка (Lytta vesicatoria)",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 17,
-      "theme": "Минералы",
-      "question": "Анафилактический шок: очень быстрая реакция с отеком и затруднением дыхания.",
-      "answer": "Carbolicum Acidum",
-      "explanation": "Карболовая кислота",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 18,
-      "theme": "Растения, Боль",
-      "question": "Внезапная, острая, дергающая боль.",
-      "answer": "Plantago",
-      "explanation": "Подорожник",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 19,
-      "theme": "Растения",
-      "question": "Место укуса крайне чувствительно - от прикосновения к ране могут возникнуть конвульсии.",
-      "answer": "Staphisagria",
-      "explanation": "Жи́вокость апте́чная (лат. Delphinium officinale)",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 20,
-      "theme": "Минералы",
-      "question": "Крайняя болезненность - боль как от занозы, усиливается от малейшего прикосновения.\r\nРаны быстро нагнаиваются, источая зловонный запах.",
-      "answer": "Hepar Sulphur",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 21,
-      "theme": "Животные, Укусы",
-      "question": "Место укуса багрово-синее, пульсирующая жгучая боль в месте укуса с ощущением обожженности и обваренности.",
-      "answer": "Lachesis Muta",
-      "explanation": "Бушмейстер, сурукуку",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 22,
-      "theme": "Животные, Страх",
-      "question": "Страх отстрых пердметов и проникновения.\r\nСтрах врачей.",
-      "answer": "Apis Melifica",
-      "explanation": "Пчела медоносная",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 23,
-      "theme": "Растения, Боль",
-      "question": "Боль возникает точно по расписанию",
-      "answer": "Cedron",
-      "explanation": "Квассия цедрон",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 24,
-      "theme": "Растения",
-      "question": "Препарат после болезней от холодного ветра",
-      "answer": "Aconit",
-      "explanation": "Борец (сем. Лютиковых)",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 25,
-      "theme": "Растения, Травма",
-      "question": "Травма физическая или эмоциональная",
-      "answer": "Arnica Montana",
-      "explanation": "Арника горная",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 26,
-      "theme": "Растения",
-      "question": "Эмоциональное потрясение (плохие новости, горе, радость, испуг).\r\nПри шоке от дурных известий человека трясет, он ошарашен, теряется, не знает что делать дальше.",
-      "answer": "Gelsemium",
-      "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 27,
-      "theme": "Растения",
-      "question": "Гипоксия при подъеме на высоту",
-      "answer": "Coca",
-      "explanation": "Кокаиновый куст. Erythroxylum coca.",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 28,
-      "theme": "Растения",
-      "question": "Препарат при переедании",
-      "answer": "Lycopodium",
-      "explanation": "Плаун булавовидный",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 29,
-      "theme": "Минералы",
-      "question": "Сопротивление жизни",
-      "answer": "Silicea",
-      "explanation": "Диоксид кремния (кремнезем)",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 30,
-      "theme": "Растения, Травма глаза",
-      "question": "Тупая травма глаза без кровоизлияния, когда сохранена целостность мягких тканей.\r\nЕсть коющие боли после заживления раны, ухудщающие от прикосновения.",
-      "answer": "Symphitum",
-      "explanation": "Symphytum officinale (Окопник)",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 31,
-      "theme": "Растения, Коллапс",
-      "question": "При коллапсе, если пациент покрыт холодным потом, очень выражена зябкость, сильно испуган, жажда холодных напитков.",
-      "answer": "Veratrum Album",
-      "explanation": "Чемерица белая",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 32,
-      "theme": "Солнечный удар",
-      "question": "При солнечном ударе, когда есть головная боль с чувством распирания изнутри.\r\nНе может лежать, лучше с приподнятой головой, либо ярко-красное.",
-      "answer": "Glonoinum",
-      "explanation": "Нитроглицерин (тринитрат глицерина)",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 33,
-      "theme": "Химические",
-      "question": "Лекарство войны",
-      "answer": "Gunpowder",
-      "explanation": "Порох",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 34,
-      "theme": "Нозоды",
-      "question": "Ощущение, что невозможно состояться и преуспеть, что он куда-то опаздывает",
-      "answer": "Medorrhinum",
-      "explanation": "",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 35,
-      "theme": "Растения",
-      "question": "Воскреситель из мертвых.\r\nПри переутомлении.",
-      "answer": "Carbo Vegetabilis",
-      "explanation": "Уголь растительный\r\nГомеопатический препарат, получаемый из древесного угля (чаще березового).",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 36,
-      "theme": "Растения, Укусы",
-      "question": "Антидот любых укусов",
-      "answer": "Ledum",
-      "explanation": "Ledum palustre, Багульник болотный",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 37,
-      "theme": "Растения",
-      "question": "Раздражение и гнев",
-      "answer": "Nux Vomica",
-      "explanation": "Рвотный орех",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 38,
-      "theme": "Растения",
-      "question": "Потеря жизненных соков",
-      "answer": "China Officinalis",
-      "explanation": "Кора хинного дерева",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 39,
-      "theme": "Химические, Отравление",
-      "question": "Отравление алкоголем (или другими токсическими веществами)",
-      "answer": "Alcogol",
-      "explanation": "Алкоголь",
-      "difficulty": "easy",
-      "hidden": false
-    },
-    {
-      "id": 40,
-      "theme": "Животные",
-      "question": "В случае возникновения отека, если кожа над отеком розовая, глянцевая.\r\nЗуд, жжение облегчается от холодного, жажда отсутствует.",
-      "answer": "Apis Melifica",
-      "explanation": "Пчела медоносная",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 41,
-      "theme": "Химические",
-      "question": "Перенапряжение ума",
-      "answer": "Picricum Acidum",
-      "explanation": "Пикриновая кислота",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 42,
-      "theme": "Растения",
-      "question": "Тропный печени.\r\nКоньюктивит, все гнойные.\r\nДетокс. После химиотерапии.",
-      "answer": "Okoubaka",
-      "explanation": "Окоубака аубревиллеи",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 43,
-      "theme": "Животные, Укусы",
-      "question": "Кожа в месте укуса багрово-красная и отечная с ощущением холода вокруг укуса.\r\nЛучше от умывания лица и рук холодной водой.",
-      "answer": "Vespa Crabro",
-      "explanation": "Шершень, оса",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 44,
-      "theme": "Растения",
-      "question": "Заболевание развилось постепенно, есть озноб, очень сильная слабость, тяжело даже открыть глаза. Головная боль, жажда отсутствует.",
-      "answer": "Gelsemium",
-      "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 45,
-      "theme": "Химические",
-      "question": "Первый препарат после анастезии",
-      "answer": "Aceticum Acidum",
-      "explanation": "Кислота уксусная",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 46,
-      "theme": "Минералы",
-      "question": "Какие лекарства наиболее часто используются при аллергии на солнце?",
-      "answer": "Natrum muriaticum\r\nNatrum carbonicum",
-      "explanation": "",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 47,
-      "theme": "Минералы, Растения, Пневмония",
-      "question": "Наиболее часто используются в стадии разгара пневмонии.",
-      "answer": "Phosphorus\r\nChelidonium",
-      "explanation": "Фосфор\r\nХелидониум (Chelidonium majus) - чистотел большой",
-      "difficulty": "hard",
-      "hidden": false
-    },
-    {
-      "id": 48,
-      "theme": "Растения",
-      "question": "Препарат при заболеваниях, связанных с переменой погоды (магнитными бурями)",
-      "answer": "Rhus Toxicodendron",
-      "explanation": "Сумах ядовитый",
-      "difficulty": "medium",
-      "hidden": false
-    },
-    {
-      "id": 49,
-      "theme": "Минералы, Солнечный удар",
-      "question": "При солнечном ударе (перегреве)",
-      "answer": "Natrum carbonicum",
-      "explanation": "Натрия карбонат",
-      "difficulty": "medium",
-      "hidden": false
-    }
-  ]
+  "next_id": 50
 }

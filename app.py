@@ -1,17 +1,35 @@
+import os
 import json
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
 from datetime import datetime
+from pathlib import Path
+from werkzeug.utils import secure_filename
 
 # Импортируем конфигурацию
 from config import Config
-from exporter import create_exporter
 
-# Создаем Flask приложение с ПРАВИЛЬНЫМИ путями
+# Импортируем модули для работы с Excel
+from excel_utils.exporter import ExcelExporter
+from excel_utils.importer import ExcelImporter
+
+# Создаем Flask приложение
 app = Flask(__name__,
             static_folder=str(Config.STATIC_DIR),
             template_folder=str(Config.TEMPLATE_DIR))
 
 app.config['SECRET_KEY'] = Config.SECRET_KEY
+
+# Папка для загрузок
+UPLOAD_FOLDER = Path('uploads')
+UPLOAD_FOLDER.mkdir(exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
+
+def allowed_file(filename):
+    """Проверка расширения файла"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # Функции для работы с данными
@@ -338,7 +356,7 @@ def export_xlsx():
     """Экспорт карточек в Excel"""
     try:
         # Создаем экспортер
-        exporter = create_exporter(str(Config.JSON_FILE))
+        exporter = ExcelExporter(str(Config.JSON_FILE))
 
         # Получаем Excel файл
         buffer, filename = exporter.export_to_excel()
@@ -352,7 +370,6 @@ def export_xlsx():
         )
 
     except ValueError as e:
-        # Нет данных для экспорта
         flash(str(e), 'warning')
         return redirect(url_for('index'))
 
@@ -360,6 +377,123 @@ def export_xlsx():
         print(f"Ошибка при экспорте в Excel: {e}")
         flash('Произошла ошибка при экспорте данных в Excel', 'error')
         return redirect(url_for('index'))
+
+
+@app.route('/import', methods=['GET', 'POST'])
+def import_cards():
+    """Страница импорта карточек"""
+    if request.method == 'GET':
+        return render_template('import.html')
+
+    # POST запрос
+    try:
+        if 'file' not in request.files:
+            flash('Файл не выбран', 'error')
+            return redirect(request.url)
+
+        file = request.files['file']
+
+        if file.filename == '':
+            flash('Файл не выбран', 'error')
+            return redirect(request.url)
+
+        if not allowed_file(file.filename):
+            flash('Разрешены только файлы Excel (.xlsx, .xls)', 'error')
+            return redirect(request.url)
+
+        # Режим импорта
+        mode = request.form.get('mode', 'append')
+        if mode not in ['append', 'replace']:
+            mode = 'append'
+
+        # Сохраняем файл
+        filename = secure_filename(file.filename)
+        file_path = UPLOAD_FOLDER / f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        file.save(file_path)
+
+        # Создаем импортер
+        importer = ExcelImporter(str(Config.JSON_FILE))
+
+        # Валидируем файл
+        is_valid, message = importer.validate_excel_file(file_path)
+        if not is_valid:
+            if file_path.exists():
+                file_path.unlink()
+            flash(f'Ошибка валидации файла: {message}', 'error')
+            return redirect(request.url)
+
+        # Импортируем
+        success, result = importer.import_from_excel(file_path, mode=mode)
+
+        # Удаляем временный файл
+        if file_path.exists():
+            file_path.unlink()
+
+        if success:
+            flash(f'Импорт успешно завершен! Импортировано {result["imported"]} карточек, '
+                  f'пропущено {result["skipped"]}. Всего карточек: {result["total"]}', 'success')
+        else:
+            flash(f'Ошибка импорта: {result.get("error", "Неизвестная ошибка")}', 'error')
+
+        return redirect(url_for('index'))
+
+    except Exception as e:
+        print(f"Ошибка импорта: {e}")
+        flash(f'Произошла ошибка при импорте: {str(e)}', 'error')
+        return redirect(request.url)
+
+
+@app.route('/import/preview', methods=['POST'])
+def import_preview():
+    """Предпросмотр файла перед импортом"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'Файл не выбран'}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Файл не выбран'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'success': False, 'error': 'Разрешены только файлы Excel (.xlsx, .xls)'}), 400
+
+        # Сохраняем файл временно
+        filename = secure_filename(file.filename)
+        file_path = UPLOAD_FOLDER / f"preview_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        file.save(file_path)
+
+        # Создаем импортер
+        importer = ExcelImporter(str(Config.JSON_FILE))
+
+        # Валидируем файл
+        is_valid, message = importer.validate_excel_file(file_path)
+        if not is_valid:
+            # Удаляем временный файл
+            if file_path.exists():
+                file_path.unlink()
+            return jsonify({'success': False, 'error': message}), 400
+
+        # Получаем предпросмотр
+        success, result = importer.get_import_preview(file_path)
+
+        # Удаляем временный файл
+        if file_path.exists():
+            file_path.unlink()
+
+        if success:
+            return jsonify({
+                'success': True,
+                'preview': result['preview'],
+                'total_rows': result['total_rows'],
+                'shown_rows': result['shown_rows']
+            })
+        else:
+            return jsonify({'success': False, 'error': result}), 400
+
+    except Exception as e:
+        print(f"Ошибка предпросмотра: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # Контекстный процессор для шаблонов
