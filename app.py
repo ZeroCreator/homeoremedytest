@@ -74,21 +74,24 @@ def get_theme_counts(cards_data):
 # Маршруты
 @app.route('/')
 def index():
-    """Главная страница"""
     try:
         cards_data = load_cards()
 
-        # Фильтры
+        # Новые параметры фильтрации
         theme_filter = request.args.get('theme', '').strip()
         search_query = request.args.get('search', '').lower()
+        show_hidden = request.args.get('show_hidden', 'false').lower() == 'true'
 
-        # Получаем все уникальные темы для сайдбара
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
+        # Подсчет скрытых карточек
+        hidden_count = sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False))
 
         # Фильтрация
         filtered_cards = []
         for card in cards_data.get('cards', []):
+            # Фильтр по скрытым карточкам
+            if not show_hidden and card.get('hidden', False):
+                continue
+
             # Фильтр по теме
             if theme_filter:
                 card_themes = [t.strip() for t in card.get('theme', '').split(',')]
@@ -101,11 +104,15 @@ def index():
                 answer = card.get('answer', '').lower()
                 explanation = card.get('explanation', '').lower()
                 if (search_query not in question and
-                    search_query not in answer and
-                    search_query not in explanation):
+                        search_query not in answer and
+                        search_query not in explanation):
                     continue
 
             filtered_cards.append(card)
+
+        # Получаем все уникальные темы для сайдбара
+        all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)
 
         # Сортировка тем по популярности (по количеству карточек)
         sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
@@ -116,6 +123,8 @@ def index():
                                theme_counts=theme_counts,
                                current_theme=theme_filter,
                                search_query=search_query,
+                               show_hidden=show_hidden,
+                               hidden_count=hidden_count,
                                total_cards=len(cards_data.get('cards', []))
                                )
     except Exception as e:
@@ -124,7 +133,33 @@ def index():
         return render_template('index.html',
                                cards=[],
                                all_themes=[],
-                               total_cards=0)
+                               total_cards=0,
+                               hidden_count=0,
+                               show_hidden=False)
+
+
+@app.route('/card/<int:card_id>/toggle_hidden', methods=['POST'])
+def toggle_hidden(card_id):
+    """Переключение состояния скрытия карточки"""
+    try:
+        cards_data = load_cards()
+
+        for card in cards_data.get('cards', []):
+            if card.get('id') == card_id:
+                # Переключаем состояние
+                card['hidden'] = not card.get('hidden', False)
+                save_cards(cards_data)
+
+                status = "скрыта" if card['hidden'] else "показана"
+                flash(f'Карточка {status}!', 'success')
+                return redirect(url_for('card_detail', card_id=card_id))
+
+        flash('Карточка не найдена', 'error')
+        return redirect(url_for('index'))
+    except Exception as e:
+        print(f"Ошибка в toggle_hidden: {e}")
+        flash('Произошла ошибка', 'error')
+        return redirect(url_for('index'))
 
 
 @app.route('/create', methods=['GET', 'POST'])
@@ -157,8 +192,7 @@ def create_card():
                 "answer": answer,
                 "explanation": request.form.get('explanation', '').strip(),
                 "difficulty": request.form.get('difficulty', 'medium'),
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
+                "hidden": False,
             }
 
             cards_data['cards'].append(new_card)
@@ -257,7 +291,7 @@ def edit_card(card_id):
             card['answer'] = answer
             card['explanation'] = request.form.get('explanation', '').strip()
             card['difficulty'] = request.form.get('difficulty', 'medium')
-            card['updated_at'] = datetime.now().isoformat()
+            card['hidden'] = card.get('hidden', False)
 
             save_cards(cards_data)
             flash('Вопрос успешно обновлен!', 'success')

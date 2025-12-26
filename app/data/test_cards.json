@@ -1,4 +1,21 @@
 {
+  "next_id": 50,
+  "themes": [
+    "Боль",
+    "Животные",
+    "Коллапс",
+    "Минералы",
+    "Нозоды",
+    "Отравление",
+    "Пневмония",
+    "Растения",
+    "Солнечный удар",
+    "Страх",
+    "Травма",
+    "Травма глаза",
+    "Укусы",
+    "Химические"
+  ],
   "cards": [
     {
       "id": 1,
@@ -7,8 +24,7 @@
       "answer": "Валериана лекарственная (Valeriana officinalis)",
       "explanation": "Валериана обладает седативным действием, помогает при нервном возбуждении и нарушениях сна.",
       "difficulty": "easy",
-      "created_at": "2024-01-15T10:30:00",
-      "updated_at": "2024-01-15T10:30:00"
+      "hidden": true
     },
     {
       "id": 2,
@@ -17,8 +33,7 @@
       "answer": "Apis Мellifica",
       "explanation": "Используется при состояниях с отеками, жжением и покраснением, подобных укусу пчелы.",
       "difficulty": "easy",
-      "created_at": "2024-01-16T14:20:00",
-      "updated_at": "2025-12-25T16:40:37.858493"
+      "hidden": false
     },
     {
       "id": 3,
@@ -27,8 +42,7 @@
       "answer": "Силицея (Silicea)",
       "explanation": "Используется при слабости соединительной ткани, гнойных процессах и недостатке уверенности.",
       "difficulty": "easy",
-      "created_at": "2024-01-17T09:15:00",
-      "updated_at": "2025-12-25T15:08:36.530516"
+      "hidden": false
     },
     {
       "id": 4,
@@ -37,8 +51,7 @@
       "answer": "Stramonium",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:00:14.538987",
-      "updated_at": "2025-12-25T15:00:14.538997"
+      "hidden": false
     },
     {
       "id": 5,
@@ -47,8 +60,7 @@
       "answer": "Staphisagria",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:01:19.763139",
-      "updated_at": "2025-12-25T15:01:19.763150"
+      "hidden": false
     },
     {
       "id": 6,
@@ -57,8 +69,7 @@
       "answer": "Carcinosinum",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:02:14.271247",
-      "updated_at": "2025-12-25T15:02:14.271257"
+      "hidden": false
     },
     {
       "id": 7,
@@ -67,8 +78,7 @@
       "answer": "Hypericum",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:03:09.177984",
-      "updated_at": "2025-12-25T15:03:09.177993"
+      "hidden": false
     },
     {
       "id": 8,
@@ -77,8 +87,7 @@
       "answer": "Ruta",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:03:48.262691",
-      "updated_at": "2025-12-25T15:03:48.262700"
+      "hidden": false
     },
     {
       "id": 9,
@@ -87,8 +96,7 @@
       "answer": "Caladium",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:05:09.435649",
-      "updated_at": "2025-12-25T15:05:09.435659"
+      "hidden": false
     },
     {
       "id": 10,
@@ -97,8 +105,7 @@
       "answer": "Ledum",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:06:03.374128",
-      "updated_at": "2025-12-25T18:03:01.905029"
+      "hidden": false
     },
     {
       "id": 11,
@@ -107,8 +114,7 @@
       "answer": "Arnica",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:09:33.187433",
-      "updated_at": "2025-12-25T15:09:33.187442"
+      "hidden": false
     },
     {
       "id": 12,
@@ -117,8 +123,7 @@
       "answer": "Tarentula Hispanica",
       "explanation": "",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:10:36.650519",
-      "updated_at": "2025-12-25T15:10:36.650527"
+      "hidden": false
     },
     {
       "id": 13,
@@ -127,8 +132,7 @@
       "answer": "Vipera Berus",
       "explanation": "Гадюка обыкновенная",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:12:17.132259",
-      "updated_at": "2025-12-25T18:02:38.008879"
+      "hidden": false
     },
     {
       "id": 14,
@@ -137,8 +141,7 @@
       "answer": "Urtica Urens",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:13:33.797376",
-      "updated_at": "2025-12-25T18:03:22.164957"
+      "hidden": false
     },
     {
       "id": 15,
@@ -147,8 +150,7 @@
       "answer": "Crotalus Horridus",
       "explanation": "Полосатый гремучник",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:15:36.357067",
-      "updated_at": "2025-12-25T15:15:36.357076"
+      "hidden": false
     },
     {
       "id": 16,
@@ -157,8 +159,7 @@
       "answer": "Cantharis",
       "explanation": "Шпанская мушка (Lytta vesicatoria)",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:17:40.728537",
-      "updated_at": "2025-12-25T15:17:40.728547"
+      "hidden": false
     },
     {
       "id": 17,
@@ -167,8 +168,7 @@
       "answer": "Carbolicum Acidum",
       "explanation": "Карболовая кислота",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:19:02.548925",
-      "updated_at": "2025-12-25T15:19:02.548933"
+      "hidden": false
     },
     {
       "id": 18,
@@ -177,8 +177,7 @@
       "answer": "Plantago",
       "explanation": "Подорожник",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:20:03.265843",
-      "updated_at": "2025-12-25T18:04:35.796325"
+      "hidden": false
     },
     {
       "id": 19,
@@ -187,8 +186,7 @@
       "answer": "Staphisagria",
       "explanation": "Жи́вокость апте́чная (лат. Delphinium officinale)",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:21:57.394769",
-      "updated_at": "2025-12-25T15:21:57.394778"
+      "hidden": false
     },
     {
       "id": 20,
@@ -197,8 +195,7 @@
       "answer": "Hepar Sulphur",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:23:21.432839",
-      "updated_at": "2025-12-25T15:23:21.432848"
+      "hidden": false
     },
     {
       "id": 21,
@@ -207,8 +204,7 @@
       "answer": "Lachesis Muta",
       "explanation": "Бушмейстер, сурукуку",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:26:15.498883",
-      "updated_at": "2025-12-25T18:06:48.324249"
+      "hidden": false
     },
     {
       "id": 22,
@@ -217,8 +213,7 @@
       "answer": "Apis Melifica",
       "explanation": "Пчела медоносная",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:27:01.669560",
-      "updated_at": "2025-12-25T18:08:13.514336"
+      "hidden": false
     },
     {
       "id": 23,
@@ -227,8 +222,7 @@
       "answer": "Cedron",
       "explanation": "Квассия цедрон",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:28:49.048558",
-      "updated_at": "2025-12-25T18:05:21.418195"
+      "hidden": false
     },
     {
       "id": 24,
@@ -237,8 +231,7 @@
       "answer": "Aconit",
       "explanation": "Борец (сем. Лютиковых)",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:30:10.969086",
-      "updated_at": "2025-12-25T15:30:10.969095"
+      "hidden": false
     },
     {
       "id": 25,
@@ -247,8 +240,7 @@
       "answer": "Arnica Montana",
       "explanation": "Арника горная",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:31:34.458373",
-      "updated_at": "2025-12-25T18:08:30.272774"
+      "hidden": false
     },
     {
       "id": 26,
@@ -257,8 +249,7 @@
       "answer": "Gelsemium",
       "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
       "difficulty": "easy",
-      "created_at": "2025-12-25T15:33:07.000279",
-      "updated_at": "2025-12-25T15:39:46.523072"
+      "hidden": false
     },
     {
       "id": 27,
@@ -267,8 +258,7 @@
       "answer": "Coca",
       "explanation": "Кокаиновый куст. Erythroxylum coca.",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:34:53.649482",
-      "updated_at": "2025-12-25T15:34:53.649491"
+      "hidden": false
     },
     {
       "id": 28,
@@ -277,8 +267,7 @@
       "answer": "Lycopodium",
       "explanation": "Плаун булавовидный",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:35:49.074268",
-      "updated_at": "2025-12-25T15:35:49.074276"
+      "hidden": false
     },
     {
       "id": 29,
@@ -287,8 +276,7 @@
       "answer": "Silicea",
       "explanation": "Диоксид кремния (кремнезем)",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:37:11.147613",
-      "updated_at": "2025-12-25T15:37:11.147622"
+      "hidden": false
     },
     {
       "id": 30,
@@ -297,8 +285,7 @@
       "answer": "Symphitum",
       "explanation": "Symphytum officinale (Окопник)",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:42:06.583886",
-      "updated_at": "2025-12-25T18:01:17.038757"
+      "hidden": false
     },
     {
       "id": 31,
@@ -307,8 +294,7 @@
       "answer": "Veratrum Album",
       "explanation": "Чемерица белая",
       "difficulty": "medium",
-      "created_at": "2025-12-25T15:43:58.998487",
-      "updated_at": "2025-12-25T18:00:30.591877"
+      "hidden": false
     },
     {
       "id": 32,
@@ -317,8 +303,7 @@
       "answer": "Glonoinum",
       "explanation": "Нитроглицерин (тринитрат глицерина)",
       "difficulty": "hard",
-      "created_at": "2025-12-25T15:51:32.305789",
-      "updated_at": "2025-12-25T17:11:41.445138"
+      "hidden": false
     },
     {
       "id": 33,
@@ -327,8 +312,7 @@
       "answer": "Gunpowder",
       "explanation": "Порох",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:26:02.623146",
-      "updated_at": "2025-12-25T16:26:02.623157"
+      "hidden": false
     },
     {
       "id": 34,
@@ -337,8 +321,7 @@
       "answer": "Medorrhinum",
       "explanation": "",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:27:29.926919",
-      "updated_at": "2025-12-25T16:27:29.926928"
+      "hidden": false
     },
     {
       "id": 35,
@@ -347,8 +330,7 @@
       "answer": "Carbo Vegetabilis",
       "explanation": "Уголь растительный\r\nГомеопатический препарат, получаемый из древесного угля (чаще березового).",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:30:08.006465",
-      "updated_at": "2025-12-25T17:05:30.706979"
+      "hidden": false
     },
     {
       "id": 36,
@@ -357,8 +339,7 @@
       "answer": "Ledum",
       "explanation": "Ledum palustre, Багульник болотный",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:30:59.189595",
-      "updated_at": "2025-12-25T18:02:15.297953"
+      "hidden": false
     },
     {
       "id": 37,
@@ -367,8 +348,7 @@
       "answer": "Nux Vomica",
       "explanation": "Рвотный орех",
       "difficulty": "easy",
-      "created_at": "2025-12-25T16:32:15.191596",
-      "updated_at": "2025-12-25T16:32:15.191605"
+      "hidden": false
     },
     {
       "id": 38,
@@ -377,8 +357,7 @@
       "answer": "China Officinalis",
       "explanation": "Кора хинного дерева",
       "difficulty": "easy",
-      "created_at": "2025-12-25T16:33:39.230098",
-      "updated_at": "2025-12-25T16:33:39.230107"
+      "hidden": false
     },
     {
       "id": 39,
@@ -387,8 +366,7 @@
       "answer": "Alcogol",
       "explanation": "Алкоголь",
       "difficulty": "easy",
-      "created_at": "2025-12-25T16:34:29.245471",
-      "updated_at": "2025-12-25T18:03:54.412507"
+      "hidden": false
     },
     {
       "id": 40,
@@ -397,8 +375,7 @@
       "answer": "Apis Melifica",
       "explanation": "Пчела медоносная",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:39:21.287246",
-      "updated_at": "2025-12-25T16:39:21.287255"
+      "hidden": false
     },
     {
       "id": 41,
@@ -407,8 +384,7 @@
       "answer": "Picricum Acidum",
       "explanation": "Пикриновая кислота",
       "difficulty": "medium",
-      "created_at": "2025-12-25T16:57:17.263662",
-      "updated_at": "2025-12-25T16:57:17.263671"
+      "hidden": false
     },
     {
       "id": 42,
@@ -417,8 +393,7 @@
       "answer": "Okoubaka",
       "explanation": "Окоубака аубревиллеи",
       "difficulty": "hard",
-      "created_at": "2025-12-25T16:59:26.209013",
-      "updated_at": "2025-12-25T18:07:36.946010"
+      "hidden": false
     },
     {
       "id": 43,
@@ -427,8 +402,7 @@
       "answer": "Vespa Crabro",
       "explanation": "Шершень, оса",
       "difficulty": "hard",
-      "created_at": "2025-12-25T17:01:52.176787",
-      "updated_at": "2025-12-25T18:06:23.348364"
+      "hidden": false
     },
     {
       "id": 44,
@@ -437,8 +411,7 @@
       "answer": "Gelsemium",
       "explanation": "Гельземин (Gelsemium sempervirens). Жёлтый жасмин.",
       "difficulty": "medium",
-      "created_at": "2025-12-25T17:04:37.385241",
-      "updated_at": "2025-12-25T17:04:37.385251"
+      "hidden": false
     },
     {
       "id": 45,
@@ -447,8 +420,7 @@
       "answer": "Aceticum Acidum",
       "explanation": "Кислота уксусная",
       "difficulty": "hard",
-      "created_at": "2025-12-25T17:07:07.571730",
-      "updated_at": "2025-12-25T17:07:07.571740"
+      "hidden": false
     },
     {
       "id": 46,
@@ -457,8 +429,7 @@
       "answer": "Natrum muriaticum\r\nNatrum carbonicum",
       "explanation": "",
       "difficulty": "hard",
-      "created_at": "2025-12-25T17:08:26.323455",
-      "updated_at": "2025-12-25T17:08:26.323465"
+      "hidden": false
     },
     {
       "id": 47,
@@ -467,8 +438,7 @@
       "answer": "Phosphorus\r\nChelidonium",
       "explanation": "Фосфор\r\nХелидониум (Chelidonium majus) - чистотел большой",
       "difficulty": "hard",
-      "created_at": "2025-12-25T17:11:04.910820",
-      "updated_at": "2025-12-25T18:05:58.434324"
+      "hidden": false
     },
     {
       "id": 48,
@@ -477,8 +447,7 @@
       "answer": "Rhus Toxicodendron",
       "explanation": "Сумах ядовитый",
       "difficulty": "medium",
-      "created_at": "2025-12-25T17:16:51.285439",
-      "updated_at": "2025-12-25T17:16:51.285448"
+      "hidden": false
     },
     {
       "id": 49,
@@ -487,19 +456,7 @@
       "answer": "Natrum carbonicum",
       "explanation": "Натрия карбонат",
       "difficulty": "medium",
-      "created_at": "2025-12-25T17:21:10.237703",
-      "updated_at": "2025-12-25T18:04:57.939391"
+      "hidden": false
     }
-  ],
-  "themes": [
-    "Животные",
-    "Минералы",
-    "Нозоды",
-    "Пневмония",
-    "Растения",
-    "Солнечный удар",
-    "Химические",
-    "Химический"
-  ],
-  "next_id": 50
+  ]
 }

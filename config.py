@@ -19,6 +19,16 @@ class Config:
     CARDS_PER_PAGE = 20
     SEARCH_DELAY = 500
 
+    DEFAULT_FIELDS = {
+        "id": 0,
+        "theme": "",
+        "question": "",
+        "answer": "",
+        "explanation": "",
+        "difficulty": "medium",
+        "hidden": False
+    }
+
     # Список тем по умолчанию
     DEFAULT_THEMES = ['Растения', 'Животные', 'Минералы', 'Нозоды', 'Саркоды']
 

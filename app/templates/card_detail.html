@@ -4,6 +4,13 @@
 
 {% block content %}
 <div class="card-detail-container">
+    {% if card.hidden %}
+    <div class="hidden-indicator">
+        <i class="fas fa-eye-slash"></i>
+        <span>Эта карточка скрыта и не отображается в основном списке</span>
+    </div>
+    {% endif %}
+
     <div class="card-detail-header">
         <div class="card-detail-meta">
             <span class="card-theme">{{ card.theme }}</span>
@@ -16,9 +23,11 @@
                 <i class="fas fa-balance-scale"></i> Средний
                 {% endif %}
             </span>
-            <span class="card-date">
-                <i class="far fa-clock"></i> {{ card.created_at[:10] }}
+            {% if card.hidden %}
+            <span class="text-secondary">
+                <i class="fas fa-eye-slash"></i> Скрыта
             </span>
+            {% endif %}
         </div>
 
         <h1 class="card-detail-question">
@@ -44,26 +53,50 @@
         {% endif %}
 
         <div class="detail-section">
-            <h2><i class="fas fa-info-circle"></i> Дополнительная информация</h2>
+            <h2><i class="fas fa-info-circle"></i> Информация о карточке</h2>
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">ID вопроса:</span>
                     <span class="info-value">#{{ card.id }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Создан:</span>
-                    <span class="info-value">{{ card.created_at }}</span>
+                    <span class="info-label">Статус:</span>
+                    <span class="info-value {% if card.hidden %}text-secondary{% else %}text-success{% endif %}">
+                        {% if card.hidden %}
+                        <i class="fas fa-eye-slash"></i> Скрыта
+                        {% else %}
+                        <i class="fas fa-eye"></i> Видима
+                        {% endif %}
+                    </span>
                 </div>
-                {% if card.updated_at and card.updated_at != card.created_at %}
                 <div class="info-item">
-                    <span class="info-label">Обновлен:</span>
-                    <span class="info-value">{{ card.updated_at }}</span>
+                    <span class="info-label">Сложность:</span>
+                    <span class="info-value">
+                        {% if card.difficulty == 'easy' %}
+                        Легкая
+                        {% elif card.difficulty == 'hard' %}
+                        Сложная
+                        {% else %}
+                        Средняя
+                        {% endif %}
+                    </span>
                 </div>
-                {% endif %}
             </div>
         </div>
 
         <div class="card-detail-actions">
+            <!-- Кнопка скрыть/показать -->
+            <form action="{{ url_for('toggle_hidden', card_id=card.id) }}" method="POST"
+                  style="display: inline;">
+                <button type="submit" class="btn {% if card.hidden %}btn-success{% else %}btn-secondary{% endif %}">
+                    {% if card.hidden %}
+                    <i class="fas fa-eye"></i> Показать карточку
+                    {% else %}
+                    <i class="fas fa-eye-slash"></i> Скрыть карточку
+                    {% endif %}
+                </button>
+            </form>
+
             <a href="{{ url_for('edit_card', card_id=card.id) }}" class="btn btn-primary">
                 <i class="fas fa-edit"></i> Редактировать
             </a>
@@ -74,7 +107,7 @@
                     <i class="fas fa-trash"></i> Удалить
                 </button>
             </form>
-            <a href="{{ url_for('index') }}" class="btn">
+            <a href="{{ url_for('index') }}?show_hidden={{ show_hidden|lower }}" class="btn">
                 <i class="fas fa-arrow-left"></i> Назад к списку
             </a>
         </div>

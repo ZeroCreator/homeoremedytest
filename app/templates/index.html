@@ -8,7 +8,7 @@
     <h1>Вопросы для тестирования</h1>
     <p class="subtitle">Проверьте свои знания по гомеопатии</p>
 
-    {% if current_theme or search_query %}
+    {% if current_theme or search_query or show_hidden %}
     <div class="active-filters">
         <strong>Активные фильтры:</strong>
         {% if current_theme %}
@@ -16,6 +16,9 @@
         {% endif %}
         {% if search_query %}
         <span class="filter-badge">Поиск: "{{ search_query }}"</span>
+        {% endif %}
+        {% if show_hidden %}
+        <span class="filter-badge">Показаны скрытые карточки</span>
         {% endif %}
         <a href="{{ url_for('index') }}" class="clear-filters">
             <i class="fas fa-times"></i> Сбросить
@@ -27,7 +30,14 @@
 {% if cards %}
 <div class="cards-grid">
     {% for card in cards %}
-    <div class="test-card" data-id="{{ card.id }}">
+    <div class="test-card {% if card.hidden %}card-hidden{% endif %}" data-id="{{ card.id }}">
+        {% if card.hidden %}
+        <!-- Бейдж скрытой карточки над номером -->
+        <div class="card-hidden-badge">
+            <i class="fas fa-eye-slash"></i> Скрыта
+        </div>
+        {% endif %}
+
         <div class="card-header">
             <div class="card-meta">
                 <!-- ТЕМЫ СЛЕВА -->
@@ -76,6 +86,19 @@
                     {% endif %}
 
                     <div class="card-actions">
+                        <!-- Кнопка скрыть/показать -->
+                        <form action="{{ url_for('toggle_hidden', card_id=card.id) }}" method="POST"
+                              onsubmit="return confirm('{{ 'Показать' if card.hidden else 'Скрыть' }} эту карточку?');"
+                              style="display: inline;">
+                            <button type="submit" class="action-btn {% if card.hidden %}unhide-btn{% else %}hide-btn{% endif %}">
+                                {% if card.hidden %}
+                                <i class="fas fa-eye"></i> Показать
+                                {% else %}
+                                <i class="fas fa-eye-slash"></i> Скрыть
+                                {% endif %}
+                            </button>
+                        </form>
+
                         <a href="{{ url_for('edit_card', card_id=card.id) }}" class="action-btn edit-btn">
                             <i class="fas fa-edit"></i> Редактировать
                         </a>
@@ -99,7 +122,7 @@
         <i class="fas fa-inbox"></i>
     </div>
     <h3>Нет вопросов</h3>
-    <p>{% if current_theme or search_query %}
+    <p>{% if current_theme or search_query or show_hidden %}
         Попробуйте изменить параметры фильтрации
         {% else %}
         Добавьте первый вопрос, нажав на кнопку "+" в правом верхнем углу
