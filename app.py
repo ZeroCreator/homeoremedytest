@@ -510,6 +510,83 @@ def import_cards():
         return redirect(request.url)
 
 
+@app.route('/import/preview', methods=['POST'])
+def import_preview():
+    """Предпросмотр данных перед импортом"""
+    try:
+        print(f"DEBUG: Получен запрос на предпросмотр")
+
+        if 'file' not in request.files:
+            print(f"DEBUG: Нет файла в запросе")
+            return jsonify({
+                'success': False,
+                'error': 'Файл не выбран'
+            }), 400
+
+        file = request.files['file']
+        print(f"DEBUG: Файл получен: {file.filename}")
+
+        if file.filename == '':
+            print(f"DEBUG: Имя файла пустое")
+            return jsonify({
+                'success': False,
+                'error': 'Файл не выбран'
+            }), 400
+
+        if not allowed_file(file.filename):
+            print(f"DEBUG: Неподдерживаемый формат файла: {file.filename}")
+            return jsonify({
+                'success': False,
+                'error': 'Разрешены только файлы Excel (.xlsx, .xls)'
+            }), 400
+
+        # Создаем временную папку для загрузок
+        upload_folder = app.config['UPLOAD_FOLDER']
+        upload_folder.mkdir(parents=True, exist_ok=True)
+
+        # Сохраняем файл
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = secure_filename(file.filename)
+        file_path = upload_folder / f"preview_{timestamp}_{filename}"
+        file.save(file_path)
+
+        print(f"DEBUG: Файл сохранен в {file_path}")
+
+        # Используем путь из конфига приложения
+        json_file = str(app.config['JSON_FILE'])
+        importer = ExcelImporter(json_file)
+
+        # Получаем предпросмотр
+        success, result = importer.get_import_preview(file_path)
+
+        # Удаляем временный файл
+        if file_path.exists():
+            file_path.unlink()
+            print(f"DEBUG: Временный файл удален")
+
+        if success:
+            print(f"DEBUG: Предпросмотр успешно получен, строк: {result.get('total_rows', 0)}")
+            return jsonify({
+                'success': True,
+                **result
+            })
+        else:
+            print(f"DEBUG: Ошибка предпросмотра: {result}")
+            return jsonify({
+                'success': False,
+                'error': result
+            }), 400
+
+    except Exception as e:
+        print(f"DEBUG: Ошибка в import_preview: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Произошла ошибка: {str(e)}'
+        }), 500
+
+
 # Контекстный процессор для шаблонов
 @app.context_processor
 def inject_globals():
@@ -517,7 +594,6 @@ def inject_globals():
         'current_year': datetime.now().year,
         'app_name': 'Тесты по гомеопатии'
     }
-
 
 
 if __name__ == '__main__':

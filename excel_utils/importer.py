@@ -2,7 +2,13 @@
 Модуль для импорта данных из Excel файлов
 Использует openpyxl для чтения файлов
 Фиксированный формат колонок:
-0: №, 1: Вопрос, 2: Ответ, 3: Объяснение, 4: Тема, 5: Сложность, 6: Скрытый
+0: №,
+1: Вопрос,
+2: Ответ,
+3: Объяснение,
+4: Тема,
+5: Сложность,
+6: Скрытый
 """
 import json
 import re
@@ -17,7 +23,6 @@ class ExcelImporter:
     def __init__(self, json_file_path=None):
         """
         Инициализация импортера
-
         Args:
             json_file_path: Путь к JSON файлу с данными
         """
@@ -84,10 +89,8 @@ class ExcelImporter:
     def validate_excel_file(self, file_path):
         """
         Валидация Excel файла
-
         Args:
             file_path: Путь к Excel файлу
-
         Returns:
             tuple: (bool, str) - успех и сообщение
         """
@@ -121,14 +124,12 @@ class ExcelImporter:
         except Exception as e:
             return False, f"Ошибка при проверке файла: {str(e)}"
 
-    def read_excel_file(self, file_path, max_rows=100):
+    def read_excel_file(self, file_path, max_rows=10000):
         """
         Чтение данных из Excel файла
-
         Args:
             file_path: Путь к Excel файлу
             max_rows: Максимальное количество строк для чтения (включая заголовки)
-
         Returns:
             list: Список строк с данными
         """
@@ -174,10 +175,8 @@ class ExcelImporter:
     def parse_excel_data(self, excel_data):
         """
         Парсинг данных из Excel с фиксированными колонками
-
         Args:
             excel_data: Данные из Excel файла
-
         Returns:
             list: Список карточек
         """
@@ -278,11 +277,9 @@ class ExcelImporter:
     def import_from_excel(self, excel_file_path, mode='append'):
         """
         Основная функция импорта
-
         Args:
             excel_file_path: Путь к Excel файлу
             mode: Режим импорта ('append' или 'replace')
-
         Returns:
             tuple: (bool, dict) - успех и статистика
         """
@@ -456,16 +453,12 @@ class ExcelImporter:
             traceback.print_exc()
             return False, {'error': f'Ошибка импорта: {str(e)}'}
 
-    def get_import_preview(self, file_path, limit=50):
+    def get_import_preview(self, file_path, limit=1000):
         """
         Предпросмотр данных из файла
-
         Args:
             file_path: Путь к файлу
             limit: Максимальное количество строк для показа
-
-        Returns:
-            tuple: (bool, данные или сообщение об ошибке)
         """
         try:
             # Валидируем файл
@@ -508,7 +501,7 @@ class ExcelImporter:
             mapped_headers = []
             for i, header_info in enumerate(header_matches):
                 status = "✅" if header_info['matches'] else "❌"
-                actual = header_info['actual'] if header_info['actual'] else f"Колонка {i+1}"
+                actual = header_info['actual'] if header_info['actual'] else f"Колонка {i + 1}"
                 mapped_headers.append(f"{status} {actual} → {header_info['expected']}")
 
             preview_data.append(mapped_headers)
@@ -533,14 +526,23 @@ class ExcelImporter:
                 preview_row.insert(0, row_idx - 1)  # -1 потому что первая строка - заголовки
                 preview_data.append(preview_row)
 
-            # Информация о файле
-            total_data_rows = len(excel_data) - 1
+            # Определяем реальное количество строк в файле
+            try:
+                from openpyxl import load_workbook
+                wb = load_workbook(filename=str(file_path), read_only=True, data_only=True)
+                ws = wb.active
+                total_data_rows = ws.max_row - 1  # минус заголовок
+                wb.close()
+            except:
+                # Если не получилось определить, используем количество прочитанных строк
+                total_data_rows = len(excel_data) - 1 if len(excel_data) > 1 else 0
+
             correct_headers = sum(1 for h in header_matches if h['matches'])
 
             return True, {
                 'preview': preview_data,
-                'total_rows': total_data_rows,
-                'shown_rows': len(data_rows),
+                'total_rows': total_data_rows,  # реальное количество строк
+                'shown_rows': len(data_rows),  # показанное количество строк
                 'expected_headers': fixed_headers,
                 'actual_headers': headers_in_file,
                 'header_matches': header_matches,
