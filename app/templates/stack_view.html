@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Режим стопки - Тесты по гомеопатии{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/stack_style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Режим тестирования</h1>
+    <p class="subtitle">Листайте карточки для проверки знаний</p>
+
+    {% if current_theme %}
+    <div class="active-filters" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Активный фильтр:</strong>
+            <span class="filter-badge">{{ current_theme }}</span>
+            <span class="theme-count-badge" style="background: rgba(74, 111, 165, 0.15); color: var(--primary-color); width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(74, 111, 165, 0.3);">
+                {{ cards|length }}
+            </span>
+        </div>
+        <a href="?view=stack&show_hidden={{ show_hidden|lower }}"
+           class="clear-filters">
+            <i class="fas fa-times"></i> Сбросить фильтр
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if cards %}
+<div class="stack-view-container">
+    <div class="cards-stack" id="cardsStack">
+        <!-- Фоновые карточки (только для визуализации) -->
+        <div class="stack-bg-card stack-bg-left-3"></div>
+        <div class="stack-bg-card stack-bg-left-2"></div>
+        <div class="stack-bg-card stack-bg-left-1"></div>
+
+        <div class="stack-bg-card stack-bg-right-1"></div>
+        <div class="stack-bg-card stack-bg-right-2"></div>
+        <div class="stack-bg-card stack-bg-right-3"></div>
+
+        <!-- Основная карточка будет вставлена сюда JavaScript -->
+    </div>
+</div>
+
+<div class="swipe-hint-container">
+    <div class="swipe-hint">
+        <i class="fas fa-hand-point-up"></i>
+        <span>Перетащите карточку влево/вправо</span>
+        <i class="fas fa-hand-point-up"></i>
+    </div>
+</div>
+
+<div class="stack-navigation">
+    <button class="stack-nav-btn" id="prevBtn">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="stack-counter">
+        <span class="stack-current" id="currentPos">1</span>
+        <span> из </span>
+        <span class="stack-total" id="totalCards">{{ cards|length }}</span>
+    </div>
+
+    <button class="stack-nav-btn" id="nextBtn">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-layer-group"></i>
+    </div>
+    <h3>Нет карточек для отображения</h3>
+    <p>Добавьте карточки или измените параметры фильтрации</p>
+    <div class="empty-actions">
+        <a href="{{ url_for('create_card') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Добавить вопрос
+        </a>
+        <!-- ИСПРАВЛЕНО: Сохраняем все текущие фильтры при переходе к сетке -->
+        <a href="?view=grid{% if current_theme %}&theme={{ current_theme }}{% endif %}&show_hidden={{ show_hidden|lower }}"
+           class="btn btn-secondary">
+            <i class="fas fa-th-large"></i> Перейти к сетке
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Данные карточек из шаблона
+const cardsData = {{ cards|tojson|safe }};
+let currentIndex = 0;
+let isDragging = false;
+let startX = 0;
+let dragOffset = 0;
+let currentCardElement = null;
+let isAnswerExpanded = false;
+
+// Функция для получения индекса карточки с учетом циклического перехода
+function getCardIndex(index) {
+    const total = cardsData.length;
+    if (total === 0) return 0;
+
+    if (index < 0) return total - 1;
+    if (index >= total) return 0;
+    return index;
+}
+
+// Инициализация
+function initStack() {
+    if (!cardsData || cardsData.length === 0) return;
+
+    renderCurrentCard();
+    updateNavigation();
+    setupEventListeners();
+    setupKeyboard();
+}
+
+// Рендер текущей карточки (без анимации)
+function renderCurrentCard() {
+    const stackContainer = document.getElementById('cardsStack');
+    if (!stackContainer) return;
+
+    // Сбрасываем флаг открытого ответа
+    isAnswerExpanded = false;
+
+    // Удаляем старую карточку
+    if (currentCardElement && currentCardElement.parentNode) {
+        currentCardElement.remove();
+    }
+
+    // Создаем новую карточку
+    const card = cardsData[currentIndex];
+    currentCardElement = createCardElement(card);
+
+    // Устанавливаем начальные стили
+    currentCardElement.style.transform = 'translateX(-50%)';
+    currentCardElement.style.opacity = '1';
+
+    // Добавляем в контейнер
+    stackContainer.appendChild(currentCardElement);
+    setupCardDrag(currentCardElement);
+}
+
+// Создание элемента карточки
+function createCardElement(card) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'stack-main-card';
+    cardDiv.setAttribute('data-id', card.id);
+
+    const buttonId = `toggle-btn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const answerId = `answer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    cardDiv.innerHTML = `
+        ${card.hidden ? `
+        <div class="stack-hidden-badge">
+            <i class="fas fa-eye-slash"></i> Скрыта
+        </div>
+        ` : ''}
+
+        <div class="test-card ${card.hidden ? 'card-hidden' : ''}" data-id="${card.id}">
+            <div class="card-header">
+                <div class="card-meta">
+                    <div class="card-themes">
+                        ${card.theme.split(',').map(theme => `
+                            <span class="theme-tag">${theme.trim()}</span>
+                        `).join('')}
+                    </div>
+
+                    <span class="card-number">-${card.id}-</span>
+
+                    <span class="card-difficulty ${card.difficulty}">
+                        ${card.difficulty === 'easy' ? '<i class="fas fa-leaf"></i> Легкий' :
+                          card.difficulty === 'hard' ? '<i class="fas fa-fire"></i> Сложный' :
+                          '<i class="fas fa-balance-scale"></i> Средний'}
+                    </span>
+                </div>
+                <h3 class="card-question">
+                    <i class="fas fa-question-circle"></i> ${card.question}
+                </h3>
+            </div>
+
+            <div class="card-body">
+                <div class="answer-section">
+                    <button class="toggle-answer" id="${buttonId}" type="button">
+                        <i class="fas fa-eye"></i> Показать ответ
+                    </button>
+                    <div class="answer-content" id="${answerId}">
+                        <div class="answer-text">
+                            <strong><i class="fas fa-check-circle"></i> Ответ:</strong>
+                            <p>${card.answer}</p>
+                        </div>
+
+                        ${card.explanation ? `
+                        <div class="explanation">
+                            <strong><i class="fas fa-lightbulb"></i> Объяснение:</strong>
+                            <p>${card.explanation}</p>
+                        </div>
+                        ` : ''}
+
+                        <div class="card-actions">
+                            <form action="/card/${card.id}/toggle_hidden" method="POST"
+                                  onsubmit="return confirm('${card.hidden ? 'Показать' : 'Скрыть'} эту карточку?');">
+                                <button type="submit" class="action-btn ${card.hidden ? 'unhide-btn' : 'hide-btn'}">
+                                    ${card.hidden ? '<i class="fas fa-eye"></i> Показать' : '<i class="fas fa-eye-slash"></i> Скрыть'}
+                                </button>
+                            </form>
+
+                            <a href="/card/${card.id}/edit" class="action-btn edit-btn">
+                                <i class="fas fa-edit"></i> Редактировать
+                            </a>
+
+                            <form action="/card/${card.id}/delete" method="POST"
+                                  onsubmit="return confirm('Вы уверены, что хотите удалить этот вопрос?');">
+                                <button type="submit" class="action-btn delete-btn">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Обработчик для кнопки показа/скрытия ответа
+    const toggleBtn = cardDiv.querySelector(`#${buttonId}`);
+    const answerElement = cardDiv.querySelector(`#${answerId}`);
+
+    toggleBtn.addEventListener('click', function() {
+        const isVisible = answerElement.classList.contains('visible');
+
+        if (!isVisible) {
+            // Показываем ответ
+            answerElement.classList.add('visible');
+            this.innerHTML = '<i class="fas fa-eye-slash"></i> Скрыть ответ';
+            this.classList.add('active');
+            cardDiv.classList.add('answer-expanded');
+            isAnswerExpanded = true;
+        } else {
+            // Скрываем ответ
+            answerElement.classList.remove('visible');
+            this.innerHTML = '<i class="fas fa-eye"></i> Показать ответ';
+            this.classList.remove('active');
+            cardDiv.classList.remove('answer-expanded');
+            isAnswerExpanded = false;
+        }
+    });
+
+    return cardDiv;
+}
+
+// Настройка перетаскивания
+function setupCardDrag(cardElement) {
+    cardElement.addEventListener('mousedown', startDrag);
+    cardElement.addEventListener('touchstart', startDragTouch, { passive: false });
+}
+
+// Начало перетаскивания (мышь)
+function startDrag(e) {
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('a')) {
+        return;
+    }
+
+    if (e.button !== 0) return;
+
+    isDragging = true;
+    startX = e.clientX;
+    dragOffset = 0;
+
+    if (currentCardElement) {
+        currentCardElement.classList.add('grabbing');
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+    }
+
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    e.preventDefault();
+}
+
+// Начало перетаскивания (касание)
+function startDragTouch(e) {
+    const target = e.target;
+    if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+        return;
+    }
+
+    if (e.touches.length !== 1) return;
+
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    dragOffset = 0;
+
+    if (currentCardElement) {
+        currentCardElement.classList.add('grabbing');
+    }
+
+    document.addEventListener('touchmove', onDragTouch, { passive: false });
+    document.addEventListener('touchend', stopDragTouch);
+    e.preventDefault();
+}
+
+// Перетаскивание (мышь)
+function onDrag(e) {
+    if (!isDragging || !currentCardElement) return;
+
+    const currentX = e.clientX;
+    dragOffset = currentX - startX;
+
+    updateCardPosition();
+    e.preventDefault();
+}
+
+// Перетаскивание (касание)
+function onDragTouch(e) {
+    if (!isDragging || !currentCardElement || e.touches.length !== 1) return;
+
+    const currentX = e.touches[0].clientX;
+    dragOffset = currentX - startX;
+
+    updateCardPosition();
+    e.preventDefault();
+}
+
+// Обновление позиции карточки
+function updateCardPosition() {
+    if (!currentCardElement) return;
+
+    currentCardElement.classList.add('dragging');
+    currentCardElement.style.setProperty('--drag-offset', dragOffset + 'px');
+    currentCardElement.style.opacity = `${1 - Math.abs(dragOffset) / 300}`;
+}
+
+// Завершение перетаскивания мышью
+function stopDrag(e) {
+    if (!isDragging) return;
+
+    finishDrag();
+
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    e.preventDefault();
+}
+
+// Завершение перетаскивания касанием
+function stopDragTouch(e) {
+    if (!isDragging) return;
+
+    finishDrag();
+
+    document.removeEventListener('touchmove', onDragTouch);
+    document.removeEventListener('touchend', stopDragTouch);
+
+    if (e.cancelable) e.preventDefault();
+}
+
+// Завершение перетаскивания
+function finishDrag() {
+    if (!currentCardElement) return;
+
+    const threshold = 100;
+    currentCardElement.classList.remove('grabbing', 'dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+
+    // Анимация ухода карточки
+    if (Math.abs(dragOffset) > threshold) {
+        const moveDirection = dragOffset > 0 ? 'prev' : 'next';
+        const moveDistance = dragOffset > 0 ? 500 : -500;
+
+        currentCardElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
+        currentCardElement.style.transform = `translateX(calc(-50% + ${moveDistance}px))`;
+        currentCardElement.style.opacity = '0';
+
+        // Сохраняем старую карточку для удаления
+        const oldCard = currentCardElement;
+        const oldCardIndex = currentIndex;
+
+        // Меняем индекс
+        if (moveDirection === 'prev') {
+            currentIndex = getCardIndex(currentIndex - 1);
+        } else {
+            currentIndex = getCardIndex(currentIndex + 1);
+        }
+
+        // Сразу создаем новую карточку
+        setTimeout(() => {
+            createAndAnimateNewCard(oldCard, moveDirection);
+
+            // Удаляем старую карточку после анимации
+            setTimeout(() => {
+                if (oldCard && oldCard.parentNode) {
+                    oldCard.remove();
+                }
+            }, 400);
+        }, 150); // Небольшая задержка перед появлением новой
+
+    } else {
+        // Возвращаем на место
+        currentCardElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        currentCardElement.style.transform = 'translateX(-50%)';
+        currentCardElement.style.opacity = '1';
+
+        setTimeout(() => {
+            if (currentCardElement) {
+                currentCardElement.style.transition = '';
+            }
+        }, 300);
+    }
+
+    isDragging = false;
+    startX = 0;
+    dragOffset = 0;
+}
+
+// Создание и анимация новой карточки
+function createAndAnimateNewCard(oldCard, direction) {
+    const stackContainer = document.getElementById('cardsStack');
+    if (!stackContainer) return;
+
+    // Создаем новую карточку
+    const card = cardsData[currentIndex];
+    const newCardElement = createCardElement(card);
+
+    // Устанавливаем начальную позицию
+    if (direction === 'prev') {
+        // Новая карточка появляется справа (при свайпе вправо)
+        newCardElement.style.transform = 'translateX(100px) translateX(-50%)';
+    } else {
+        // Новая карточка появляется слева (при свайпе влево)
+        newCardElement.style.transform = 'translateX(-100px) translateX(-50%)';
+    }
+    newCardElement.style.opacity = '0';
+
+    // Добавляем в контейнер
+    stackContainer.appendChild(newCardElement);
+
+    // Анимация появления
+    setTimeout(() => {
+        newCardElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
+        newCardElement.style.transform = 'translateX(-50%)';
+        newCardElement.style.opacity = '1';
+
+        // Устанавливаем как текущую
+        currentCardElement = newCardElement;
+        setupCardDrag(newCardElement);
+
+        // Обновляем навигацию
+        updateNavigation();
+
+        // Убираем transition через время
+        setTimeout(() => {
+            if (currentCardElement === newCardElement) {
+                newCardElement.style.transition = '';
+            }
+        }, 400);
+    }, 10);
+}
+
+// Навигация по карточкам с кнопок
+function goToIndex(newIndex, direction) {
+    if (cardsData.length === 0) return false;
+
+    const oldIndex = currentIndex;
+    currentIndex = getCardIndex(newIndex);
+
+    if (currentIndex === oldIndex) return false;
+
+    // Анимация для кнопочной навигации
+    if (currentCardElement) {
+        const moveDistance = direction === 'next' ? -500 : 500;
+        currentCardElement.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+        currentCardElement.style.transform = `translateX(calc(-50% + ${moveDistance}px))`;
+        currentCardElement.style.opacity = '0';
+
+        const oldCard = currentCardElement;
+
+        setTimeout(() => {
+            createAndAnimateNewCard(oldCard, direction === 'next' ? 'next' : 'prev');
+
+            // Удаляем старую карточку
+            setTimeout(() => {
+                if (oldCard && oldCard.parentNode) {
+                    oldCard.remove();
+                }
+            }, 400);
+        }, 150);
+    }
+
+    return true;
+}
+
+// Следующая карточка
+function nextCard() {
+    goToIndex(currentIndex + 1, 'next');
+}
+
+// Предыдущая карточка
+function prevCard() {
+    goToIndex(currentIndex - 1, 'prev');
+}
+
+// Обновление навигации
+function updateNavigation() {
+    const currentPosEl = document.getElementById('currentPos');
+    const totalCardsEl = document.getElementById('totalCards');
+
+    if (currentPosEl) currentPosEl.textContent = currentIndex + 1;
+    if (totalCardsEl) totalCardsEl.textContent = cardsData.length;
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    if (prevBtn) prevBtn.disabled = cardsData.length <= 1;
+    if (nextBtn) nextBtn.disabled = cardsData.length <= 1;
+}
+
+// Настройка управления с клавиатуры
+function setupKeyboard() {
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch(e.key) {
+            case 'ArrowRight':
+            case ' ':
+            case 'PageDown':
+                nextCard();
+                e.preventDefault();
+                break;
+            case 'ArrowLeft':
+            case 'PageUp':
+                prevCard();
+                e.preventDefault();
+                break;
+            case 'Home':
+                // Простой переход без анимации
+                currentIndex = 0;
+                renderCurrentCard();
+                updateNavigation();
+                e.preventDefault();
+                break;
+            case 'End':
+                // Простой переход без анимации
+                currentIndex = cardsData.length - 1;
+                renderCurrentCard();
+                updateNavigation();
+                e.preventDefault();
+                break;
+            case 'Escape':
+                if (isAnswerExpanded && currentCardElement) {
+                    const answerElement = currentCardElement.querySelector('.answer-content');
+                    const button = answerElement?.previousElementSibling;
+                    if (answerElement && button) {
+                        answerElement.classList.remove('visible');
+                        button.innerHTML = '<i class="fas fa-eye"></i> Показать ответ';
+                        button.classList.remove('active');
+                        currentCardElement.classList.remove('answer-expanded');
+                        isAnswerExpanded = false;
+                    }
+                }
+                break;
+        }
+    });
+}
+
+// Настройка обработчиков событий
+function setupEventListeners() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    if (prevBtn) prevBtn.addEventListener('click', prevCard);
+    if (nextBtn) nextBtn.addEventListener('click', nextCard);
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', initStack);
+</script>
+{% endblock %}

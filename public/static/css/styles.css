@@ -2087,3 +2087,38 @@ input:checked + .slider:before {
         font-size: 0.85rem;
     }
 }
+
+/* Переключатель режимов */
+.view-toggle {
+    display: flex;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px;
+    margin-left: 15px;
+}
+
+.view-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.view-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.view-btn.active {
+    background: white;
+    color: #4a6fa5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}

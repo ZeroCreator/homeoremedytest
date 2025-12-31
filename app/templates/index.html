@@ -9,22 +9,28 @@
     <p class="subtitle">Проверьте свои знания по гомеопатии</p>
 
     {% if current_theme or search_query or show_hidden %}
-    <div class="active-filters">
-        <strong>Активные фильтры:</strong>
-        {% if current_theme %}
-        <span class="filter-badge">{{ current_theme }}</span>
-        {% endif %}
-        {% if search_query %}
-        <span class="filter-badge">Поиск: "{{ search_query }}"</span>
-        {% endif %}
-        {% if show_hidden %}
-        <span class="filter-badge">Показаны скрытые карточки</span>
-        {% endif %}
+    <div class="active-filters" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="filters-container">
+            <strong>Активный фильтр:</strong>
+            {% if current_theme %}
+            <span class="filter-badge">{{ current_theme }}</span>
+            <span class="theme-count-badge" style="background: rgba(74, 111, 165, 0.15); color: var(--primary-color); width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(74, 111, 165, 0.3);">
+                {{ cards|length }}
+            </span>
+            {% endif %}
+            {% if search_query %}
+            <span class="filter-badge">Поиск: "{{ search_query }}"</span>
+            {% endif %}
+            {% if show_hidden %}
+            <span class="filter-badge">Показаны скрытые карточки</span>
+            {% endif %}
+        </div>
         <a href="{{ url_for('index') }}" class="clear-filters">
-            <i class="fas fa-times"></i> Сбросить
+            <i class="fas fa-times"></i> Сбросить фильтр
         </a>
     </div>
-    {% endif %}
+{% endif %}
+
 </div>
 
 {% if cards %}

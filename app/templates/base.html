@@ -29,6 +29,25 @@
                     </a>
                 </nav>
 
+                <!-- Переключатель режимов -->
+                <div class="view-toggle">
+                    {% set current_view = request.args.get('view', 'grid') %}
+                    {% set current_theme = request.args.get('theme', '') %}
+                    {% set current_search = request.args.get('search', '') %}
+                    {% set current_show_hidden = request.args.get('show_hidden', 'false') %}
+
+                    <a href="{{ url_for('index') }}?view=grid{% if current_theme %}&theme={{ current_theme }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_show_hidden == 'true' %}&show_hidden=true{% endif %}"
+                       class="view-btn {% if current_view != 'stack' %}active{% endif %}"
+                       title="Режим сетки">
+                        <i class="fas fa-th-large"></i>
+                    </a>
+                    <a href="{{ url_for('index') }}?view=stack{% if current_theme %}&theme={{ current_theme }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_show_hidden == 'true' %}&show_hidden=true{% endif %}"
+                       class="view-btn {% if current_view == 'stack' %}active{% endif %}"
+                       title="Режим стопки карточек">
+                        <i class="fas fa-layer-group"></i>
+                    </a>
+                </div>
+
                 <!-- Выпадающее меню действий -->
                 <div class="header-actions">
                     <div class="dropdown">
@@ -64,6 +83,15 @@
 
                         <div class="search-box">
                             <form method="get" action="{{ url_for('index') }}" id="search-form">
+                                <!-- Сохраняем текущий режим просмотра -->
+                                <input type="hidden" name="view" value="{{ request.args.get('view', 'grid') }}">
+                                <!-- Сохраняем фильтр по теме -->
+                                {% if current_theme %}
+                                <input type="hidden" name="theme" value="{{ current_theme }}">
+                                {% endif %}
+                                <!-- Сохраняем фильтр скрытых карточек -->
+                                <input type="hidden" name="show_hidden" value="{{ show_hidden|lower }}">
+
                                 <div class="search-input">
                                     <i class="fas fa-search"></i>
                                     <input type="text"
@@ -109,14 +137,17 @@
                                 <i class="accordion-icon fas fa-chevron-down"></i>
                             </h4>
                             <div class="theme-list" id="theme-list">
-                                <a href="{{ url_for('index') }}?show_hidden={{ show_hidden|lower }}"
+                                <!-- Ссылка "Все темы" с сохранением режима просмотра -->
+                                {% set current_view = request.args.get('view', 'grid') %}
+                                <a href="?view={{ current_view }}&show_hidden={{ show_hidden|lower }}"
                                    class="theme-filter {% if not current_theme %}active{% endif %}">
                                     <i class="fas fa-layer-group"></i> Все темы
                                     <span class="theme-count">{{ total_cards }}</span>
                                 </a>
 
                                 {% for theme in all_themes %}
-                                <a href="{{ url_for('index', theme=theme, show_hidden=show_hidden) }}"
+                                <!-- Каждая тема с сохранением режима просмотра -->
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&theme={{ theme }}&show_hidden={{ show_hidden }}"
                                    class="theme-filter {% if current_theme == theme %}active{% endif %}">
                                     <i class="fas fa-tag"></i> {{ theme }}
                                     <span class="theme-count">{{ theme_counts.get(theme, 0) if theme_counts else 0 }}</span>
@@ -226,7 +257,9 @@
             const input = document.getElementById('search-input');
             if (input) {
                 input.value = '';
-                input.form.submit();
+                // Сохраняем текущие параметры в форме
+                const form = input.form;
+                form.submit();
             }
         }
 
@@ -234,11 +267,20 @@
         function toggleHiddenFilter(checkbox) {
             const showHidden = checkbox.checked;
             const url = new URL(window.location.href);
+            const currentView = '{{ request.args.get("view", "grid") }}';
 
+            // Устанавливаем все параметры
             if (showHidden) {
                 url.searchParams.set('show_hidden', 'true');
             } else {
                 url.searchParams.delete('show_hidden');
+            }
+
+            // Сохраняем режим просмотра
+            if (currentView !== 'grid') {
+                url.searchParams.set('view', currentView);
+            } else {
+                url.searchParams.delete('view');
             }
 
             window.location.href = url.toString();

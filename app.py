@@ -160,6 +160,8 @@ def index():
         theme_filter = request.args.get('theme', '').strip()
         search_query = request.args.get('search', '').lower()
         show_hidden = request.args.get('show_hidden', 'false').lower() == 'true'
+        # ДОБАВЛЯЕМ ПАРАМЕТР РЕЖИМА ПРОСМОТРА
+        view_mode = request.args.get('view', 'grid')  # grid или stack
 
         # Подсчет скрытых карточек
         hidden_count = sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False))
@@ -196,7 +198,18 @@ def index():
         # Сортировка тем по популярности (по количеству карточек)
         sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
 
-        return render_template('index.html',
+        # ВАЖНО: Выбираем шаблон в зависимости от режима просмотра
+        template_name = 'stack_view.html' if view_mode == 'stack' else 'index.html'
+
+        # Проверяем существование шаблона стопки
+        if view_mode == 'stack':
+            stack_template_path = Path(TEMPLATE_DIR) / 'stack_view.html'
+            if not stack_template_path.exists():
+                # Если шаблон стопки не существует, используем обычный
+                template_name = 'index.html'
+                flash('Режим стопки карточек временно недоступен', 'info')
+
+        return render_template(template_name,
                                cards=filtered_cards,
                                all_themes=sorted_themes,
                                theme_counts=theme_counts,
@@ -204,7 +217,8 @@ def index():
                                search_query=search_query,
                                show_hidden=show_hidden,
                                hidden_count=hidden_count,
-                               total_cards=len(cards_data.get('cards', []))
+                               total_cards=len(cards_data.get('cards', [])),
+                               view_mode=view_mode  # Передаем в шаблон
                                )
     except Exception as e:
         print(f"Ошибка в index: {e}")
@@ -214,7 +228,8 @@ def index():
                                all_themes=[],
                                total_cards=0,
                                hidden_count=0,
-                               show_hidden=False)
+                               show_hidden=False,
+                               view_mode='grid')
 
 
 @app.route('/card/<int:card_id>/toggle_hidden', methods=['POST'])
