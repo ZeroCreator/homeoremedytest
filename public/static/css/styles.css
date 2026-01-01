@@ -1318,6 +1318,28 @@ input:checked + .slider:before {
         text-align: center;
     }
 
+    /* Активные фильтры на мобильных */
+    .active-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 15px;
+        margin: 10px 0 15px;
+    }
+
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .theme-count-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+        margin-left: 6px;
+    }
+
     /* На мобильных все аккордеоны закрыты */
     .accordion.collapsed .accordion-content {
         display: none;
@@ -1968,5 +1990,92 @@ input:checked + .slider:before {
 
     .form-overlay .form-actions .btn {
         width: 100%;
+    }
+}
+
+/* ==========================================================================
+   ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ ФИЛЬТРОВ
+   ========================================================================== */
+/* Контейнер для фильтров (обертка для бейджей) */
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex: 1;
+}
+
+/* Десктоп стили для активных фильтров */
+@media (min-width: 769px) {
+    .active-filters {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+    }
+
+    .active-filters strong {
+        flex-shrink: 0;
+    }
+
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex: 1;
+        justify-content: flex-start;
+    }
+
+    .clear-filters {
+        flex-shrink: 0;
+        margin-left: 10px;
+    }
+}
+
+/* Мобильные стили для активных фильтров */
+@media (max-width: 768px) {
+    .active-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .clear-filters {
+        align-self: flex-start;
+        margin-top: 5px;
+    }
+
+    .theme-count-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+        margin-left: 6px;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+    .active-filters {
+        padding: 12px;
+        margin: 10px 0;
+    }
+
+    .filter-badge {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+    }
+
+    .theme-count-badge {
+        width: 22px;
+        height: 22px;
+        font-size: 0.75rem;
     }
 }

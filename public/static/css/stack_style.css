@@ -804,33 +804,6 @@
         font-size: 0.9rem !important;
         padding: 6px 12px !important;
     }
-
-    /* Фильтры */
-    .active-filters {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        padding: 10px 15px !important;
-        margin: 10px 0 15px !important;
-    }
-
-    .filters-container {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-
-    .clear-filters {
-        align-self: flex-end !important;
-    }
-
-    .theme-count-badge {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 0.8rem !important;
-        margin-left: 6px !important;
-    }
 }
 
 /* ==========================================================================

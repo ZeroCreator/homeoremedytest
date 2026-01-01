@@ -11,18 +11,46 @@
     <h1>Режим тестирования</h1>
     <p class="subtitle">Листайте карточки для проверки знаний</p>
 
-    {% if current_theme %}
-    <div class="active-filters" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <strong>Активный фильтр:</strong>
-            <span class="filter-badge">{{ current_theme }}</span>
-            <span class="theme-count-badge" style="background: rgba(74, 111, 165, 0.15); color: var(--primary-color); width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(74, 111, 165, 0.3);">
-                {{ cards|length }}
+    <!-- Активные фильтры -->
+     {% if current_theme or current_difficulty or current_version or search_query %}
+    <div class="active-filters">
+        <strong>Активные фильтры:</strong>
+        <div class="filters-container">
+            {% if current_theme %}
+            <span class="filter-badge">
+                <i class="fas fa-tag"></i> {{ current_theme }}
+                <span class="theme-count-badge">{{ theme_counts.get(current_theme, 0) }}</span>
             </span>
+            {% endif %}
+
+            {% if current_difficulty %}
+            <span class="filter-badge">
+                <i class="fas fa-signal"></i>
+                {% if current_difficulty == 'easy' %}Легкие
+                {% elif current_difficulty == 'medium' %}Средние
+                {% elif current_difficulty == 'hard' %}Сложные
+                {% endif %}
+                <span class="theme-count-badge">{{ difficulty_counts.get(current_difficulty, 0) }}</span>
+            </span>
+            {% endif %}
+
+            {% if current_version %}
+            <span class="filter-badge">
+                <i class="fas fa-code-branch"></i> Версия {{ current_version }}
+                <span class="theme-count-badge">{{ version_counts.get(current_version, 0) }}</span>
+            </span>
+            {% endif %}
+
+            {% if search_query %}
+            <span class="filter-badge">
+                <i class="fas fa-search"></i> "{{ search_query }}"
+            </span>
+            {% endif %}
         </div>
-        <a href="?view=stack&show_hidden={{ show_hidden|lower }}"
+
+        <a href="?view=grid&show_hidden={{ show_hidden|lower }}"
            class="clear-filters">
-            <i class="fas fa-times"></i> Сбросить фильтр
+            <i class="fas fa-times"></i> Сбросить фильтры
         </a>
     </div>
     {% endif %}
@@ -79,8 +107,8 @@
         <a href="{{ url_for('create_card') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Добавить вопрос
         </a>
-        <!-- ИСПРАВЛЕНО: Сохраняем все текущие фильтры при переходе к сетке -->
-        <a href="?view=grid{% if current_theme %}&theme={{ current_theme }}{% endif %}&show_hidden={{ show_hidden|lower }}"
+        <!-- Ссылка на режим сетки с сохранением всех текущих фильтров -->
+        <a href="?view=grid{% if current_theme %}&theme={{ current_theme }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_version %}&version={{ current_version }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}&show_hidden={{ show_hidden|lower }}"
            class="btn btn-secondary">
             <i class="fas fa-th-large"></i> Перейти к сетке
         </a>
@@ -135,7 +163,7 @@ function renderCurrentCard() {
     const card = cardsData[currentIndex];
     currentCardElement = createCardElement(card);
 
-    // Устанавливаем начальные стили (видимая, по центру)
+    // Устанавливаем начальные стили
     const isMobile = window.innerWidth <= 768;
     currentCardElement.style.position = 'absolute';
     currentCardElement.style.top = isMobile ? '10px' : '20px';
@@ -157,6 +185,13 @@ function createCardElement(card) {
     const buttonId = `toggle-btn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const answerId = `answer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+    // Создаем HTML структуру карточки
+    const difficultyIcons = {
+        'easy': '<i class="fas fa-leaf"></i> Легкий',
+        'medium': '<i class="fas fa-balance-scale"></i> Средний',
+        'hard': '<i class="fas fa-fire"></i> Сложный'
+    };
+
     cardDiv.innerHTML = `
         ${card.hidden ? `
         <div class="stack-hidden-badge">
@@ -176,14 +211,17 @@ function createCardElement(card) {
                     <span class="card-number">-${card.id}-</span>
 
                     <span class="card-difficulty ${card.difficulty}">
-                        ${card.difficulty === 'easy' ? '<i class="fas fa-leaf"></i> Легкий' :
-                          card.difficulty === 'hard' ? '<i class="fas fa-fire"></i> Сложный' :
-                          '<i class="fas fa-balance-scale"></i> Средний'}
+                        ${difficultyIcons[card.difficulty] || difficultyIcons['medium']}
                     </span>
                 </div>
                 <h3 class="card-question">
                     <i class="fas fa-question-circle"></i> ${card.question}
                 </h3>
+                ${card.version ? `
+                <div class="card-version">
+                    <i class="fas fa-code-branch"></i> Версия ${card.version}
+                </div>
+                ` : ''}
             </div>
 
             <div class="card-body">
@@ -393,7 +431,7 @@ function finishDrag() {
         // Сразу создаем новую карточку
         setTimeout(() => {
             createAndAnimateNewCard(oldCard, moveDirection);
-        }, 150); // Задержка для плавности
+        }, 150);
 
     } else {
         // Возвращаем на место
@@ -422,27 +460,24 @@ function createAndAnimateNewCard(oldCard, direction) {
     const card = cardsData[currentIndex];
     const newCardElement = createCardElement(card);
 
-    // Определяем смещение в зависимости от направления
-    // Учитываем адаптивный дизайн для мобильных устройств
+    // Определяем смещение
     const isMobile = window.innerWidth <= 768;
-    const offset = isMobile ? 100 : 100; // Можно настроить разное смещение
+    const offset = isMobile ? 100 : 100;
 
     // Устанавливаем начальную позицию ВНЕ экрана
     if (direction === 'prev') {
-        // Новая карточка появляется справа (при свайпе вправо)
         newCardElement.style.transform = `translateX(calc(-50% + ${offset}px))`;
     } else {
-        // Новая карточка появляется слева (при свайпе влево)
         newCardElement.style.transform = `translateX(calc(-50% - ${offset}px))`;
     }
     newCardElement.style.opacity = '0';
 
-    // Важно: сразу позиционируем правильно
+    // Позиционируем
     newCardElement.style.position = 'absolute';
     newCardElement.style.top = isMobile ? '10px' : '20px';
     newCardElement.style.left = '50%';
 
-    // Добавляем в контейнер ПОД текущей карточкой
+    // Добавляем в контейнер
     stackContainer.appendChild(newCardElement);
 
     // Ждем один кадр для применения стилей
@@ -554,14 +589,12 @@ function setupKeyboard() {
                 e.preventDefault();
                 break;
             case 'Home':
-                // Простой переход без анимации
                 currentIndex = 0;
                 renderCurrentCard();
                 updateNavigation();
                 e.preventDefault();
                 break;
             case 'End':
-                // Простой переход без анимации
                 currentIndex = cardsData.length - 1;
                 renderCurrentCard();
                 updateNavigation();

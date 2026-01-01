@@ -9,6 +9,7 @@
 4: Тема,
 5: Сложность,
 6: Скрытый
+7: Версия,
 """
 import json
 import re
@@ -185,9 +186,9 @@ class ExcelImporter:
 
         # Проверяем заголовки (опционально, для информативности)
         headers = excel_data[0]
-        expected_headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый']
+        expected_headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый', 'Версия']
 
-        print(f"Заголовки в файле: {headers[:7]}")
+        print(f"Заголовки в файле: {headers[:8]}")
         print(f"Ожидаемые заголовки: {expected_headers}")
 
         # Проверяем соответствие заголовков
@@ -215,12 +216,12 @@ class ExcelImporter:
         for row_idx, row in enumerate(excel_data[1:], start=2):
             try:
                 # Фиксированные колонки (согласно экспортеру):
-                # 0: №, 1: Вопрос, 2: Ответ, 3: Объяснение, 4: Тема, 5: Сложность, 6: Скрытый
+                # 0: №, 1: Вопрос, 2: Ответ, 3: Объяснение, 4: Тема, 5: Сложность, 6: Скрытый, 7: Версия
 
                 # Проверяем, что строка имеет достаточно колонок
-                if len(row) < 7:
+                if len(row) < 8:
                     # Дополняем пустыми значениями
-                    row = list(row) + [''] * (7 - len(row))
+                    row = list(row) + [''] * (8 - len(row))
 
                 # Извлекаем значения (уже очищенные при чтении)
                 id_str = row[0] if len(row) > 0 else ''
@@ -230,6 +231,7 @@ class ExcelImporter:
                 theme = row[4] if len(row) > 4 else ''
                 difficulty_str = row[5] if len(row) > 5 else ''
                 hidden_str = row[6] if len(row) > 6 else ''
+                version = row[7] if len(row) > 7 else ''
 
                 # Проверяем обязательные поля
                 if not question and not answer:
@@ -250,7 +252,7 @@ class ExcelImporter:
                 hidden_normalized = hidden_str.lower()
                 hidden = hidden_map.get(hidden_normalized, False)
 
-                # Создаем карточку
+                # Создаем карточку с версией
                 card = {
                     'id': card_id,
                     'question': question,
@@ -258,7 +260,8 @@ class ExcelImporter:
                     'explanation': explanation,
                     'theme': theme,
                     'difficulty': difficulty,
-                    'hidden': hidden
+                    'hidden': hidden,
+                    'version': version
                 }
 
                 cards.append(card)
@@ -266,7 +269,8 @@ class ExcelImporter:
                 # Отладочный вывод
                 if row_idx <= 5 or row_idx >= len(excel_data) - 5:
                     question_preview = question[:50] + '...' if len(question) > 50 else question
-                    print(f"Строка {row_idx}: ID={card_id}, Вопрос='{question_preview}'")
+                    version_preview = f", Версия='{version}'" if version else ""
+                    print(f"Строка {row_idx}: ID={card_id}, Вопрос='{question_preview}'{version_preview}")
 
             except Exception as e:
                 print(f"Ошибка в строке {row_idx}: {str(e)}")
@@ -473,7 +477,7 @@ class ExcelImporter:
                 return False, "Файл не содержит данных"
 
             # Фиксированные заголовки (согласно экспортеру)
-            fixed_headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый']
+            fixed_headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый', 'Версия']
 
             # Проверяем соответствие заголовков
             headers_in_file = excel_data[0] if excel_data else []
@@ -506,13 +510,13 @@ class ExcelImporter:
 
             preview_data.append(mapped_headers)
 
-            # Добавляем данные (только первые 7 колонок)
+            # Добавляем данные (только первые 8 колонок)
             data_start = 1
             data_rows = excel_data[data_start:data_start + limit]
 
             for row_idx, row in enumerate(data_rows, start=2):
                 preview_row = []
-                for i in range(7):  # Только 7 фиксированных колонок
+                for i in range(8):  # Теперь 8 фиксированных колонок
                     if i < len(row):
                         value = row[i]
                         # Обрезаем длинные значения для предпросмотра
@@ -578,7 +582,7 @@ if __name__ == "__main__":
     print(f"  Стало: {repr(cleaned)}")
 
     print("\nОжидаемые заголовки колонок:")
-    expected = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый']
+    expected = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый', 'Версия']
     for i, header in enumerate(expected):
         print(f"  {i+1}. {header}")
 

@@ -26,6 +26,9 @@ class ExcelExporter:
         'Сложный': 'FFEBEE'      # Светло-красный
     }
 
+    # Цвет для скрытых карточек (серый фон)
+    HIDDEN_COLOR = 'F5F5F5'      # Светло-серый
+
     # Коэффициенты для расчета ширины колонок
     CHAR_WIDTH = 1.2  # Ширина одного символа
     MAX_COLUMN_WIDTH = 50
@@ -78,8 +81,8 @@ class ExcelExporter:
             worksheet = workbook.active
             worksheet.title = 'Карточки'
 
-            # Заголовки колонок
-            headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый']
+            # Заголовки колонок (добавлена колонка "Версия")
+            headers = ['№', 'Вопрос', 'Ответ', 'Объяснение', 'Тема', 'Сложность', 'Скрытый', 'Версия']
             for col_idx, header in enumerate(headers, start=1):
                 cell = worksheet.cell(row=1, column=col_idx, value=header)
 
@@ -112,6 +115,7 @@ class ExcelExporter:
                 # Преобразуем данные
                 difficulty_text = difficulty_map.get(card.get('difficulty', 'medium'), 'Средний')
                 hidden_text = 'Да' if card.get('hidden', False) else 'Нет'
+                version_text = card.get('version', '')  # Получаем версию, может быть пустой
 
                 # Очищаем текст от лишних символов
                 def clean_cell_text(text):
@@ -123,7 +127,7 @@ class ExcelExporter:
                     text = text.replace('\r', '\n')
                     return text.strip()
 
-                # Данные для записи
+                # Данные для записи (добавлена версия)
                 data = [
                     card['id'],
                     clean_cell_text(card['question']),
@@ -131,11 +135,16 @@ class ExcelExporter:
                     clean_cell_text(card.get('explanation', '')),
                     clean_cell_text(card['theme']),
                     difficulty_text,
-                    hidden_text
+                    hidden_text,
+                    clean_cell_text(version_text)
                 ]
 
                 # Определяем цвет фона в зависимости от сложности
                 bg_color = self.DIFFICULTY_COLORS.get(difficulty_text, 'FFFFFF')
+
+                # Если карточка скрыта, используем серый фон
+                if card.get('hidden', False):
+                    bg_color = self.HIDDEN_COLOR
 
                 for col_idx, value in enumerate(data, start=1):
                     cell = worksheet.cell(row=row_idx, column=col_idx, value=value)
@@ -149,7 +158,7 @@ class ExcelExporter:
                     )
 
                     # Центрирование для определенных колонок
-                    if col_idx in [1, 6, 7]:  # №, Сложность, Скрытый
+                    if col_idx in [1, 6, 7, 8]:  # №, Сложность, Скрытый, Версия
                         cell.alignment = Alignment(
                             horizontal='center',
                             vertical='center',
@@ -201,31 +210,59 @@ class ExcelExporter:
         """Автоматическая настройка ширины колонок"""
         column_widths = []
 
+        # Устанавливаем фиксированные ширины для последних колонок
+        fixed_widths = {
+            'F': 15,  # Сложность
+            'G': 15,  # Скрытый
+            'H': 12  # Версия
+        }
+
         for column in worksheet.columns:
             max_length = 0
             column_letter = get_column_letter(column[0].column)
 
+            # Если для этой колонки есть фиксированная ширина
+            if column_letter in fixed_widths:
+                worksheet.column_dimensions[column_letter].width = fixed_widths[column_letter]
+                column_widths.append(fixed_widths[column_letter])
+                continue
+
+            # Для остальных колонок вычисляем оптимальную ширину
             for cell in column:
                 try:
                     if cell.value:
-                        # Учитываем переносы строк
-                        lines = str(cell.value).split('\n')
-                        max_line_length = max(len(line) for line in lines) if lines else 0
-                        max_length = max(max_length, max_line_length)
+                        # Учитываем заголовки (первая строка) отдельно
+                        if cell.row == 1:  # Заголовок
+                            cell_length = len(str(cell.value))
+                            max_length = max(max_length, cell_length)
+                        else:  # Данные
+                            lines = str(cell.value).split('\n')
+                            max_line_length = max(len(line) for line in lines) if lines else 0
+                            max_length = max(max_length, max_line_length)
                 except:
                     pass
 
-            # Рассчитываем ширину с учетом форматирования
+            # Рассчитываем ширину с учетом минимальных значений
+            min_widths = {
+                'A': 6,  # №
+                'B': 15,  # Вопрос
+                'C': 15,  # Ответ
+                'D': 15,  # Объяснение
+                'E': 12  # Тема
+            }
+
+            min_width = min_widths.get(column_letter, 8)
             adjusted_width = min(
                 self.MAX_COLUMN_WIDTH,
-                max(self.MIN_COLUMN_WIDTH, (max_length + 2) * self.CHAR_WIDTH)
+                max(min_width, (max_length + 2) * self.CHAR_WIDTH)
             )
 
             worksheet.column_dimensions[column_letter].width = adjusted_width
             column_widths.append(adjusted_width)
 
             # Для отладки
-            print(f"Колонка {column_letter}: ширина {adjusted_width:.1f}")
+            header_text = worksheet.cell(row=1, column=column[0].column).value
+            print(f"Колонка {column_letter} ('{header_text}'): ширина {adjusted_width:.1f}")
 
         return column_widths
 
@@ -236,7 +273,7 @@ class ExcelExporter:
 
             # Считаем максимальное количество строк в ячейках этой строки
             for cell in row:
-                if cell.value and cell.column in [2, 3, 4, 5]:  # Текст в колонках B, C, D, E
+                if cell.value and cell.column in [2, 3, 4, 5, 6]:  # Текст в колонках B, C, D, E, F (вопрос, ответ, объяснение, тема, версия)
                     # Считаем строки с учетом переносов
                     lines = str(cell.value).count('\n') + 1
                     max_lines = max(max_lines, lines)
@@ -323,7 +360,7 @@ def test_exporter():
 
 
 def create_test_data():
-    """Создание тестовых данных"""
+    """Создание тестовых данных с версиями"""
     test_data = {
         "cards": [
             {
@@ -332,6 +369,7 @@ def create_test_data():
                 "answer": "Метод лечения, основанный на принципе 'подобное лечится подобным'.",
                 "explanation": "Создана Самуэлем Ганеманом в конце 18 века.",
                 "theme": "Основы",
+                "version": "Тест 1",
                 "difficulty": "easy",
                 "hidden": False
             },
@@ -341,8 +379,9 @@ def create_test_data():
                 "answer": "1. Принцип подобия_x000D_2. Принцип минимальной дозы",
                 "explanation": "Эти принципы отличают гомеопатию от аллопатии.",
                 "theme": "Принципы",
+                "version": "Тест 2",
                 "difficulty": "medium",
-                "hidden": False
+                "hidden": True  # Скрытая карточка
             }
         ],
         "themes": ["Основы", "Принципы"],

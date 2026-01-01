@@ -435,6 +435,76 @@
                 });
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Находим элементы меню
+            const dropdown = document.querySelector('.dropdown');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (dropdown && dropdownToggle && dropdownMenu) {
+                // Флаг для отслеживания состояния меню
+                let isMenuOpen = false;
+
+                // Функция открытия меню
+                function openMenu() {
+                    dropdownMenu.style.opacity = '1';
+                    dropdownMenu.style.visibility = 'visible';
+                    dropdownMenu.style.transform = 'translateY(0)';
+                    isMenuOpen = true;
+                }
+
+                // Функция закрытия меню
+                function closeMenu() {
+                    dropdownMenu.style.opacity = '0';
+                    dropdownMenu.style.visibility = 'hidden';
+                    dropdownMenu.style.transform = 'translateY(-10px)';
+                    isMenuOpen = false;
+                }
+
+                // Клик по кнопке меню
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (isMenuOpen) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                // Закрытие меню при клике на пункт меню
+                dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        closeMenu();
+                    });
+                });
+
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', function(e) {
+                    if (isMenuOpen &&
+                        !dropdown.contains(e.target) &&
+                        !dropdownMenu.contains(e.target)) {
+                        closeMenu();
+                    }
+                });
+
+                // Закрытие меню при нажатии Escape
+                document.addEventListener('keydown', function(e) {
+                    if (isMenuOpen && e.key === 'Escape') {
+                        closeMenu();
+                    }
+                });
+
+                // Закрытие меню при изменении размера окна
+                window.addEventListener('resize', function() {
+                    if (isMenuOpen) {
+                        closeMenu();
+                    }
+                });
+            }
+        });
     </script>
 
     {% block scripts %}{% endblock %}
