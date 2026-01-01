@@ -22,10 +22,12 @@
 
                 <nav class="main-nav">
                     <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                        <i class="fas fa-home"></i> Главная
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Главная</span>
                     </a>
                     <a href="{{ url_for('create_card') }}" class="nav-link {% if request.path == '/create' %}active{% endif %}">
-                        <i class="fas fa-plus-circle"></i> Добавить вопрос
+                        <i class="fas fa-plus-circle"></i>
+                        <span class="nav-text">Добавить вопрос</span>
                     </a>
                 </nav>
 
