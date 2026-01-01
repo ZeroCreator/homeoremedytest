@@ -150,21 +150,62 @@ def get_theme_counts(cards_data):
     return theme_counts
 
 
+def get_difficulty_counts(cards_data):
+    """Подсчет количества карточек по сложности"""
+    difficulty_counts = {'easy': 0, 'medium': 0, 'hard': 0}
+    for card in cards_data.get('cards', []):
+        difficulty = card.get('difficulty', 'medium')
+        if difficulty in difficulty_counts:
+            difficulty_counts[difficulty] += 1
+    return difficulty_counts
+
+
+def get_version_counts(cards_data):
+    """Подсчет количества карточек по версиям"""
+    version_counts = {}
+    for card in cards_data.get('cards', []):
+        version = card.get('version')
+        if version:
+            version_counts[version] = version_counts.get(version, 0) + 1
+    return version_counts
+
+
+def extract_versions(cards_data):
+    """Извлечение уникальных версий"""
+    versions = set()
+    for card in cards_data.get('cards', []):
+        version = card.get('version')
+        if version:
+            versions.add(version)
+    return sorted(list(versions))
+
+
 # Маршруты
 @app.route('/')
 def index():
     try:
         cards_data = load_cards()
 
-        # Новые параметры фильтрации
+        # Параметры фильтрации
         theme_filter = request.args.get('theme', '').strip()
+        difficulty_filter = request.args.get('difficulty', '').strip()
+        version_filter = request.args.get('version', '').strip()
         search_query = request.args.get('search', '').lower()
         show_hidden = request.args.get('show_hidden', 'false').lower() == 'true'
-        # ДОБАВЛЯЕМ ПАРАМЕТР РЕЖИМА ПРОСМОТРА
-        view_mode = request.args.get('view', 'grid')  # grid или stack
+        view_mode = request.args.get('view', 'grid')
 
         # Подсчет скрытых карточек
         hidden_count = sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False))
+
+        # Получаем все уникальные темы для сайдбара
+        all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)
+        difficulty_counts = get_difficulty_counts(cards_data)
+        version_counts = get_version_counts(cards_data)
+        all_versions = extract_versions(cards_data)
+
+        # Сортировка тем по популярности (по количеству карточек)
+        sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
 
         # Фильтрация
         filtered_cards = []
@@ -179,6 +220,14 @@ def index():
                 if theme_filter not in card_themes:
                     continue
 
+            # Фильтр по сложности
+            if difficulty_filter and card.get('difficulty') != difficulty_filter:
+                continue
+
+            # Фильтр по версии
+            if version_filter and card.get('version') != version_filter:
+                continue
+
             # Поиск по тексту
             if search_query:
                 question = card.get('question', '').lower()
@@ -191,41 +240,42 @@ def index():
 
             filtered_cards.append(card)
 
-        # Получаем все уникальные темы для сайдбара
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
-
-        # Сортировка тем по популярности (по количеству карточек)
-        sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
-
-        # ВАЖНО: Выбираем шаблон в зависимости от режима просмотра
+        # Выбираем шаблон
         template_name = 'stack_view.html' if view_mode == 'stack' else 'index.html'
 
-        # Проверяем существование шаблона стопки
         if view_mode == 'stack':
             stack_template_path = Path(TEMPLATE_DIR) / 'stack_view.html'
             if not stack_template_path.exists():
-                # Если шаблон стопки не существует, используем обычный
                 template_name = 'index.html'
                 flash('Режим стопки карточек временно недоступен', 'info')
 
-        return render_template(template_name,
-                               cards=filtered_cards,
-                               all_themes=sorted_themes,
-                               theme_counts=theme_counts,
-                               current_theme=theme_filter,
-                               search_query=search_query,
-                               show_hidden=show_hidden,
-                               hidden_count=hidden_count,
-                               total_cards=len(cards_data.get('cards', [])),
-                               view_mode=view_mode  # Передаем в шаблон
-                               )
+        return render_template(
+            template_name,
+            cards=filtered_cards,
+            all_themes=sorted_themes,
+            all_versions=all_versions,
+            theme_counts=theme_counts,
+            difficulty_counts=difficulty_counts,
+            version_counts=version_counts,
+            current_theme=theme_filter,
+            current_difficulty=difficulty_filter,
+            current_version=version_filter,
+            search_query=search_query,
+            show_hidden=show_hidden,
+            hidden_count=hidden_count,
+            total_cards=len(cards_data.get('cards', [])),
+            view_mode=view_mode
+        )
     except Exception as e:
         print(f"Ошибка в index: {e}")
         flash('Произошла ошибка при загрузке данных', 'error')
         return render_template('index.html',
                                cards=[],
                                all_themes=[],
+                               all_versions=[],
+                               theme_counts={},
+                               difficulty_counts={'easy': 0, 'medium': 0, 'hard': 0},
+                               version_counts={},
                                total_cards=0,
                                hidden_count=0,
                                show_hidden=False,
@@ -270,13 +320,30 @@ def create_card():
 
             # Валидация
             if not theme or not question or not answer:
+                # Получаем данные для сайдбара
                 all_themes = extract_themes(cards_data)
-                theme_counts = get_theme_counts(cards_data)  # Добавляем
+                theme_counts = get_theme_counts(cards_data)
+                difficulty_counts = get_difficulty_counts(cards_data)
+                version_counts = get_version_counts(cards_data)
+                all_versions = extract_versions(cards_data)
+
                 flash('Все поля обязательны для заполнения', 'error')
                 return render_template('create_card.html',
+                                       difficulty_levels=Config.DIFFICULTY_LEVELS,
+                                       # Данные для сайдбара
                                        all_themes=all_themes,
-                                       theme_counts=theme_counts,  # Добавляем
-                                       difficulty_levels=Config.DIFFICULTY_LEVELS)
+                                       theme_counts=theme_counts,
+                                       difficulty_counts=difficulty_counts,
+                                       version_counts=version_counts,
+                                       all_versions=all_versions,
+                                       total_cards=len(cards_data.get('cards', [])),
+                                       hidden_count=sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
+                                       current_theme='',
+                                       current_difficulty='',
+                                       current_version='',
+                                       search_query='',
+                                       show_hidden=False,
+                                       view_mode='grid')
 
             # Создаем карточку
             new_card = {
@@ -286,6 +353,7 @@ def create_card():
                 "answer": answer,
                 "explanation": request.form.get('explanation', '').strip(),
                 "difficulty": request.form.get('difficulty', 'medium'),
+                "version": request.form.get('version', '').strip() or None,
                 "hidden": False,
             }
 
@@ -299,12 +367,27 @@ def create_card():
         # GET запрос
         cards_data = load_cards()
         all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)  # Добавляем
+        theme_counts = get_theme_counts(cards_data)
+        difficulty_counts = get_difficulty_counts(cards_data)
+        version_counts = get_version_counts(cards_data)
+        all_versions = extract_versions(cards_data)
 
         return render_template('create_card.html',
+                               difficulty_levels=Config.DIFFICULTY_LEVELS,
+                               # Данные для сайдбара
                                all_themes=all_themes,
-                               theme_counts=theme_counts,  # Добавляем
-                               difficulty_levels=Config.DIFFICULTY_LEVELS
+                               theme_counts=theme_counts,
+                               difficulty_counts=difficulty_counts,
+                               version_counts=version_counts,
+                               all_versions=all_versions,
+                               total_cards=len(cards_data.get('cards', [])),
+                               hidden_count=sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
+                               current_theme='',
+                               current_difficulty='',
+                               current_version='',
+                               search_query='',
+                               show_hidden=False,
+                               view_mode='grid'
                                )
     except Exception as e:
         print(f"Ошибка в create_card: {e}")
@@ -316,6 +399,7 @@ def create_card():
 def card_detail(card_id):
     """Детальная страница карточки"""
     try:
+        print(f"DEBUG: Loading card_detail for card_id={card_id}")
         cards_data = load_cards()
 
         # Ищем карточку
@@ -326,8 +410,11 @@ def card_detail(card_id):
                 break
 
         if not card:
+            print(f"DEBUG: Card {card_id} not found!")
             flash('Карточка не найдена', 'error')
             return redirect(url_for('index'))
+
+        print(f"DEBUG: Found card: {card}")
 
         # Получаем информацию о сложности
         difficulty_info = Config.DIFFICULTY_LEVELS.get(
@@ -335,12 +422,35 @@ def card_detail(card_id):
             Config.DIFFICULTY_LEVELS['medium']
         )
 
+        # Получаем данные для сайдбара (чтобы base.html работал)
+        all_themes = extract_themes(cards_data)
+        theme_counts = get_theme_counts(cards_data)
+        difficulty_counts = get_difficulty_counts(cards_data)
+        version_counts = get_version_counts(cards_data)
+        all_versions = extract_versions(cards_data)
+
         return render_template('card_detail.html',
                                card=card,
-                               difficulty_info=difficulty_info
+                               difficulty_info=difficulty_info,
+                               # Данные для сайдбара
+                               all_themes=all_themes,
+                               theme_counts=theme_counts,
+                               difficulty_counts=difficulty_counts,
+                               version_counts=version_counts,
+                               all_versions=all_versions,
+                               total_cards=len(cards_data.get('cards', [])),
+                               hidden_count=sum(1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
+                               current_theme='',
+                               current_difficulty='',
+                               current_version='',
+                               search_query='',
+                               show_hidden=False,
+                               view_mode='grid'
                                )
     except Exception as e:
         print(f"Ошибка в card_detail: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Произошла ошибка при загрузке карточки', 'error')
         return redirect(url_for('index'))
 
@@ -349,6 +459,7 @@ def card_detail(card_id):
 def edit_card(card_id):
     """Редактирование карточки"""
     try:
+        print(f"DEBUG: edit_card called for card_id={card_id}, method={request.method}")
         cards_data = load_cards()
 
         # Ищем карточку
@@ -363,6 +474,7 @@ def edit_card(card_id):
             return redirect(url_for('index'))
 
         if request.method == 'POST':
+            print(f"DEBUG: Processing POST data: {request.form}")
             # Получаем данные
             theme = request.form.get('theme', '').strip()
             question = request.form.get('question', '').strip()
@@ -370,40 +482,81 @@ def edit_card(card_id):
 
             # Валидация
             if not theme or not question or not answer:
-                all_themes = extract_themes(cards_data)
-                theme_counts = get_theme_counts(cards_data)  # Добавляем
                 flash('Все поля обязательны для заполнения', 'error')
+                # Получаем данные для сайдбара
+                all_themes = extract_themes(cards_data)
+                theme_counts = get_theme_counts(cards_data)
+                difficulty_counts = get_difficulty_counts(cards_data)
+                version_counts = get_version_counts(cards_data)
+                all_versions = extract_versions(cards_data)
+
                 return render_template('edit_card.html',
                                        card=card,
+                                       difficulty_levels=Config.DIFFICULTY_LEVELS,
+                                       # Данные для сайдбара
                                        all_themes=all_themes,
-                                       theme_counts=theme_counts,  # Добавляем
-                                       difficulty_levels=Config.DIFFICULTY_LEVELS)
+                                       theme_counts=theme_counts,
+                                       difficulty_counts=difficulty_counts,
+                                       version_counts=version_counts,
+                                       all_versions=all_versions,
+                                       total_cards=len(cards_data.get('cards', [])),
+                                       hidden_count=sum(
+                                           1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
+                                       current_theme='',
+                                       current_difficulty='',
+                                       current_version='',
+                                       search_query='',
+                                       show_hidden=False,
+                                       view_mode='grid')
 
-            # Обновляем данные
+            # Обновляем данные карточки
             card['theme'] = theme
             card['question'] = question
             card['answer'] = answer
             card['explanation'] = request.form.get('explanation', '').strip()
             card['difficulty'] = request.form.get('difficulty', 'medium')
-            card['hidden'] = card.get('hidden', False)
+            version = request.form.get('version', '').strip()
+            card['version'] = version if version else None
 
+            print(f"DEBUG: Updated card data: {card}")
             save_cards(cards_data)
+
             flash('Вопрос успешно обновлен!', 'success')
             return redirect(url_for('card_detail', card_id=card_id))
 
         # GET запрос
+        # Получаем данные для сайдбара
         all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)  # Добавляем
+        theme_counts = get_theme_counts(cards_data)
+        difficulty_counts = get_difficulty_counts(cards_data)
+        version_counts = get_version_counts(cards_data)
+        all_versions = extract_versions(cards_data)
 
         return render_template('edit_card.html',
                                card=card,
+                               difficulty_levels=Config.DIFFICULTY_LEVELS,
+                               # Данные для сайдбара
                                all_themes=all_themes,
-                               theme_counts=theme_counts,  # Добавляем
-                               difficulty_levels=Config.DIFFICULTY_LEVELS)
+                               theme_counts=theme_counts,
+                               difficulty_counts=difficulty_counts,
+                               version_counts=version_counts,
+                               all_versions=all_versions,
+                               total_cards=len(cards_data.get('cards', [])),
+                               hidden_count=sum(1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
+                               current_theme='',
+                               current_difficulty='',
+                               current_version='',
+                               search_query='',
+                               show_hidden=False,
+                               view_mode='grid')
+
     except Exception as e:
         print(f"Ошибка в edit_card: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Произошла ошибка при редактировании', 'error')
         return redirect(url_for('index'))
+
 
 @app.route('/card/<int:card_id>/delete', methods=['POST'])
 def delete_card(card_id):

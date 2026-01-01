@@ -3,118 +3,105 @@
 {% block title %}Редактировать вопрос - Тесты по гомеопатии{% endblock %}
 
 {% block content %}
-<div class="create-form-container">
-    <div class="form-header">
-        <h1><i class="fas fa-edit"></i> Редактировать вопрос</h1>
-        <p>Внесите изменения в тестовый вопрос</p>
-    </div>
+<!-- Затемнение фона -->
+<div class="form-overlay">
+    <div class="create-form-container">
+        <button type="button" class="close-form-btn" onclick="window.history.back();">
+            <i class="fas fa-times"></i>
+        </button>
 
-    <form method="POST" action="{{ url_for('edit_card', card_id=card.id) }}" class="card-form">
-        <div class="form-group">
-            <label for="theme">
-                <i class="fas fa-tags"></i> Темы *
-                <small class="form-hint">(разделяйте запятыми)</small>
-            </label>
-            <input type="text"
-                   id="theme"
-                   name="theme"
-                   value="{{ card.theme }}"
-                   required
-                   placeholder="Например: Растения, Животные, Минералы..."
-                   list="theme-suggestions"
-                   class="theme-input">
-            <datalist id="theme-suggestions">
-                {% for theme in all_themes %}
-                <option value="{{ theme }}">
-                {% endfor %}
-            </datalist>
-            <div class="form-hint">
-                Пример: "Гомеопатия, Диагностика, Симптомы"
+        <div class="form-header">
+            <h1>
+                <i class="fas fa-edit"></i>
+                Редактировать вопрос #{{ card.id }}
+            </h1>
+            <p>Измените нужные поля и сохраните изменения</p>
+        </div>
+
+        <form method="post" class="card-form">
+            <div class="form-group">
+                <label for="theme">
+                    <i class="fas fa-tag"></i> Тема (можно несколько через запятую):
+                </label>
+                <input type="text"
+                       id="theme"
+                       name="theme"
+                       value="{{ card.theme }}"
+                       placeholder="Например: Анатомия, Физиология"
+                       class="form-control"
+                       required>
+                <p class="form-hint">Можно указать несколько тем, разделяя их запятыми</p>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="question">
-                <i class="fas fa-question-circle"></i> Вопрос *
-            </label>
-            <textarea id="question"
-                      name="question"
-                      rows="3"
-                      required
-                      placeholder="Введите вопрос для тестирования...">{{ card.question }}</textarea>
-        </div>
+            <div class="form-group">
+                <label for="question">
+                    <i class="fas fa-question-circle"></i> Вопрос:
+                </label>
+                <textarea id="question"
+                          name="question"
+                          placeholder="Введите текст вопроса..."
+                          class="form-control"
+                          rows="3"
+                          required>{{ card.question }}</textarea>
+            </div>
 
-        <div class="form-group">
-            <label for="answer">
-                <i class="fas fa-check-circle"></i> Ответ *
-            </label>
-            <textarea id="answer"
-                      name="answer"
-                      rows="3"
-                      required
-                      placeholder="Введите правильный ответ...">{{ card.answer }}</textarea>
-        </div>
+            <div class="form-group">
+                <label for="answer">
+                    <i class="fas fa-check-circle"></i> Ответ:
+                </label>
+                <textarea id="answer"
+                          name="answer"
+                          placeholder="Введите правильный ответ..."
+                          class="form-control"
+                          rows="3"
+                          required>{{ card.answer }}</textarea>
+            </div>
 
-        <div class="form-group">
-            <label for="explanation">
-                <i class="fas fa-lightbulb"></i> Объяснение (опционально)
-            </label>
-            <textarea id="explanation"
-                      name="explanation"
-                      rows="4"
-                      placeholder="Дополнительное объяснение ответа...">{{ card.explanation or '' }}</textarea>
-        </div>
+            <div class="form-group">
+                <label for="explanation">
+                    <i class="fas fa-lightbulb"></i> Объяснение (необязательно):
+                </label>
+                <textarea id="explanation"
+                          name="explanation"
+                          placeholder="Пояснение к ответу, дополнительная информация..."
+                          class="form-control"
+                          rows="3">{{ card.explanation if card.explanation else '' }}</textarea>
+            </div>
 
-        <div class="form-group">
-            <label for="difficulty">
-                <i class="fas fa-chart-line"></i> Сложность
-            </label>
-            <select id="difficulty" name="difficulty">
-                <option value="easy" {% if card.difficulty == 'easy' %}selected{% endif %}>Легкий</option>
-                <option value="medium" {% if card.difficulty == 'medium' %}selected{% endif %}>Средний</option>
-                <option value="hard" {% if card.difficulty == 'hard' %}selected{% endif %}>Сложный</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="difficulty">
+                    <i class="fas fa-signal"></i> Сложность:
+                </label>
+                <select id="difficulty" name="difficulty" class="form-control">
+                    {% for key, value in difficulty_levels.items() %}
+                    <option value="{{ key }}" {% if card.difficulty == key %}selected{% endif %}>
+                        {{ value.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="form-actions">
-            <a href="{{ url_for('card_detail', card_id=card.id) }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> Отмена
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Сохранить изменения
-            </button>
-        </div>
-    </form>
+            <div class="form-group">
+                <label for="version">
+                    <i class="fas fa-code-branch"></i> Версия (необязательно):
+                </label>
+                <input type="text"
+                       id="version"
+                       name="version"
+                       value="{{ card.version if card.version else '' }}"
+                       placeholder="Например: 1.0, 2.1"
+                       class="form-control">
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
-
-<script>
-// Автодополнение и нормализация тем
-const themeInput = document.getElementById('theme');
-
-// Очистка и нормализация тем при вводе
-themeInput.addEventListener('blur', function() {
-    // Убираем лишние пробелы и дубликаты
-    let themes = this.value.split(',')
-        .map(theme => theme.trim())
-        .filter(theme => theme.length > 0);
-
-    // Убираем дубликаты
-    themes = [...new Set(themes)];
-
-    this.value = themes.join(', ');
-});
-</script>
-
-<style>
-.form-hint {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    margin-top: 5px;
-    font-style: italic;
-}
-
-.theme-input {
-    position: relative;
-}
-</style>
 {% endblock %}

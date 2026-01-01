@@ -3,34 +3,57 @@
 {% block title %}Главная - Тесты по гомеопатии{% endblock %}
 
 {% block content %}
-<!-- ЗАГОЛОВКИ ПО ЦЕНТРУ -->
 <div class="content-header">
     <h1>Вопросы для тестирования</h1>
     <p class="subtitle">Проверьте свои знания по гомеопатии</p>
 
-    {% if current_theme or search_query or show_hidden %}
-    <div class="active-filters" style="display: flex; justify-content: space-between; align-items: center;">
+    {% if current_theme or current_difficulty or current_version or search_query or show_hidden %}
+    <div class="active-filters">
         <div class="filters-container">
-            <strong>Активный фильтр:</strong>
+            <strong>Активные фильтры:</strong>
             {% if current_theme %}
-            <span class="filter-badge">{{ current_theme }}</span>
-            <span class="theme-count-badge" style="background: rgba(74, 111, 165, 0.15); color: var(--primary-color); width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(74, 111, 165, 0.3);">
-                {{ cards|length }}
+            <span class="filter-badge">
+                <i class="fas fa-tag"></i> {{ current_theme }}
+                <span class="theme-count-badge">{{ cards|length }}</span>
             </span>
             {% endif %}
-            {% if search_query %}
-            <span class="filter-badge">Поиск: "{{ search_query }}"</span>
+
+            {% if current_difficulty %}
+            <span class="filter-badge">
+                <i class="fas fa-signal"></i>
+                {% if current_difficulty == 'easy' %}Легкие
+                {% elif current_difficulty == 'medium' %}Средние
+                {% elif current_difficulty == 'hard' %}Сложные
+                {% endif %}
+                <span class="theme-count-badge">{{ cards|length }}</span>
+            </span>
             {% endif %}
+
+            {% if current_version %}
+            <span class="filter-badge">
+                <i class="fas fa-code-branch"></i> Версия {{ current_version }}
+                <span class="theme-count-badge">{{ cards|length }}</span>
+            </span>
+            {% endif %}
+
+            {% if search_query %}
+            <span class="filter-badge">
+                <i class="fas fa-search"></i> "{{ search_query }}"
+            </span>
+            {% endif %}
+
             {% if show_hidden %}
-            <span class="filter-badge">Показаны скрытые карточки</span>
+            <span class="filter-badge">
+                <i class="fas fa-eye-slash"></i> Скрытые показаны
+            </span>
             {% endif %}
         </div>
+
         <a href="{{ url_for('index') }}" class="clear-filters">
-            <i class="fas fa-times"></i> Сбросить фильтр
+            <i class="fas fa-times"></i> Сбросить фильтры
         </a>
     </div>
-{% endif %}
-
+    {% endif %}
 </div>
 
 {% if cards %}
@@ -38,7 +61,6 @@
     {% for card in cards %}
     <div class="test-card {% if card.hidden %}card-hidden{% endif %}" data-id="{{ card.id }}">
         {% if card.hidden %}
-        <!-- Бейдж скрытой карточки над номером -->
         <div class="card-hidden-badge">
             <i class="fas fa-eye-slash"></i> Скрыта
         </div>
@@ -46,7 +68,6 @@
 
         <div class="card-header">
             <div class="card-meta">
-                <!-- ТЕМЫ СЛЕВА -->
                 <div class="card-themes">
                     {% set themes_list = card.theme.split(',') %}
                     {% for theme in themes_list %}
@@ -54,10 +75,8 @@
                     {% endfor %}
                 </div>
 
-                <!-- НОМЕР ПО ЦЕНТРУ -->
                 <span class="card-number">-{{ card.id }}-</span>
 
-                <!-- СЛОЖНОСТЬ СПРАВА -->
                 <span class="card-difficulty {{ card.difficulty }}">
                     {% if card.difficulty == 'easy' %}
                     <i class="fas fa-leaf"></i> Легкий
@@ -68,6 +87,13 @@
                     {% endif %}
                 </span>
             </div>
+
+            {% if card.version %}
+            <div class="card-version">
+                <i class="fas fa-code-branch"></i> Версия: {{ card.version }}
+            </div>
+            {% endif %}
+
             <h3 class="card-question">
                 <i class="fas fa-question-circle"></i> {{ card.question }}
             </h3>
@@ -92,7 +118,6 @@
                     {% endif %}
 
                     <div class="card-actions">
-                        <!-- Кнопка скрыть/показать -->
                         <form action="{{ url_for('toggle_hidden', card_id=card.id) }}" method="POST"
                               onsubmit="return confirm('{{ 'Показать' if card.hidden else 'Скрыть' }} эту карточку?');"
                               style="display: inline;">
@@ -138,7 +163,6 @@
 {% endif %}
 
 <script>
-// Функция для показа/скрытия ответа
 function toggleAnswer(button) {
     const answerElement = button.nextElementSibling;
 

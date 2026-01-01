@@ -7,7 +7,8 @@
       "explanation": "Bryonia показана при сухих слизистых, колющих болях, усиливающихся от малейшего движения, и сильной жажде.",
       "theme": "Растения",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 2,
@@ -16,7 +17,8 @@
       "explanation": "Apis эффективен при отёках, жалящих и жгучих болях, с улучшением от холода и отсутствием жажды.",
       "theme": "Животные",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 3,
@@ -25,7 +27,8 @@
       "explanation": "Calcarea carbonica применяется при нарушениях обмена, медленном развитии, зябкости и потливости.",
       "theme": "Минералы",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 4,
@@ -34,7 +37,8 @@
       "explanation": "Pulsatilla подходит эмоционально лабильным людям, нуждающимся в утешении, с ухудшением в тепле и улучшением на воздухе.",
       "theme": "Растения",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 5,
@@ -43,7 +47,8 @@
       "explanation": "Chamomilla назначается при раздражительности, особенно у детей, с сильной чувствительностью к боли и шуму.",
       "theme": "Растения",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 6,
@@ -52,7 +57,8 @@
       "explanation": "Aconitum используется при острых состояниях, возникших после переохлаждения или испуга, с сильным страхом и жаждой.",
       "theme": "Растения",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 7,
@@ -61,7 +67,8 @@
       "explanation": "Colocynthis применяется при спастических болях, часто после гнева, с облегчением от давления и сгибания.",
       "theme": "Растения",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 8,
@@ -70,7 +77,8 @@
       "explanation": "Silicea способствует укреплению тканей, применяется при хронических гнойных процессах и психической робости.",
       "theme": "Минералы",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 9,
@@ -79,7 +87,8 @@
       "explanation": "Lachesis подходит ревнивым, разговорчивым людям с чувством удушья и обострением симптомов после пробуждения.",
       "theme": "Животные",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 10,
@@ -88,7 +97,8 @@
       "explanation": "Tuberculinum назначается при слабости иммунитета, физическом и психическом истощении, потребности в переменах.",
       "theme": "Нозоды",
       "difficulty": "easy",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 11,
@@ -97,7 +107,8 @@
       "explanation": "Arsenicum album показан при жгучих болях, сильном беспокойстве, истощении и зябкости, с улучшением от тепла.",
       "theme": "Минералы",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 12,
@@ -106,7 +117,8 @@
       "explanation": "Glonoinum эффективен при пульсирующих головных болях, чувстве распирания, покраснении лица, связанных с перегревом.",
       "theme": "Химические",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 13,
@@ -115,7 +127,8 @@
       "explanation": "Arnica используется при ушибах, травмах, ощущении разбитости и болезненности тканей.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 14,
@@ -124,7 +137,8 @@
       "explanation": "Ignatia применяется при острых эмоциональных потрясениях, противоречивых симптомах и подавленном состоянии.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 15,
@@ -133,7 +147,8 @@
       "explanation": "Carcinosinum назначается людям с повышенной ответственностью, стремлением к совершенству и подавленными эмоциями.",
       "theme": "Нозоды",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 16,
@@ -142,7 +157,8 @@
       "explanation": "Hypericum эффективен при повреждениях нервных тканей, стреляющих болях и последствиях травм.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 17,
@@ -151,7 +167,8 @@
       "explanation": "Ledum используется при травмах, укусах, с ощущением холода в поражённой области и улучшением от холодных примочек.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 18,
@@ -160,7 +177,8 @@
       "explanation": "Ключевые симптомы: раздражительность, спазмы, злоупотребление стимуляторами (кофе, алкоголь), хуже утром.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 19,
@@ -169,7 +187,8 @@
       "explanation": "Ключевые симптомы: неряшливость, жар в стопах, высовывает их из-под одеяла, философские размышления, кожные высыпания.",
       "theme": "Минералы",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 20,
@@ -178,7 +197,8 @@
       "explanation": "Ключевые симптомы: страх проникновения (острого), отёчность, жжение, лучше от холода.",
       "theme": "Животные",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 21,
@@ -187,7 +207,8 @@
       "explanation": "Ключевые симптомы: хаотичная гиперактивность, потребность в музыке и ритме, хитрость.",
       "theme": "Животные",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 22,
@@ -196,7 +217,8 @@
       "explanation": "Ключевые симптомы: холодный пот, коллапс, изнеможение, неутолимая жажда холодного.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 23,
@@ -205,7 +227,8 @@
       "explanation": "Ключевые симптомы: нагноение без должной реакции, склонность к образованию свищей, выталкивает инородное.",
       "theme": "Минералы",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 24,
@@ -214,7 +237,8 @@
       "explanation": "Ключевые симптомы: газообразование, вздутие, страх новой ответственности, хуже 16-20 часов.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 25,
@@ -223,7 +247,8 @@
       "explanation": "Ключевые симптомы: последствия сдержанного негодования, ранимое самолюбие, кожные и мочеполовые симптомы.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 26,
@@ -232,7 +257,8 @@
       "explanation": "Ключевые симптомы: периодичность симптомов, точность как по часам, невралгии, малярийные симптомы.",
       "theme": "Растения",
       "difficulty": "hard",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 27,
@@ -241,7 +267,8 @@
       "explanation": "Ключевые симптомы: страх одиночества и темноты, жажда холодных напитков, кровоточивость, улучшение от сна.",
       "theme": "Минералы",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 28,
@@ -250,7 +277,8 @@
       "explanation": "Ключевые симптомы: скованность и боль, проходящая от движения, хуже в покое и при сырости.",
       "theme": "Растения",
       "difficulty": "medium",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 29,
@@ -259,7 +287,8 @@
       "explanation": "Ключевые симптомы: ощущение грязи, зябкость, зуд кожи, особенно в тепле постели.",
       "theme": "Нозоды",
       "difficulty": "hard",
-      "hidden": false
+      "hidden": false,
+      "version": "Тест 1"
     },
     {
       "id": 30,
@@ -268,6 +297,17 @@
       "explanation": "Ключевые симптомы: последствия вакцин, бородавки, полипы, ощущение, будто тело хрупкое или «разбитое».",
       "theme": "Растения",
       "difficulty": "medium",
+      "hidden": false,
+      "version": "Тест 1"
+    },
+    {
+      "id": 31,
+      "theme": "Растения",
+      "question": "Тест",
+      "answer": "Тест",
+      "explanation": "",
+      "difficulty": "medium",
+      "version": "Тест 2",
       "hidden": false
     }
   ],
@@ -278,5 +318,5 @@
     "Растения",
     "Химические"
   ],
-  "next_id": 31
+  "next_id": 32
 }

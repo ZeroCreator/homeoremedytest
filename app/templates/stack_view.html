@@ -118,7 +118,7 @@ function initStack() {
     setupKeyboard();
 }
 
-// Рендер текущей карточки (без анимации)
+// Рендер текущей карточки
 function renderCurrentCard() {
     const stackContainer = document.getElementById('cardsStack');
     if (!stackContainer) return;
@@ -135,7 +135,11 @@ function renderCurrentCard() {
     const card = cardsData[currentIndex];
     currentCardElement = createCardElement(card);
 
-    // Устанавливаем начальные стили
+    // Устанавливаем начальные стили (видимая, по центру)
+    const isMobile = window.innerWidth <= 768;
+    currentCardElement.style.position = 'absolute';
+    currentCardElement.style.top = isMobile ? '10px' : '20px';
+    currentCardElement.style.left = '50%';
     currentCardElement.style.transform = 'translateX(-50%)';
     currentCardElement.style.opacity = '1';
 
@@ -389,14 +393,7 @@ function finishDrag() {
         // Сразу создаем новую карточку
         setTimeout(() => {
             createAndAnimateNewCard(oldCard, moveDirection);
-
-            // Удаляем старую карточку после анимации
-            setTimeout(() => {
-                if (oldCard && oldCard.parentNode) {
-                    oldCard.remove();
-                }
-            }, 400);
-        }, 150); // Небольшая задержка перед появлением новой
+        }, 150); // Задержка для плавности
 
     } else {
         // Возвращаем на место
@@ -425,39 +422,60 @@ function createAndAnimateNewCard(oldCard, direction) {
     const card = cardsData[currentIndex];
     const newCardElement = createCardElement(card);
 
-    // Устанавливаем начальную позицию
+    // Определяем смещение в зависимости от направления
+    // Учитываем адаптивный дизайн для мобильных устройств
+    const isMobile = window.innerWidth <= 768;
+    const offset = isMobile ? 100 : 100; // Можно настроить разное смещение
+
+    // Устанавливаем начальную позицию ВНЕ экрана
     if (direction === 'prev') {
         // Новая карточка появляется справа (при свайпе вправо)
-        newCardElement.style.transform = 'translateX(100px) translateX(-50%)';
+        newCardElement.style.transform = `translateX(calc(-50% + ${offset}px))`;
     } else {
         // Новая карточка появляется слева (при свайпе влево)
-        newCardElement.style.transform = 'translateX(-100px) translateX(-50%)';
+        newCardElement.style.transform = `translateX(calc(-50% - ${offset}px))`;
     }
     newCardElement.style.opacity = '0';
 
-    // Добавляем в контейнер
+    // Важно: сразу позиционируем правильно
+    newCardElement.style.position = 'absolute';
+    newCardElement.style.top = isMobile ? '10px' : '20px';
+    newCardElement.style.left = '50%';
+
+    // Добавляем в контейнер ПОД текущей карточкой
     stackContainer.appendChild(newCardElement);
 
-    // Анимация появления
-    setTimeout(() => {
-        newCardElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
-        newCardElement.style.transform = 'translateX(-50%)';
-        newCardElement.style.opacity = '1';
+    // Ждем один кадр для применения стилей
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            // Анимация появления
+            newCardElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
+            newCardElement.style.transform = 'translateX(-50%)';
+            newCardElement.style.opacity = '1';
 
-        // Устанавливаем как текущую
-        currentCardElement = newCardElement;
-        setupCardDrag(newCardElement);
+            // Устанавливаем как текущую
+            const previousCard = currentCardElement;
+            currentCardElement = newCardElement;
+            setupCardDrag(newCardElement);
 
-        // Обновляем навигацию
-        updateNavigation();
+            // Обновляем навигацию
+            updateNavigation();
 
-        // Убираем transition через время
-        setTimeout(() => {
-            if (currentCardElement === newCardElement) {
-                newCardElement.style.transition = '';
-            }
-        }, 400);
-    }, 10);
+            // Убираем transition через время
+            setTimeout(() => {
+                if (currentCardElement === newCardElement) {
+                    newCardElement.style.transition = '';
+                }
+
+                // Удаляем старую карточку после завершения анимаций
+                if (previousCard && previousCard.parentNode) {
+                    setTimeout(() => {
+                        previousCard.remove();
+                    }, 100);
+                }
+            }, 400);
+        });
+    });
 }
 
 // Навигация по карточкам с кнопок
