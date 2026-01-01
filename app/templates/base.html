@@ -257,7 +257,6 @@
             const input = document.getElementById('search-input');
             if (input) {
                 input.value = '';
-                // Сохраняем текущие параметры в форме
                 const form = input.form;
                 form.submit();
             }
@@ -269,14 +268,12 @@
             const url = new URL(window.location.href);
             const currentView = '{{ request.args.get("view", "grid") }}';
 
-            // Устанавливаем все параметры
             if (showHidden) {
                 url.searchParams.set('show_hidden', 'true');
             } else {
                 url.searchParams.delete('show_hidden');
             }
 
-            // Сохраняем режим просмотра
             if (currentView !== 'grid') {
                 url.searchParams.set('view', currentView);
             } else {
@@ -286,7 +283,7 @@
             window.location.href = url.toString();
         }
 
-        // Автоматическое скрытие flash сообщений через 5 секунд
+        // Автоматическое скрытие flash сообщений
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(alert => {
                 setTimeout(() => {
@@ -296,73 +293,131 @@
             });
         }, 100);
 
-        // Функция переключения аккордеона
-        function toggleAccordion() {
-            // Работает только на мобильных
-            if (window.innerWidth <= 768) {
-                const themeFilters = document.getElementById('theme-filters');
-                const themeList = document.getElementById('theme-list');
+        // Аккордеон для мобильных
+        function initAccordion() {
+            const themeFilters = document.getElementById('theme-filters');
+            if (!themeFilters || window.innerWidth > 768) return;
 
-                themeFilters.classList.toggle('collapsed');
+            const header = themeFilters.querySelector('.accordion-header');
+            if (!header) return;
 
-                // Если открываем, прокручиваем к активной теме
-                if (!themeFilters.classList.contains('collapsed')) {
-                    setTimeout(() => {
-                        const activeTheme = document.querySelector('.theme-filter.active');
-                        if (activeTheme) {
-                            // Прокручиваем список к активной теме
-                            themeList.scrollTop = activeTheme.offsetTop - 20;
-                        }
-                    }, 100);
-                }
+            themeFilters.classList.add('collapsed');
 
-                // Добавляем/убираем возможность скролла для body при открытом аккордеоне
-                if (!themeFilters.classList.contains('collapsed')) {
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    document.body.style.overflow = '';
-                }
-            }
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleAccordion();
+            });
         }
 
-        // Закрываем аккордеон при клике на тему и возвращаем скролл
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.theme-filter').forEach(filter => {
-                filter.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        const themeFilters = document.getElementById('theme-filters');
-                        // Небольшая задержка перед закрытием
-                        setTimeout(() => {
-                            themeFilters.classList.add('collapsed');
-                            document.body.style.overflow = ''; // Восстанавливаем скролл
-                        }, 300);
-                    }
-                });
-            });
+        function toggleAccordion() {
+            const themeFilters = document.getElementById('theme-filters');
+            if (!themeFilters || window.innerWidth > 768) return;
 
-            // Инициализируем аккордеон как свернутый на мобильных
-            if (window.innerWidth <= 768) {
-                const themeFilters = document.getElementById('theme-filters');
-                themeFilters.classList.add('collapsed');
-            }
+            themeFilters.classList.toggle('collapsed');
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            initAccordion();
         });
 
-        // Восстанавливаем скролл при изменении размера окна
+        // Адаптация аккордеона при изменении размера
         window.addEventListener('resize', function() {
-            document.body.style.overflow = '';
-
             const themeFilters = document.getElementById('theme-filters');
             if (!themeFilters) return;
 
             if (window.innerWidth <= 768) {
-                // На мобильных - сворачиваем если не свернут
-                if (!themeFilters.classList.contains('collapsed')) {
-                    themeFilters.classList.add('collapsed');
-                }
+                themeFilters.classList.add('collapsed');
             } else {
-                // На десктопах - разворачиваем и убираем класс collapsed
                 themeFilters.classList.remove('collapsed');
             }
+        });
+
+        <script>
+        // ... предыдущий код (автопоиск, фильтры, аккордеон) ...
+
+        // ФИКСАЦИЯ САЙДБАРА С ПРЕДОТВРАЩЕНИЕМ НАПОЛЗАНИЯ НА ФУТЕР
+        function initSidebarSticky() {
+            const sidebar = document.querySelector('.sidebar');
+            const footer = document.querySelector('.footer');
+
+            if (!sidebar || !footer) return;
+
+            // Только для десктопов
+            if (window.innerWidth <= 1024) return;
+
+            const updateSidebar = () => {
+                const header = document.querySelector('.header');
+                const headerHeight = header ? header.offsetHeight : 70;
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+
+                // Получаем позицию футера
+                const footerTop = footer.getBoundingClientRect().top + scrollTop;
+                const viewportBottom = scrollTop + windowHeight;
+
+                // Вычисляем максимальную доступную высоту для сайдбара
+                const maxSidebarHeight = windowHeight - 40; // 40px отступы сверху и снизу
+
+                // Фиксируем сайдбар, если еще не дошли до футера
+                if (viewportBottom < footerTop - 20) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.top = headerHeight + 20 + 'px';
+                    sidebar.style.maxHeight = maxSidebarHeight + 'px';
+                } else {
+                    // Когда приближаемся к футеру, открепляем сайдбар
+                    sidebar.style.position = 'absolute';
+                    sidebar.style.top = 'auto';
+                    sidebar.style.bottom = '20px';
+                    sidebar.style.maxHeight = (footerTop - scrollTop - 40) + 'px';
+                }
+            };
+
+            // Обработчик прокрутки с throttle
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        updateSidebar();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Обработчик изменения размера
+            window.addEventListener('resize', updateSidebar);
+
+            // Инициализация
+            updateSidebar();
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            initAccordion();
+
+            // Даем время на загрузку всех элементов
+            setTimeout(() => {
+                if (window.innerWidth > 1024) {
+                    initSidebarSticky();
+                }
+            }, 300);
+        });
+
+        // Обновляем при изменении размера окна
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.style.position = '';
+                sidebar.style.top = '';
+                sidebar.style.maxHeight = '';
+            }
+
+            setTimeout(() => {
+                if (window.innerWidth > 1024) {
+                    initSidebarSticky();
+                }
+            }, 100);
         });
     </script>
 

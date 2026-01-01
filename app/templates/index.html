@@ -75,10 +75,10 @@
 
         <div class="card-body">
             <div class="answer-section">
-                <button class="toggle-answer" onclick="toggleAnswer({{ card.id }})">
+                <button class="toggle-answer" onclick="toggleAnswer(this)">
                     <i class="fas fa-eye"></i> Показать ответ
                 </button>
-                <div class="answer-content" id="answer-{{ card.id }}" style="display: none;">
+                <div class="answer-content" style="display: none;">
                     <div class="answer-text">
                         <strong><i class="fas fa-check-circle"></i> Ответ:</strong>
                         <p>{{ card.answer }}</p>
@@ -138,9 +138,9 @@
 {% endif %}
 
 <script>
-function toggleAnswer(cardId) {
-    const answerElement = document.getElementById(`answer-${cardId}`);
-    const button = answerElement.previousElementSibling;
+// Функция для показа/скрытия ответа
+function toggleAnswer(button) {
+    const answerElement = button.nextElementSibling;
 
     if (answerElement.style.display === 'none') {
         answerElement.style.display = 'block';
