@@ -308,7 +308,7 @@
       "explanation": "",
       "difficulty": "medium",
       "version": "Тест 2",
-      "hidden": true
+      "hidden": false
     }
   ],
   "themes": [
