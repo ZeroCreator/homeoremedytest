@@ -71,6 +71,15 @@
                         </div>
                     </div>
                 </div>
+
+                {% if has_yandex %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('system_status') }}">
+                        <i class="fas fa-info-circle"></i> Статус
+                    </a>
+                </li>
+                {% endif %}
+
             </div>
         </header>
 

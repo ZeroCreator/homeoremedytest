@@ -5,16 +5,29 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, f
 from datetime import datetime
 from pathlib import Path
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 
-# Импортируем пути из единого источника
-from paths import JSON_FILE, UPLOAD_DIR, STATIC_DIR, TEMPLATE_DIR, IS_VERCEL
+# Загружаем переменные окружения
+load_dotenv()
 
 # Импортируем конфигурацию
 from config import Config
 
+# Выводим конфигурацию
+Config.print_config()
+
+# Импортируем пути из paths.py
+from paths import UPLOAD_DIR, STATIC_DIR, TEMPLATE_DIR, IS_VERCEL
+
+# Используем JSON_FILE из Config
+JSON_FILE = Config.JSON_FILE
+
 # Импортируем модули для работы с Excel
 from excel_utils.exporter import ExcelExporter
 from excel_utils.importer import ExcelImporter
+
+# Импортируем гибридное хранилище
+from storage import HybridStorage
 
 print(f"Starting app...")
 print(f"JSON file path: {JSON_FILE}")
@@ -30,42 +43,32 @@ app.config['SECRET_KEY'] = Config.SECRET_KEY
 app.config['JSON_FILE'] = JSON_FILE
 app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 
+# Создаем гибридное хранилище
+storage = HybridStorage(
+    mode=Config.STORAGE_MODE,
+    local_path=JSON_FILE,
+    yandex_token=Config.YANDEX_DISK_TOKEN,
+    yandex_path=Config.YANDEX_DISK_PATH
+)
+
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
 
-# Создаем необходимые папки при запуске
+def allowed_file(filename):
+    """Проверка расширения файла"""
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# Инициализируем папки
 def init_folders():
     try:
-        # Создаем папку для загрузок
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         print(f"Created upload dir: {UPLOAD_DIR}")
 
-        # Создаем JSON файл если не существует
-        if not JSON_FILE.exists():
-            data = {
-                "cards": [],
-                "themes": Config.DEFAULT_THEMES.copy(),
-                "next_id": 1
-            }
-            with open(JSON_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"Created JSON file with default data: {JSON_FILE}")
-        else:
-            # Проверяем содержимое файла
-            try:
-                with open(JSON_FILE, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    cards_count = len(data.get('cards', []))
-                    print(f"JSON file exists with {cards_count} cards: {JSON_FILE}")
-            except json.JSONDecodeError:
-                print(f"Warning: JSON file is corrupted, recreating: {JSON_FILE}")
-                data = {
-                    "cards": [],
-                    "themes": Config.DEFAULT_THEMES.copy(),
-                    "next_id": 1
-                }
-                with open(JSON_FILE, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
+        # Загружаем начальные данные через хранилище
+        data = storage.load()
+        print(f"Initial data loaded: {len(data.get('cards', []))} cards")
 
     except Exception as e:
         print(f"Error in init_folders: {e}", file=sys.stderr)
@@ -75,53 +78,31 @@ def init_folders():
 init_folders()
 
 
-def allowed_file(filename):
-    """Проверка расширения файла"""
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-# Функции для работы с данными
+# Функции для работы с данными через гибридное хранилище
 def load_cards():
-    """Загрузка карточек из JSON файла"""
+    """Загрузка карточек через гибридное хранилище"""
     try:
-        json_file = app.config['JSON_FILE']
-        print(f"DEBUG: Loading cards from {json_file}")
-
-        if json_file.exists():
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                print(f"DEBUG: Successfully loaded {len(data.get('cards', []))} cards")
-                return data
-        else:
-            print(f"DEBUG: JSON file not found, creating default")
-            data = {
-                "cards": [],
-                "themes": Config.DEFAULT_THEMES.copy(),
-                "next_id": 1
-            }
-            with open(json_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            return data
-
+        return storage.load()
     except Exception as e:
-        print(f"Ошибка загрузки: {e}", file=sys.stderr)
-        return {
-            "cards": [],
-            "themes": Config.DEFAULT_THEMES.copy(),
-            "next_id": 1
-        }
+        print(f"Ошибка загрузки через хранилище: {e}", file=sys.stderr)
+        return {"cards": [], "themes": Config.DEFAULT_THEMES.copy(), "next_id": 1}
 
 
 def save_cards(data):
-    """Сохранение карточек"""
+    """Сохранение карточек через гибридное хранилище"""
     try:
-        json_file = app.config['JSON_FILE']
-        print(f"DEBUG: Saving {len(data.get('cards', []))} cards to {json_file}")
-        with open(json_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        results = storage.save(data)
+
+        # Проверяем результаты сохранения
+        if results.get('yandex') is False:
+            flash('Данные сохранены локально, но не удалось синхронизировать с Яндекс.Диском', 'warning')
+        elif results.get('yandex') is True:
+            flash('Данные успешно сохранены и синхронизированы с Яндекс.Диском', 'success')
+        else:
+            flash('Данные успешно сохранены локально', 'success')
+
     except Exception as e:
-        print(f"Ошибка сохранения: {e}", file=sys.stderr)
+        print(f"Ошибка сохранения через хранилище: {e}", file=sys.stderr)
         flash('Ошибка сохранения данных', 'error')
 
 
@@ -180,6 +161,29 @@ def extract_versions(cards_data):
     return sorted(list(versions))
 
 
+def get_template_variables(cards_data, **overrides):
+    """Получение всех переменных для шаблона с возможностью переопределения"""
+    base_vars = {
+        'all_themes': extract_themes(cards_data),
+        'theme_counts': get_theme_counts(cards_data),
+        'difficulty_counts': get_difficulty_counts(cards_data),
+        'version_counts': get_version_counts(cards_data),
+        'all_versions': extract_versions(cards_data),
+        'total_cards': len(cards_data.get('cards', [])),
+        'hidden_count': sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
+        'current_theme': '',
+        'current_difficulty': '',
+        'current_version': '',
+        'search_query': '',
+        'show_hidden': False,
+        'view_mode': 'grid',
+        'storage_mode': storage.mode,
+        'has_yandex': storage.has_yandex
+    }
+    base_vars.update(overrides)
+    return base_vars
+
+
 # Маршруты
 @app.route('/')
 def index():
@@ -194,18 +198,16 @@ def index():
         show_hidden = request.args.get('show_hidden', 'false').lower() == 'true'
         view_mode = request.args.get('view', 'grid')
 
-        # Подсчет скрытых карточек
-        hidden_count = sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False))
-
-        # Получаем все уникальные темы для сайдбара
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
-        difficulty_counts = get_difficulty_counts(cards_data)
-        version_counts = get_version_counts(cards_data)
-        all_versions = extract_versions(cards_data)
-
-        # Сортировка тем по популярности (по количеству карточек)
-        sorted_themes = sorted(all_themes, key=lambda x: (-theme_counts.get(x, 0), x))
+        # Получаем базовые переменные
+        template_vars = get_template_variables(
+            cards_data,
+            current_theme=theme_filter,
+            current_difficulty=difficulty_filter,
+            current_version=version_filter,
+            search_query=search_query,
+            show_hidden=show_hidden,
+            view_mode=view_mode
+        )
 
         # Фильтрация
         filtered_cards = []
@@ -249,26 +251,12 @@ def index():
                 template_name = 'index.html'
                 flash('Режим стопки карточек временно недоступен', 'info')
 
-        return render_template(
-            template_name,
-            cards=filtered_cards,
-            all_themes=sorted_themes,
-            all_versions=all_versions,
-            theme_counts=theme_counts,
-            difficulty_counts=difficulty_counts,
-            version_counts=version_counts,
-            current_theme=theme_filter,
-            current_difficulty=difficulty_filter,
-            current_version=version_filter,
-            search_query=search_query,
-            show_hidden=show_hidden,
-            hidden_count=hidden_count,
-            total_cards=len(cards_data.get('cards', [])),
-            view_mode=view_mode
-        )
+        template_vars['cards'] = filtered_cards
+        return render_template(template_name, **template_vars)
     except Exception as e:
         print(f"Ошибка в index: {e}")
         flash('Произошла ошибка при загрузке данных', 'error')
+        # Возвращаем пустой шаблон с минимальными переменными
         return render_template('index.html',
                                cards=[],
                                all_themes=[],
@@ -279,7 +267,9 @@ def index():
                                total_cards=0,
                                hidden_count=0,
                                show_hidden=False,
-                               view_mode='grid')
+                               view_mode='grid',
+                               storage_mode=storage.mode,
+                               has_yandex=storage.has_yandex)
 
 
 @app.route('/card/<int:card_id>/toggle_hidden', methods=['POST'])
@@ -310,9 +300,10 @@ def toggle_hidden(card_id):
 def create_card():
     """Создание карточки"""
     try:
-        if request.method == 'POST':
-            cards_data = load_cards()
+        cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
 
+        if request.method == 'POST':
             # Получаем данные
             theme = request.form.get('theme', '').strip()
             question = request.form.get('question', '').strip()
@@ -320,30 +311,10 @@ def create_card():
 
             # Валидация
             if not theme or not question or not answer:
-                # Получаем данные для сайдбара
-                all_themes = extract_themes(cards_data)
-                theme_counts = get_theme_counts(cards_data)
-                difficulty_counts = get_difficulty_counts(cards_data)
-                version_counts = get_version_counts(cards_data)
-                all_versions = extract_versions(cards_data)
-
                 flash('Все поля обязательны для заполнения', 'error')
                 return render_template('create_card.html',
                                        difficulty_levels=Config.DIFFICULTY_LEVELS,
-                                       # Данные для сайдбара
-                                       all_themes=all_themes,
-                                       theme_counts=theme_counts,
-                                       difficulty_counts=difficulty_counts,
-                                       version_counts=version_counts,
-                                       all_versions=all_versions,
-                                       total_cards=len(cards_data.get('cards', [])),
-                                       hidden_count=sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
-                                       current_theme='',
-                                       current_difficulty='',
-                                       current_version='',
-                                       search_query='',
-                                       show_hidden=False,
-                                       view_mode='grid')
+                                       **template_vars)
 
             # Создаем карточку
             new_card = {
@@ -365,30 +336,9 @@ def create_card():
             return redirect(url_for('index'))
 
         # GET запрос
-        cards_data = load_cards()
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
-        difficulty_counts = get_difficulty_counts(cards_data)
-        version_counts = get_version_counts(cards_data)
-        all_versions = extract_versions(cards_data)
-
         return render_template('create_card.html',
                                difficulty_levels=Config.DIFFICULTY_LEVELS,
-                               # Данные для сайдбара
-                               all_themes=all_themes,
-                               theme_counts=theme_counts,
-                               difficulty_counts=difficulty_counts,
-                               version_counts=version_counts,
-                               all_versions=all_versions,
-                               total_cards=len(cards_data.get('cards', [])),
-                               hidden_count=sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
-                               current_theme='',
-                               current_difficulty='',
-                               current_version='',
-                               search_query='',
-                               show_hidden=False,
-                               view_mode='grid'
-                               )
+                               **template_vars)
     except Exception as e:
         print(f"Ошибка в create_card: {e}")
         flash('Произошла ошибка при создании вопроса', 'error')
@@ -401,6 +351,7 @@ def card_detail(card_id):
     try:
         print(f"DEBUG: Loading card_detail for card_id={card_id}")
         cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
 
         # Ищем карточку
         card = None
@@ -422,31 +373,9 @@ def card_detail(card_id):
             Config.DIFFICULTY_LEVELS['medium']
         )
 
-        # Получаем данные для сайдбара (чтобы base.html работал)
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
-        difficulty_counts = get_difficulty_counts(cards_data)
-        version_counts = get_version_counts(cards_data)
-        all_versions = extract_versions(cards_data)
-
-        return render_template('card_detail.html',
-                               card=card,
-                               difficulty_info=difficulty_info,
-                               # Данные для сайдбара
-                               all_themes=all_themes,
-                               theme_counts=theme_counts,
-                               difficulty_counts=difficulty_counts,
-                               version_counts=version_counts,
-                               all_versions=all_versions,
-                               total_cards=len(cards_data.get('cards', [])),
-                               hidden_count=sum(1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
-                               current_theme='',
-                               current_difficulty='',
-                               current_version='',
-                               search_query='',
-                               show_hidden=False,
-                               view_mode='grid'
-                               )
+        template_vars['card'] = card
+        template_vars['difficulty_info'] = difficulty_info
+        return render_template('card_detail.html', **template_vars)
     except Exception as e:
         print(f"Ошибка в card_detail: {e}")
         import traceback
@@ -461,6 +390,7 @@ def edit_card(card_id):
     try:
         print(f"DEBUG: edit_card called for card_id={card_id}, method={request.method}")
         cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
 
         # Ищем карточку
         card = None
@@ -483,31 +413,11 @@ def edit_card(card_id):
             # Валидация
             if not theme or not question or not answer:
                 flash('Все поля обязательны для заполнения', 'error')
-                # Получаем данные для сайдбара
-                all_themes = extract_themes(cards_data)
-                theme_counts = get_theme_counts(cards_data)
-                difficulty_counts = get_difficulty_counts(cards_data)
-                version_counts = get_version_counts(cards_data)
-                all_versions = extract_versions(cards_data)
-
+                template_vars['card'] = card
                 return render_template('edit_card.html',
                                        card=card,
                                        difficulty_levels=Config.DIFFICULTY_LEVELS,
-                                       # Данные для сайдбара
-                                       all_themes=all_themes,
-                                       theme_counts=theme_counts,
-                                       difficulty_counts=difficulty_counts,
-                                       version_counts=version_counts,
-                                       all_versions=all_versions,
-                                       total_cards=len(cards_data.get('cards', [])),
-                                       hidden_count=sum(
-                                           1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
-                                       current_theme='',
-                                       current_difficulty='',
-                                       current_version='',
-                                       search_query='',
-                                       show_hidden=False,
-                                       view_mode='grid')
+                                       **template_vars)
 
             # Обновляем данные карточки
             card['theme'] = theme
@@ -525,30 +435,11 @@ def edit_card(card_id):
             return redirect(url_for('card_detail', card_id=card_id))
 
         # GET запрос
-        # Получаем данные для сайдбара
-        all_themes = extract_themes(cards_data)
-        theme_counts = get_theme_counts(cards_data)
-        difficulty_counts = get_difficulty_counts(cards_data)
-        version_counts = get_version_counts(cards_data)
-        all_versions = extract_versions(cards_data)
-
+        template_vars['card'] = card
         return render_template('edit_card.html',
                                card=card,
                                difficulty_levels=Config.DIFFICULTY_LEVELS,
-                               # Данные для сайдбара
-                               all_themes=all_themes,
-                               theme_counts=theme_counts,
-                               difficulty_counts=difficulty_counts,
-                               version_counts=version_counts,
-                               all_versions=all_versions,
-                               total_cards=len(cards_data.get('cards', [])),
-                               hidden_count=sum(1 for c in cards_data.get('cards', []) if c.get('hidden', False)),
-                               current_theme='',
-                               current_difficulty='',
-                               current_version='',
-                               search_query='',
-                               show_hidden=False,
-                               view_mode='grid')
+                               **template_vars)
 
     except Exception as e:
         print(f"Ошибка в edit_card: {e}")
@@ -616,7 +507,10 @@ def export_xlsx():
 def import_cards():
     """Страница импорта карточек"""
     if request.method == 'GET':
-        return render_template('import.html')
+        # Получаем данные для сайдбара
+        cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
+        return render_template('import.html', **template_vars)
 
     # POST запрос
     try:
@@ -755,12 +649,104 @@ def import_preview():
         }), 500
 
 
+@app.route('/system/status')
+def system_status():
+    """Страница статуса системы"""
+    try:
+        cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
+
+        status_info = {
+            'storage_mode': storage.mode,
+            'has_yandex': storage.has_yandex,
+            'local_file_exists': JSON_FILE.exists(),
+            'local_file_path': str(JSON_FILE),
+            'yandex_connected': False,
+            'total_cards': len(cards_data.get('cards', [])),
+            'visible_cards': sum(1 for card in cards_data.get('cards', []) if not card.get('hidden', False)),
+            'hidden_cards': sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
+            'themes_count': len(template_vars['all_themes']),
+            'versions_count': len(template_vars['all_versions']),
+            'yandex_path': Config.YANDEX_DISK_PATH,
+            'local_path': str(Config.JSON_FILE)
+        }
+
+        # Получаем информацию о локальном файле
+        if JSON_FILE.exists():
+            size = JSON_FILE.stat().st_size
+            status_info['local_file_size'] = f"{size} байт ({size / 1024:.1f} KB)"
+        else:
+            status_info['local_file_size'] = "Файл не существует"
+
+        # Проверяем подключение к Яндекс.Диску
+        if storage.has_yandex and hasattr(storage, 'yandex_storage'):
+            try:
+                status_info['yandex_connected'] = storage.yandex_storage.test_connection()
+                status_info['yandex_info'] = "Настроен и подключен"
+            except:
+                status_info['yandex_connected'] = False
+                status_info['yandex_info'] = "Ошибка подключения"
+        else:
+            status_info['yandex_info'] = "Не настроен"
+
+        template_vars['status'] = status_info
+        return render_template('system_status.html', **template_vars)
+    except Exception as e:
+        print(f"Ошибка в system_status: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Ошибка получения статуса системы', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/debug/storage')
+def debug_storage():
+    """Страница отладки хранилища"""
+    try:
+        cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
+
+        # Проверяем локальный файл
+        local_path = JSON_FILE
+        local_exists = local_path.exists()
+        local_size = local_path.stat().st_size if local_exists else 0
+
+        # Проверяем Яндекс.Диск
+        yandex_status = {}
+        if storage.has_yandex and storage.yandex_storage:
+            yandex_status['connected'] = storage.yandex_storage.test_connection()
+            yandex_status['file_exists'] = storage.yandex_storage.file_exists()
+
+            # Пробуем прочитать файл
+            yandex_data = storage.yandex_storage.load()
+            yandex_status['cards_count'] = len(yandex_data.get('cards', []))
+
+        template_vars['local_exists'] = local_exists
+        template_vars['local_size'] = local_size
+        template_vars['local_cards'] = len(cards_data.get('cards', []))
+        template_vars['yandex_status'] = yandex_status
+        template_vars['yandex_path'] = Config.YANDEX_DISK_PATH
+        template_vars['local_path'] = str(Config.JSON_FILE)
+
+        return render_template('debug_storage.html', **template_vars)
+    except Exception as e:
+        print(f"Ошибка в debug_storage: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Ошибка отладки хранилища', 'error')
+        return redirect(url_for('index'))
+
+
 # Контекстный процессор для шаблонов
 @app.context_processor
 def inject_globals():
     return {
         'current_year': datetime.now().year,
-        'app_name': 'Тесты по гомеопатии'
+        'app_name': 'Тесты по гомеопатии',
+        'storage_mode': storage.mode,
+        'has_yandex': storage.has_yandex,
+        'yandex_path': Config.YANDEX_DISK_PATH,
+        'local_path': str(Config.JSON_FILE)
     }
 
 
