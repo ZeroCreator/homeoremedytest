@@ -1,6 +1,7 @@
 """
 Модуль для импорта данных из Excel файлов
 Использует openpyxl для чтения файлов
+Работает с гибридным хранилищем
 Фиксированный формат колонок:
 0: №,
 1: Вопрос,
@@ -21,17 +22,23 @@ from openpyxl import load_workbook
 class ExcelImporter:
     """Класс для импорта данных из Excel файлов с фиксированным форматом"""
 
-    def __init__(self, json_file_path=None):
+    def __init__(self, storage=None, json_file_path=None):
         """
         Инициализация импортера
+
         Args:
-            json_file_path: Путь к JSON файлу с данными
+            storage: объект гибридного хранилища (приоритет)
+            json_file_path: Путь к JSON файлу с данными (для обратной совместимости)
         """
+        self.storage = storage
         if json_file_path:
             self.json_file_path = Path(json_file_path)
         else:
             from config import Config
             self.json_file_path = Config.JSON_FILE
+
+        print(f"Инициализирован ExcelImporter. Storage: {self.storage is not None}, "
+              f"JSON file: {self.json_file_path}")
 
     def clean_text(self, text):
         """Очистка текста от Windows-символов и лишних пробелов"""
@@ -66,25 +73,43 @@ class ExcelImporter:
         return text_lower.strip()
 
     def load_current_data(self):
-        """Загрузка текущих данных из JSON"""
+        """Загрузка текущих данных через хранилище или из JSON"""
         try:
-            if self.json_file_path.exists():
-                with open(self.json_file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+            if self.storage:
+                # Используем гибридное хранилище
+                data = self.storage.load()
+                print(f"Загружено {len(data.get('cards', []))} карточек через хранилище")
+                return data
+            else:
+                # Для обратной совместимости: загрузка из JSON файла
+                if self.json_file_path.exists():
+                    with open(self.json_file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        print(f"Загружено {len(data.get('cards', []))} карточек из файла")
+                        return data
         except Exception as e:
-            print(f"Ошибка загрузки JSON: {e}")
+            print(f"Ошибка загрузки данных: {e}")
 
+        print("Возвращаем пустые данные")
         return {"cards": [], "themes": [], "next_id": 1}
 
     def save_data(self, data):
-        """Сохранение данных в JSON"""
+        """Сохранение данных через хранилище или в JSON файл"""
         try:
-            self.json_file_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.json_file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            return True
+            if self.storage:
+                # Используем гибридное хранилище
+                result = self.storage.save(data)
+                print(f"Данные сохранены через хранилище: {result}")
+                return True
+            else:
+                # Для обратной совместимости: сохранение в JSON файл
+                self.json_file_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(self.json_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                print(f"Данные сохранены в файл: {self.json_file_path}")
+                return True
         except Exception as e:
-            print(f"Ошибка сохранения JSON: {e}")
+            print(f"Ошибка сохранения данных: {e}")
             return False
 
     def validate_excel_file(self, file_path):
@@ -562,17 +587,26 @@ class ExcelImporter:
 
 
 # Фабричная функция
-def create_importer(json_file_path=None):
+def create_importer(storage=None, json_file_path=None):
     """Создание экземпляра импортера"""
-    return ExcelImporter(json_file_path)
+    return ExcelImporter(storage=storage, json_file_path=json_file_path)
 
 
 if __name__ == "__main__":
-    print("Тест импортера с фиксированными колонками")
+    print("Тест импортера с гибридным хранилищем")
     print("=" * 60)
 
-    # Создаем тестовый импортер
-    importer = create_importer()
+    # Создаем тестовое хранилище
+    from storage.hybrid_storage import HybridStorage
+    from config import Config
+
+    storage = HybridStorage(
+        mode=Config.STORAGE_MODE,
+        local_path=Config.JSON_FILE,
+        yandex_token=Config.YANDEX_DISK_TOKEN
+    )
+
+    importer = create_importer(storage=storage)
 
     # Проверяем функцию очистки текста
     test_text = "Текст с _x000D_ Windows символами_x000D_и переносами\r\nстрок"

@@ -7,6 +7,9 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
+from excel_utils.exporter import create_exporter
+from excel_utils.importer import create_importer
+
 # Загружаем переменные окружения
 load_dotenv()
 
@@ -476,14 +479,23 @@ def delete_card(card_id):
 def export_xlsx():
     """Экспорт карточек в Excel"""
     try:
-        # Используем путь из конфига приложения
-        json_file = str(app.config['JSON_FILE'])
+        print(f"DEBUG: Экспорт запрошен. Режим хранения: {storage.mode}")
 
-        # Создаем экспортер
-        exporter = ExcelExporter(json_file)
+        # Загружаем данные через хранилище
+        data = storage.load()
+        print(f"DEBUG: Загружено {len(data.get('cards', []))} карточек")
+
+        if not data.get('cards'):
+            flash('Нет данных для экспорта', 'warning')
+            return redirect(url_for('index'))
+
+        # Создаем экспортер с гибридным хранилищем
+        exporter = create_exporter(storage=storage)
 
         # Получаем Excel файл
         buffer, filename = exporter.export_to_excel()
+
+        print(f"DEBUG: Экспорт успешен, файл: {filename}")
 
         # Отправляем файл пользователю
         return send_file(
@@ -494,11 +506,14 @@ def export_xlsx():
         )
 
     except ValueError as e:
+        print(f"Ошибка экспорта: {e}")
         flash(str(e), 'warning')
         return redirect(url_for('index'))
 
     except Exception as e:
-        print(f"Ошибка при экспорте в Excel: {e}", file=sys.stderr)
+        print(f"Ошибка при экспорте в Excel: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Произошла ошибка при экспорте данных в Excel', 'error')
         return redirect(url_for('index'))
 
@@ -539,9 +554,7 @@ def import_cards():
         file_path = upload_folder / f"import_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
         file.save(file_path)
 
-        # Используем путь из конфига приложения
-        json_file = str(app.config['JSON_FILE'])
-        importer = ExcelImporter(json_file)
+        importer = create_importer(storage=storage)
 
         # Валидируем файл
         is_valid, message = importer.validate_excel_file(file_path)
@@ -614,9 +627,7 @@ def import_preview():
 
         print(f"DEBUG: Файл сохранен в {file_path}")
 
-        # Используем путь из конфига приложения
-        json_file = str(app.config['JSON_FILE'])
-        importer = ExcelImporter(json_file)
+        importer = create_importer(storage=storage)
 
         # Получаем предпросмотр
         success, result = importer.get_import_preview(file_path)
@@ -741,7 +752,7 @@ def debug_storage():
 @app.route('/documentation')
 def documentation():
     """Страница документации"""
-    return redirect('https://zerocreator.github.io/HomeoRemedyTest/')
+    return redirect('https://zerocreator.github.io/homeoremedytest/')
 
 
 # Контекстный процессор для шаблонов

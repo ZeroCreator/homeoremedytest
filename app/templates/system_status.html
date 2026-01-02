@@ -73,6 +73,12 @@
             </table>
         </div>
     </div>
+    <div class="status-item">
+    <strong>Локальный файл:</strong>
+    <span class="status-badge {% if status.local_file_exists %}success{% else %}warning{% endif %}">
+        {{ 'Существует' if status.local_file_exists else 'Отсутствует' }}
+    </span>
+</div>
 
     <div class="text-center">
         <a href="{{ url_for('index') }}" class="btn btn-primary">На главную</a>

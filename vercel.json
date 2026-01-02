@@ -19,14 +19,5 @@
       "src": "/(.*)",
       "dest": "/wsgi.py"
     }
-  ],
-   "functions": {
-    "wsgi.py": {
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "PYTHONPATH": "/var/task/app"
-  },
-  "installCommand": "pip install -r requirements.txt"
+  ]
 }

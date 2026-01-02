@@ -1,5 +1,6 @@
 """
 Модуль для экспорта данных в Excel с использованием openpyxl
+Работает с гибридным хранилищем
 """
 import json
 from datetime import datetime
@@ -34,28 +35,43 @@ class ExcelExporter:
     MAX_COLUMN_WIDTH = 50
     MIN_COLUMN_WIDTH = 5
 
-    def __init__(self, json_file_path=None):
+    def __init__(self, storage=None, json_file_path=None):
         """
         Инициализация экспортера
 
         Args:
-            json_file_path: Путь к JSON файлу с данными
+            storage: объект гибридного хранилища (приоритет)
+            json_file_path: Путь к JSON файлу с данными (для обратной совместимости)
         """
+        self.storage = storage
         if json_file_path:
             self.json_file_path = Path(json_file_path)
         else:
             from config import Config
             self.json_file_path = Config.JSON_FILE
 
-    def load_cards(self):
-        """Загрузка карточек из JSON файла"""
-        try:
-            if self.json_file_path.exists():
-                with open(self.json_file_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except Exception as e:
-            print(f"Ошибка загрузки JSON: {e}")
+        print(f"Инициализирован ExcelExporter. Storage: {self.storage is not None}, "
+              f"JSON file: {self.json_file_path}")
 
+    def load_cards(self):
+        """Загрузка карточек через хранилище или из JSON файла"""
+        try:
+            if self.storage:
+                # Используем гибридное хранилище
+                data = self.storage.load()
+                print(f"Загружено {len(data.get('cards', []))} карточек через хранилище")
+                return data
+            else:
+                # Для обратной совместимости: загрузка из JSON файла
+                if self.json_file_path.exists():
+                    with open(self.json_file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        print(f"Загружено {len(data.get('cards', []))} карточек из файла")
+                        return data
+        except Exception as e:
+            print(f"Ошибка загрузки данных: {e}")
+
+        print("Возвращаем пустые данные")
         return {"cards": [], "themes": [], "next_id": 1}
 
     def export_to_excel(self):
@@ -314,9 +330,9 @@ class ExcelExporter:
 
 
 # Фабричная функция
-def create_exporter(json_file_path=None):
+def create_exporter(storage=None, json_file_path=None):
     """Создание экземпляра экспортера"""
-    return ExcelExporter(json_file_path)
+    return ExcelExporter(storage=storage, json_file_path=json_file_path)
 
 
 # Тестовые функции
@@ -324,7 +340,17 @@ def test_exporter():
     """Тестирование экспортера"""
     print("Тестирование экспорта в Excel с openpyxl...")
 
-    exporter = create_exporter("app/data/test_cards.json")
+    # Создаем тестовое хранилище
+    from storage.hybrid_storage import HybridStorage
+    from config import Config
+
+    storage = HybridStorage(
+        mode=Config.STORAGE_MODE,
+        local_path=Config.JSON_FILE,
+        yandex_token=Config.YANDEX_DISK_TOKEN
+    )
+
+    exporter = create_exporter(storage=storage)
 
     try:
         # Экспорт в файл
