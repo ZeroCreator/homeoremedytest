@@ -7,8 +7,14 @@ BASE_DIR = Path(__file__).resolve().parent
 # Проверяем окружение
 IS_VERCEL = os.environ.get('VERCEL') == '1'
 
-# ВСЕГДА используем JSON из репозитория (он доступен на чтение)
-JSON_FILE = BASE_DIR / 'app' / 'data' / 'test_cards.json'
+# Путь к локальному файлу (по умолчанию)
+LOCAL_DATA_PATH = Path('app/data/test_cards.json')
+# Если путь относительный, делаем абсолютным
+if not LOCAL_DATA_PATH.is_absolute():
+    LOCAL_DATA_PATH = BASE_DIR / LOCAL_DATA_PATH
+
+# Для совместимости
+JSON_FILE = LOCAL_DATA_PATH
 
 if IS_VERCEL:
     # На Vercel: uploads в /tmp
@@ -24,6 +30,6 @@ STATIC_DIR = BASE_DIR / 'public' / 'static'
 TEMPLATE_DIR = BASE_DIR / 'app' / 'templates'
 
 # Выводим для отладки
-print(f"JSON_FILE: {JSON_FILE} (always from repository)")
+print(f"JSON_FILE: {JSON_FILE}")
 print(f"JSON exists: {JSON_FILE.exists()}")
 print(f"UPLOAD_DIR: {UPLOAD_DIR}")
