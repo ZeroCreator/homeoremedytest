@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  <link rel="stylesheet" href="{{ 'assets/stylesheets/custom.css' | url }}">
+  <script defer src="{{ 'assets/javascripts/custom.js' | url }}"></script>
+{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="doc-footer">
+    <hr>
+    <div class="footer-content">
+      <p>
+        <strong>Нужна помощь?</strong>
+        <a href="https://github.com/zerocreator/HomeoRemedyTest/issues/new">Создайте issue</a>
+        или напишите на <a href="mailto:shkola.olga@gmail.com">shkola.olga@gmail.com</a>
+      </p>
+      <p class="last-updated">
+        Последнее обновление: {{ build_date_utc.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+      </p>
+    </div>
+  </div>
+{% endblock %}

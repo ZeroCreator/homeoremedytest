@@ -737,6 +737,13 @@ def debug_storage():
         return redirect(url_for('index'))
 
 
+@app.route('/docs')
+@app.route('/documentation')
+def documentation():
+    """Страница документации"""
+    return redirect('https://zerocreator.github.io/HomeoRemedyTest/')
+
+
 # Контекстный процессор для шаблонов
 @app.context_processor
 def inject_globals():
