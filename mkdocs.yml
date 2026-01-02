@@ -1,0 +1,67 @@
+site_name: HomeoRemedyTest
+site_description: Документация по приложению для тестирования знаний по гомеопатии
+site_url: https://zerocreator.github.io/HomeoRemedyTest/
+repo_url: https://github.com/zerocreator/HomeoRemedyTest
+repo_name: zerocreator/HomeoRemedyTest
+
+nav:
+  - Главная: index.md
+  - Начало работы:
+    - Установка: getting-started/installation.md
+    - Настройка: getting-started/configuration.md
+    - Первый запуск: getting-started/first-run.md
+  - Использование:
+    - Работа с карточками: usage/cards.md
+    - Фильтрация и поиск: usage/filters.md
+    - Импорт/экспорт: usage/import-export.md
+  - Хранение данных:
+    - Гибридное хранилище: storage/hybrid-storage.md
+    - Яндекс.Диск: storage/yandex-disk.md
+    - Локальное хранение: storage/local-storage.md
+  - Разработка:
+    - Структура проекта: development/structure.md
+    - API документация: development/api.md
+    - Тестирование: development/testing.md
+  - Деплой:
+    - На Vercel: deployment/vercel.md
+    - На локальном сервере: deployment/local.md
+  - FAQ: faq.md
+  - Справочник:
+    - Формат данных: reference/data-format.md
+    - Переменные окружения: reference/environment-variables.md
+    - CLI команды: reference/commands.md
+
+theme:
+  name: material
+  language: ru
+  palette:
+    primary: indigo
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/zerocreator
+    - icon: fontawesome/solid/envelope
+      link: mailto:shkola.olga@gmail.com
+
+copyright: Copyright &copy; 2024 HomeoRemedyTest

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/getting-started/configuration/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/getting-started/installation/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/reference/environment-variables/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/storage/hybrid-storage/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+    <url>
+         <loc>https://zerocreator.github.io/HomeoRemedyTest/usage/filters/</loc>
+         <lastmod>2026-01-02</lastmod>
+    </url>
+</urlset>
