@@ -1,5 +1,0 @@
-mkdocs-material>=9.0
-mkdocs-awesome-pages-plugin>=2.8
-mkdocs-macros-plugin>=1.0
-mkdocs-mermaid2-plugin>=1.0
-markdownlint>=0.3
