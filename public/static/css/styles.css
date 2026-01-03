@@ -2426,3 +2426,232 @@ css
         height: 26px;
     }
 }
+
+/* ==========================================================================
+   ПАГИНАЦИЯ
+   ========================================================================== */
+.pagination-container {
+    margin-top: 40px;
+    padding: 25px;
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.pagination-info {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.pagination-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+    font-weight: 500;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.pagination-link:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.pagination-link.disabled {
+    background-color: var(--border-color);
+    color: var(--text-light);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.pagination-link.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pagination-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    border: 1px solid var(--border-color);
+}
+
+.pagination-number:hover {
+    background-color: var(--bg-secondary);
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+}
+
+.pagination-number.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
+    transform: scale(1.1);
+}
+
+.pagination-ellipsis {
+    color: var(--text-light);
+    padding: 0 8px;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   КНОПКИ ПРОКРУТКИ
+   ========================================================================== */
+.scroll-buttons {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 999;
+}
+
+.scroll-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.9;
+}
+
+.scroll-btn:hover {
+    background-color: var(--primary-dark);
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 8px 20px rgba(74, 111, 165, 0.3);
+    opacity: 1;
+}
+
+.scroll-btn:active {
+    transform: scale(0.95) translateY(0);
+}
+
+.scroll-btn.scroll-top {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+}
+
+.scroll-btn.scroll-bottom {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+}
+
+/* Анимация появления кнопок */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 0.9;
+        transform: translateY(0);
+    }
+}
+
+.scroll-buttons {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* ==========================================================================
+   АДАПТАЦИЯ ПАГИНАЦИИ ДЛЯ МОБИЛЬНЫХ
+   ========================================================================== */
+@media (max-width: 768px) {
+    .pagination-container {
+        padding: 20px 15px;
+        margin-top: 30px;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .pagination-link {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .pagination-numbers {
+        order: -1;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination-number {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    /* Кнопки прокрутки на мобильных */
+    .scroll-buttons {
+        right: 20px;
+        bottom: 20px;
+    }
+
+    .scroll-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .scroll-buttons {
+        right: 15px;
+        bottom: 15px;
+    }
+
+    .scroll-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 1.1rem;
+    }
+
+    .pagination-number {
+        width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+}

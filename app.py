@@ -181,7 +181,13 @@ def get_template_variables(cards_data, **overrides):
         'show_hidden': False,
         'view_mode': 'grid',
         'storage_mode': storage.mode,
-        'has_yandex': storage.has_yandex
+        'has_yandex': storage.has_yandex,
+        # Параметры пагинации по умолчанию (для режима сетки)
+        'page': 1,
+        'per_page': 20,
+        'total_pages': 0,
+        'start_idx': 0,
+        'end_idx': 0
     }
     base_vars.update(overrides)
     return base_vars
@@ -200,6 +206,10 @@ def index():
         search_query = request.args.get('search', '').lower()
         show_hidden = request.args.get('show_hidden', 'false').lower() == 'true'
         view_mode = request.args.get('view', 'grid')
+
+        # Параметры пагинации (только для режима сетки)
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)  # 20 карточек на страницу
 
         # Получаем базовые переменные
         template_vars = get_template_variables(
@@ -245,6 +255,46 @@ def index():
 
             filtered_cards.append(card)
 
+        # Сортируем карточки по ID
+        filtered_cards.sort(key=lambda x: x.get('id', 0))
+
+        # Для режима стопки - все карточки, без пагинации
+        if view_mode == 'stack':
+            template_vars.update({
+                'cards': filtered_cards,
+                'total_cards': len(filtered_cards),
+                'page': 1,
+                'total_pages': 1,
+                'start_idx': 1,
+                'end_idx': len(filtered_cards)
+            })
+        else:
+            # Для режима сетки - применяем пагинацию
+            total_cards = len(filtered_cards)
+            total_pages = max(1, (total_cards + per_page - 1) // per_page)  # Округление вверх
+
+            # Ограничиваем номер страницы
+            if page < 1:
+                page = 1
+            elif page > total_pages and total_pages > 0:
+                page = total_pages
+
+            # Вычисляем индексы для текущей страницы
+            start_idx = (page - 1) * per_page
+            end_idx = min(start_idx + per_page, total_cards)
+            cards_on_page = filtered_cards[start_idx:end_idx]
+
+            # Добавляем переменные пагинации
+            template_vars.update({
+                'cards': cards_on_page,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': total_pages,
+                'total_cards': total_cards,
+                'start_idx': start_idx + 1 if cards_on_page else 0,
+                'end_idx': end_idx
+            })
+
         # Выбираем шаблон
         template_name = 'stack_view.html' if view_mode == 'stack' else 'index.html'
 
@@ -254,12 +304,10 @@ def index():
                 template_name = 'index.html'
                 flash('Режим стопки карточек временно недоступен', 'info')
 
-        template_vars['cards'] = filtered_cards
         return render_template(template_name, **template_vars)
     except Exception as e:
         print(f"Ошибка в index: {e}")
         flash('Произошла ошибка при загрузке данных', 'error')
-        # Возвращаем пустой шаблон с минимальными переменными
         return render_template('index.html',
                                cards=[],
                                all_themes=[],
@@ -267,8 +315,12 @@ def index():
                                theme_counts={},
                                difficulty_counts={'easy': 0, 'medium': 0, 'hard': 0},
                                version_counts={},
+                               page=1,
+                               per_page=20,
+                               total_pages=0,
                                total_cards=0,
-                               hidden_count=0,
+                               start_idx=0,
+                               end_idx=0,
                                show_hidden=False,
                                view_mode='grid',
                                storage_mode=storage.mode,

@@ -36,13 +36,23 @@ theme:
   language: ru
   palette:
     primary: indigo
-    accent: blue
+    accent: indigo
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.expand
+    - navigation.indexes
     - toc.integrate
     - search.suggest
     - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
 
 markdown_extensions:
   - admonition
@@ -50,12 +60,20 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
 
 plugins:
   - search
+  - mermaid2
+  - git-revision-date-localized:
+        type: timeago
+        enable_creation_date: true
 
 extra:
   social:
