@@ -1,0 +1,66 @@
+site_name: HomeoRemedyTest
+site_description: Простое приложение для тестирования знаний по гомеопатии
+site_url: https://zerocreator.github.io/HomeoRemedyTest/
+repo_url: https://github.com/zerocreator/HomeoRemedyTest
+repo_name: zerocreator/HomeoRemedyTest
+
+nav:
+  - Главная: index.md
+  - Начало работы:
+    - Установка: getting-started/installation.md
+    - Первые шаги: getting-started/first-steps.md
+  - Использование:
+    - Основные возможности: usage/features.md
+    - Работа с карточками: usage/cards.md
+    - Режимы просмотра: usage/view-modes.md
+    - Фильтры и поиск: usage/filters.md
+    - Импорт/экспорт: usage/import-export.md
+  - Советы:
+    - Эффективное обучение: tips/effective-learning.md
+    - Подготовка к тестам: tips/preparation.md
+    - Рекомендации по созданию карточек: tips/card-creation.md
+  - Справочник:
+    - Формат данных: reference/data-format.md
+    - Синхронизация данных: reference/sync.md
+    - Частые вопросы: reference/faq.md
+
+theme:
+  name: material
+  language: ru
+  palette:
+    primary: indigo
+    accent: indigo
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/zerocreator
+    - icon: fontawesome/solid/envelope
+      link: mailto:shkola.olga@gmail.com
+
+copyright: Copyright &copy; 2026 HomeoRemedyTest

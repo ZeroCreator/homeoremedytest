@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Тесты по гомеопатии{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="header-container">
+                <div class="logo">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-pills"></i>
+                        <span>HomeoRemedyTest</span>
+                    </a>
+                </div>
+
+                <nav class="main-nav">
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">Главная</span>
+                    </a>
+                    <a href="{{ url_for('create_card') }}" class="nav-link {% if request.path == '/create' %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i>
+                        <span class="nav-text">Добавить вопрос</span>
+                    </a>
+                </nav>
+
+                <!-- Переключатель режимов -->
+                <div class="view-toggle">
+                    {% set current_view = request.args.get('view', 'grid') %}
+                    {% set current_theme = request.args.get('theme', '') %}
+                    {% set current_difficulty = request.args.get('difficulty', '') %}
+                    {% set current_version = request.args.get('version', '') %}
+                    {% set current_search = request.args.get('search', '') %}
+                    {% set current_show_hidden = request.args.get('show_hidden', 'false') %}
+
+                    <a href="{{ url_for('index') }}?view=grid{% if current_theme %}&theme={{ current_theme }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_version %}&version={{ current_version }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_show_hidden == 'true' %}&show_hidden=true{% endif %}"
+                       class="view-btn {% if current_view != 'stack' %}active{% endif %}"
+                       title="Режим сетки">
+                        <i class="fas fa-th-large"></i>
+                    </a>
+                    <a href="{{ url_for('index') }}?view=stack{% if current_theme %}&theme={{ current_theme }}{% endif %}{% if current_difficulty %}&difficulty={{ current_difficulty }}{% endif %}{% if current_version %}&version={{ current_version }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_show_hidden == 'true' %}&show_hidden=true{% endif %}"
+                       class="view-btn {% if current_view == 'stack' %}active{% endif %}"
+                       title="Режим стопки карточек">
+                        <i class="fas fa-layer-group"></i>
+                    </a>
+                </div>
+
+                <!-- Выпадающее меню действий -->
+                <div class="header-actions">
+                    <div class="dropdown">
+                        <button class="header-btn dropdown-toggle" title="Действия">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{{ url_for('documentation') }}" class="dropdown-item">
+                                <i class="fas fa-book"></i>Документация
+                            </a>
+                            <a href="{{ url_for('export_xlsx') }}" class="dropdown-item">
+                                <i class="fas fa-file-excel"></i> Экспорт в Excel
+                            </a>
+                            <a href="{{ url_for('import_cards') }}" class="dropdown-item">
+                                <i class="fas fa-file-import"></i> Импорт из Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {% if has_yandex %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('system_status') }}">
+                        <i class="fas fa-info-circle"></i> Статус
+                    </a>
+                </li>
+                {% endif %}
+
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- Боковая панель -->
+                <aside class="sidebar">
+                    {% block sidebar %}
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">
+                            <i class="fas fa-filter"></i> Фильтры
+                        </h3>
+
+                        <div class="search-box">
+                            <form method="get" action="{{ url_for('index') }}" id="search-form">
+                                <input type="hidden" name="view" value="{{ request.args.get('view', 'grid') }}">
+                                {% if current_difficulty %}
+                                <input type="hidden" name="difficulty" value="{{ current_difficulty }}">
+                                {% endif %}
+                                {% if current_version %}
+                                <input type="hidden" name="version" value="{{ current_version }}">
+                                {% endif %}
+                                {% if current_theme %}
+                                <input type="hidden" name="theme" value="{{ current_theme }}">
+                                {% endif %}
+                                <input type="hidden" name="show_hidden" value="{{ show_hidden|lower }}">
+
+                                <div class="search-input">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text"
+                                           name="search"
+                                           placeholder="Поиск по вопросам..."
+                                           value="{{ search_query }}"
+                                           class="search-field"
+                                           id="search-input">
+                                    {% if search_query %}
+                                    <button type="button" class="clear-search" onclick="clearSearch()" title="Очистить поиск">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Фильтр скрытых карточек -->
+                        <div class="hidden-filter">
+                            <h4><i class="fas fa-eye-slash"></i> Скрытые карточки</h4>
+                            <div class="toggle-switch">
+                                <label class="switch">
+                                    <input type="checkbox"
+                                           id="show-hidden-toggle"
+                                           {% if show_hidden %}checked{% endif %}
+                                           onchange="toggleHiddenFilter(this)">
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="toggle-label">
+                                    {% if show_hidden %}
+                                    <i class="fas fa-eye"></i> Показаны все
+                                    {% else %}
+                                    <i class="fas fa-eye-slash"></i> Скрытые скрыты
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- АККОРДЕОН: ФИЛЬТР ПО ТЕМАМ -->
+                        <div class="accordion {% if request.args.get('view') == 'stack' %}collapsed{% endif %}" id="themes-accordion">
+                            <h4 class="accordion-header" onclick="toggleAccordion('themes-accordion')">
+                                <i class="fas fa-tags"></i>
+                                <span>Темы</span>
+                                <i class="accordion-icon fas fa-chevron-down"></i>
+                            </h4>
+                            <div class="accordion-content filter-list">
+                                {% set current_view = request.args.get('view', 'grid') %}
+                                <a href="?view={{ current_view }}&difficulty={{ current_difficulty }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if not current_theme %}active{% endif %}">
+                                    <i class="fas fa-layer-group"></i> Все темы
+                                    <span class="filter-count">{{ total_cards }}</span>
+                                </a>
+
+                                {% for theme in all_themes %}
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&theme={{ theme }}&difficulty={{ current_difficulty }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if current_theme == theme %}active{% endif %}">
+                                    <i class="fas fa-tag"></i> {{ theme }}
+                                    <span class="filter-count">{{ theme_counts.get(theme, 0) }}</span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- АККОРДЕОН: ФИЛЬТР ПО СЛОЖНОСТИ -->
+                        <div class="accordion collapsed" id="difficulty-accordion">
+                            <h4 class="accordion-header" onclick="toggleAccordion('difficulty-accordion')">
+                                <i class="fas fa-signal"></i>
+                                <span>Сложность</span>
+                                <i class="accordion-icon fas fa-chevron-down"></i>
+                            </h4>
+                            <div class="accordion-content filter-list">
+                                {% set current_view = request.args.get('view', 'grid') %}
+                                <a href="?view={{ current_view }}&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if not current_difficulty %}active{% endif %}">
+                                    <i class="fas fa-bars"></i> Все уровни
+                                    <span class="filter-count">{{ total_cards }}</span>
+                                </a>
+
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=easy&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if current_difficulty == 'easy' %}active{% endif %}">
+                                    <i class="fas fa-leaf"></i> Легкие
+                                    <span class="filter-count">{{ difficulty_counts.get('easy', 0) }}</span>
+                                </a>
+
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=medium&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if current_difficulty == 'medium' %}active{% endif %}">
+                                    <i class="fas fa-balance-scale"></i> Средние
+                                    <span class="filter-count">{{ difficulty_counts.get('medium', 0) }}</span>
+                                </a>
+
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=hard&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if current_difficulty == 'hard' %}active{% endif %}">
+                                    <i class="fas fa-fire"></i> Сложные
+                                    <span class="filter-count">{{ difficulty_counts.get('hard', 0) }}</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- АККОРДЕОН: ФИЛЬТР ПО ВЕРСИЯМ -->
+                        <div class="accordion collapsed" id="version-accordion">
+                            <h4 class="accordion-header" onclick="toggleAccordion('version-accordion')">
+                                <i class="fas fa-code-branch"></i>
+                                <span>Версии</span>
+                                <i class="accordion-icon fas fa-chevron-down"></i>
+                            </h4>
+                            <div class="accordion-content filter-list">
+                                {% set current_view = request.args.get('view', 'grid') %}
+                                <a href="?view={{ current_view }}&theme={{ current_theme }}&difficulty={{ current_difficulty }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if not current_version %}active{% endif %}">
+                                    <i class="fas fa-layer-group"></i> Все версии
+                                    <span class="filter-count">{{ total_cards }}</span>
+                                </a>
+
+                                {% for version in all_versions %}
+                                <a href="{{ url_for('index') }}?view={{ current_view }}&version={{ version }}&theme={{ current_theme }}&difficulty={{ current_difficulty }}&show_hidden={{ show_hidden|lower }}"
+                                   class="filter-item {% if current_version == version %}active{% endif %}">
+                                    <i class="fas fa-code-branch"></i> Версия {{ version }}
+                                    <span class="filter-count">{{ version_counts.get(version, 0) }}</span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- АККОРДЕОН: СТАТИСТИКА -->
+                        <div class="accordion collapsed" id="stats-accordion">
+                            <h4 class="accordion-header" onclick="toggleAccordion('stats-accordion')">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Статистика</span>
+                                <i class="accordion-icon fas fa-chevron-down"></i>
+                            </h4>
+                            <div class="accordion-content stats-list">
+                                <div class="stat-item">
+                                    <span class="stat-label">Всего вопросов:</span>
+                                    <span class="stat-value">{{ total_cards }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Уникальных тем:</span>
+                                    <span class="stat-value">{{ all_themes|length }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Скрытых карточек:</span>
+                                    <span class="stat-value">{{ hidden_count }}</span>
+                                </div>
+                                {% if current_theme %}
+                                <div class="stat-item">
+                                    <span class="stat-label">По теме "{{ current_theme }}":</span>
+                                    <span class="stat-value">{{ theme_counts.get(current_theme, 0) }}</span>
+                                </div>
+                                {% endif %}
+                                {% if current_difficulty %}
+                                <div class="stat-item">
+                                    <span class="stat-label">
+                                        {% if current_difficulty == 'easy' %}Легкие
+                                        {% elif current_difficulty == 'medium' %}Средние
+                                        {% elif current_difficulty == 'hard' %}Сложные
+                                        {% endif %}:
+                                    </span>
+                                    <span class="stat-value">{{ difficulty_counts.get(current_difficulty, 0) }}</span>
+                                </div>
+                                {% endif %}
+                                {% if current_version %}
+                                <div class="stat-item">
+                                    <span class="stat-label">Версия {{ current_version }}:</span>
+                                    <span class="stat-value">{{ version_counts.get(current_version, 0) }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endblock %}
+                </aside>
+
+                <!-- Основное содержимое -->
+                <section class="content-area">
+                    <!-- Flash сообщения -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="flash-messages">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">
+                                        {% if category == 'success' %}
+                                            <i class="fas fa-check-circle"></i>
+                                        {% elif category == 'error' %}
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        {% elif category == 'info' %}
+                                            <i class="fas fa-info-circle"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        {% endif %}
+                                        {{ message }}
+                                        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    {% block content %}{% endblock %}
+                </section>
+            </div>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h4>HomeoRemedyTest</h4>
+                        <p>Платформа для тестирования знаний по гомеопатии</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4></h4>
+                        <a href="{{ url_for('index') }}"></a>
+                        <a href="{{ url_for('create_card') }}"></a>
+                        <a href="{{ url_for('import_cards') }}"></a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Контакты</h4>
+                        <p>По вопросам и предложениям: shkola.olga@gmail.com</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; {{ current_year }} HomeoRemedyTest. Все права защищены.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Скрипты -->
+    <script>
+        // Автопоиск с задержкой
+        let searchTimeout;
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    e.target.form.submit();
+                }, 500);
+            });
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            if (input) {
+                input.value = '';
+                const form = input.form;
+                form.submit();
+            }
+        }
+
+        // Переключение фильтра скрытых карточек
+        function toggleHiddenFilter(checkbox) {
+            const showHidden = checkbox.checked;
+            const url = new URL(window.location.href);
+
+            if (showHidden) {
+                url.searchParams.set('show_hidden', 'true');
+            } else {
+                url.searchParams.delete('show_hidden');
+            }
+
+            window.location.href = url.toString();
+        }
+
+        // Автоматическое скрытие flash сообщений
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        }, 100);
+
+        // Универсальная функция для аккордеонов
+        function toggleAccordion(accordionId) {
+            const accordion = document.getElementById(accordionId);
+            if (!accordion) return;
+
+            const isMobile = window.innerWidth <= 1024;
+            const viewMode = new URLSearchParams(window.location.search).get('view') || 'grid';
+
+            accordion.classList.toggle('collapsed');
+        }
+
+        // Инициализация аккордеонов при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            const isMobile = window.innerWidth <= 1024;
+            const viewMode = new URLSearchParams(window.location.search).get('view') || 'grid';
+
+            // На мобильных все аккордеоны свернуты
+            if (isMobile) {
+                document.querySelectorAll('.accordion').forEach(accordion => {
+                    accordion.classList.add('collapsed');
+                });
+            } else {
+                // На десктопе
+                const themesAccordion = document.getElementById('themes-accordion');
+                if (themesAccordion) {
+                    // В режиме стопки сворачиваем темы
+                    if (viewMode === 'stack') {
+                        themesAccordion.classList.add('collapsed');
+                    }
+                }
+            }
+        });
+
+        // Адаптация аккордеонов при изменении размера
+        window.addEventListener('resize', function() {
+            const isMobile = window.innerWidth <= 1024;
+            const viewMode = new URLSearchParams(window.location.search).get('view') || 'grid';
+
+            if (isMobile) {
+                // Мобильные - сворачиваем все
+                document.querySelectorAll('.accordion').forEach(accordion => {
+                    accordion.classList.add('collapsed');
+                });
+            } else {
+                // Десктоп
+                const themesAccordion = document.getElementById('themes-accordion');
+                if (themesAccordion) {
+                    if (viewMode === 'stack') {
+                        themesAccordion.classList.add('collapsed');
+                    } else {
+                        themesAccordion.classList.remove('collapsed');
+                    }
+                }
+
+                // Остальные аккордеоны на десктопе закрыты
+                const otherAccordions = document.querySelectorAll('.accordion:not(#themes-accordion)');
+                otherAccordions.forEach(accordion => {
+                    accordion.classList.add('collapsed');
+                });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Находим элементы меню
+            const dropdown = document.querySelector('.dropdown');
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (dropdown && dropdownToggle && dropdownMenu) {
+                // Флаг для отслеживания состояния меню
+                let isMenuOpen = false;
+
+                // Функция открытия меню
+                function openMenu() {
+                    dropdownMenu.style.opacity = '1';
+                    dropdownMenu.style.visibility = 'visible';
+                    dropdownMenu.style.transform = 'translateY(0)';
+                    isMenuOpen = true;
+                }
+
+                // Функция закрытия меню
+                function closeMenu() {
+                    dropdownMenu.style.opacity = '0';
+                    dropdownMenu.style.visibility = 'hidden';
+                    dropdownMenu.style.transform = 'translateY(-10px)';
+                    isMenuOpen = false;
+                }
+
+                // Клик по кнопке меню
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (isMenuOpen) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                // Закрытие меню при клике на пункт меню
+                dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        closeMenu();
+                    });
+                });
+
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', function(e) {
+                    if (isMenuOpen &&
+                        !dropdown.contains(e.target) &&
+                        !dropdownMenu.contains(e.target)) {
+                        closeMenu();
+                    }
+                });
+
+                // Закрытие меню при нажатии Escape
+                document.addEventListener('keydown', function(e) {
+                    if (isMenuOpen && e.key === 'Escape') {
+                        closeMenu();
+                    }
+                });
+
+                // Закрытие меню при изменении размера окна
+                window.addEventListener('resize', function() {
+                    if (isMenuOpen) {
+                        closeMenu();
+                    }
+                });
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Статус системы{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Статус системы</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Хранилище данных</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th width="30%">Режим хранения</th>
+                    <td>{{ status.storage_mode }}</td>
+                </tr>
+                <tr>
+                    <th>Локальный файл</th>
+                    <td>
+                        {% if status.local_file_exists %}
+                            <span class="badge bg-success">Существует</span> ({{ status.local_file_size }})
+                        {% else %}
+                            <span class="badge bg-danger">Отсутствует</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Путь к локальному файлу</th>
+                    <td><code>{{ status.local_file_path }}</code></td>
+                </tr>
+                <tr>
+                    <th>Яндекс.Диск</th>
+                    <td>
+                        {% if status.has_yandex %}
+                            {% if status.yandex_connected %}
+                                <span class="badge bg-success">Подключен</span> ({{ status.yandex_info }})
+                            {% else %}
+                                <span class="badge bg-warning">Не подключен</span> ({{ status.yandex_info }})
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">Не настроен</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Количество карточек</th>
+                    <td><strong>{{ status.total_cards }}</strong> (видимых: {{ status.visible_cards }}, скрытых: {{ status.hidden_cards }})</td>
+                </tr>
+                <tr>
+                    <th>Количество тем</th>
+                    <td>{{ status.themes_count }}</td>
+                </tr>
+                <tr>
+                    <th>Количество версий</th>
+                    <td>{{ status.versions_count }}</td>
+                </tr>
+                <tr>
+                    <th>Локальный путь:</th>
+                    <td><code>{{ status.local_path }}</code></td>
+                </tr>
+                <tr>
+                    <th>Путь на Яндекс.Диске:</th>
+                    <td>
+                        {% if has_yandex %}
+                            <code>{{ yandex_path }}</code>
+                        {% else %}
+                            <span class="badge bg-secondary">Не настроен</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="status-item">
+    <strong>Локальный файл:</strong>
+    <span class="status-badge {% if status.local_file_exists %}success{% else %}warning{% endif %}">
+        {{ 'Существует' if status.local_file_exists else 'Отсутствует' }}
+    </span>
+</div>
+
+    <div class="text-center">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">На главную</a>
+        <a href="{{ url_for('debug_storage') }}" class="btn btn-info">Подробная диагностика</a>
+    </div>
+</div>
+{% endblock %}

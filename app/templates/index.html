@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Тесты по гомеопатии{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Вопросы для тестирования</h1>
+    <p class="subtitle">Проверьте свои знания по гомеопатии</p>
+
+    {% if current_theme or current_difficulty or current_version or search_query %}
+    <div class="active-filters">
+        <strong>Активные фильтры:</strong>
+        <div class="filters-container">
+            {% if current_theme %}
+            <span class="filter-badge">
+                <i class="fas fa-tag"></i> {{ current_theme }}
+                <span class="theme-count-badge">{{ theme_counts.get(current_theme, 0) }}</span>
+            </span>
+            {% endif %}
+
+            {% if current_difficulty %}
+            <span class="filter-badge">
+                <i class="fas fa-signal"></i>
+                {% if current_difficulty == 'easy' %}Легкие
+                {% elif current_difficulty == 'medium' %}Средние
+                {% elif current_difficulty == 'hard' %}Сложные
+                {% endif %}
+                <span class="theme-count-badge">{{ difficulty_counts.get(current_difficulty, 0) }}</span>
+            </span>
+            {% endif %}
+
+            {% if current_version %}
+            <span class="filter-badge">
+                <i class="fas fa-code-branch"></i> Версия {{ current_version }}
+                <span class="theme-count-badge">{{ version_counts.get(current_version, 0) }}</span>
+            </span>
+            {% endif %}
+
+            {% if search_query %}
+            <span class="filter-badge">
+                <i class="fas fa-search"></i> "{{ search_query }}"
+            </span>
+            {% endif %}
+        </div>
+        <a href="?view=grid&show_hidden={{ show_hidden|lower }}" class="clear-filters">
+            <i class="fas fa-times"></i> Сбросить фильтры
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if cards %}
+<div class="cards-grid">
+    {% for card in cards %}
+    <div class="test-card {% if card.hidden %}card-hidden{% endif %}" data-id="{{ card.id }}">
+        {% if card.hidden %}
+        <div class="card-hidden-badge">
+            <i class="fas fa-eye-slash"></i> Скрыта
+        </div>
+        {% endif %}
+
+        <div class="card-header">
+            <div class="card-meta">
+                <div class="card-themes">
+                    {% set themes_list = card.theme.split(',') %}
+                    {% for theme in themes_list %}
+                    <span class="theme-tag">{{ theme.strip() }}</span>
+                    {% endfor %}
+                </div>
+
+                <span class="card-number">-{{ card.id }}-</span>
+
+                <span class="card-difficulty {{ card.difficulty }}">
+                    {% if card.difficulty == 'easy' %}
+                    <i class="fas fa-leaf"></i> Легкий
+                    {% elif card.difficulty == 'hard' %}
+                    <i class="fas fa-fire"></i> Сложный
+                    {% else %}
+                    <i class="fas fa-balance-scale"></i> Средний
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if card.version %}
+            <div class="card-version">
+                <i class="fas fa-code-branch"></i> Версия: {{ card.version }}
+            </div>
+            {% endif %}
+
+            <h3 class="card-question">
+                <i class="fas fa-question-circle"></i> {{ card.question }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+            <div class="answer-section">
+                <button class="toggle-answer" onclick="toggleAnswer(this)">
+                    <i class="fas fa-eye"></i> Показать ответ
+                </button>
+                <div class="answer-content" style="display: none;">
+                    <div class="answer-text">
+                        <strong><i class="fas fa-check-circle"></i> Ответ:</strong>
+                        <p>{{ card.answer }}</p>
+                    </div>
+
+                    {% if card.explanation %}
+                    <div class="explanation">
+                        <strong><i class="fas fa-lightbulb"></i> Объяснение:</strong>
+                        <p>{{ card.explanation }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <form action="{{ url_for('toggle_hidden', card_id=card.id) }}" method="POST"
+                              onsubmit="return confirm('{{ 'Показать' if card.hidden else 'Скрыть' }} эту карточку?');"
+                              style="display: inline;">
+                            <button type="submit" class="action-btn {% if card.hidden %}unhide-btn{% else %}hide-btn{% endif %}">
+                                {% if card.hidden %}
+                                <i class="fas fa-eye"></i> Показать
+                                {% else %}
+                                <i class="fas fa-eye-slash"></i> Скрыть
+                                {% endif %}
+                            </button>
+                        </form>
+
+                        <a href="{{ url_for('edit_card', card_id=card.id) }}" class="action-btn edit-btn">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </a>
+                        <form action="{{ url_for('delete_card', card_id=card.id) }}" method="POST"
+                              onsubmit="return confirm('Вы уверены, что хотите удалить этот вопрос?');"
+                              style="display: inline;">
+                            <button type="submit" class="action-btn delete-btn">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация только для режима сетки -->
+{% if view_mode != 'stack' and total_pages > 1 %}
+<div class="pagination-container">
+    <div class="pagination-info">
+        Показано карточек {{ start_idx }} - {{ end_idx }} из {{ total_cards }}
+        {% if current_theme %}
+            по теме "{{ current_theme }}"
+        {% endif %}
+    </div>
+
+    <nav class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('index',
+                    page=page-1,
+                    theme=current_theme,
+                    difficulty=current_difficulty,
+                    version=current_version,
+                    search=search_query,
+                    show_hidden=show_hidden|lower,
+                    view=view_mode) }}"
+               class="pagination-link prev">
+                <i class="fas fa-chevron-left"></i> Назад
+            </a>
+        {% else %}
+            <span class="pagination-link prev disabled">
+                <i class="fas fa-chevron-left"></i> Назад
+            </span>
+        {% endif %}
+
+        <div class="pagination-numbers">
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="pagination-number active">{{ p }}</span>
+                {% elif p >= page - 2 and p <= page + 2 %}
+                    <a href="{{ url_for('index',
+                            page=p,
+                            theme=current_theme,
+                            difficulty=current_difficulty,
+                            version=current_version,
+                            search=search_query,
+                            show_hidden=show_hidden|lower,
+                            view=view_mode) }}"
+                       class="pagination-number">
+                        {{ p }}
+                    </a>
+                {% elif p == 1 or p == total_pages %}
+                    <a href="{{ url_for('index',
+                            page=p,
+                            theme=current_theme,
+                            difficulty=current_difficulty,
+                            version=current_version,
+                            search=search_query,
+                            show_hidden=show_hidden|lower,
+                            view=view_mode) }}"
+                       class="pagination-number">
+                        {{ p }}
+                    </a>
+                {% elif (p == page - 3 and page > 4) or (p == page + 3 and page < total_pages - 3) %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if page < total_pages %}
+            <a href="{{ url_for('index',
+                    page=page+1,
+                    theme=current_theme,
+                    difficulty=current_difficulty,
+                    version=current_version,
+                    search=search_query,
+                    show_hidden=show_hidden|lower,
+                    view=view_mode) }}"
+               class="pagination-link next">
+                Вперед <i class="fas fa-chevron-right"></i>
+            </a>
+        {% else %}
+            <span class="pagination-link next disabled">
+                Вперед <i class="fas fa-chevron-right"></i>
+            </span>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-inbox"></i>
+    </div>
+    <h3>Нет вопросов</h3>
+    <p>
+        {% if current_theme or search_query or show_hidden %}
+        Попробуйте изменить параметры фильтрации
+        {% else %}
+        Добавьте первый вопрос, нажав на кнопку "+" в правом верхнем углу
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+<!-- Кнопки прокрутки -->
+<div class="scroll-buttons">
+    <button class="scroll-btn scroll-top" onclick="scrollToTop()" title="В начало страницы">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <button class="scroll-btn scroll-bottom" onclick="scrollToBottom()" title="В конец страницы">
+        <i class="fas fa-chevron-down"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAnswer(button) {
+    const answerElement = button.nextElementSibling;
+
+    if (answerElement.style.display === 'none') {
+        answerElement.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-eye-slash"></i> Скрыть ответ';
+        button.classList.add('active');
+    } else {
+        answerElement.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-eye"></i> Показать ответ';
+        button.classList.remove('active');
+    }
+}
+
+// Функция плавной прокрутки в начало страницы
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// Функция плавной прокрутки в конец страницы
+function scrollToBottom() {
+    window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+    });
+}
+
+// Показывать/скрывать кнопку "вверх" при прокрутке
+window.addEventListener('scroll', function() {
+    const scrollTopBtn = document.querySelector('.scroll-top');
+    const scrollBottomBtn = document.querySelector('.scroll-bottom');
+
+    if (scrollTopBtn) {
+        if (window.scrollY > 300) {
+            scrollTopBtn.style.opacity = '0.9';
+            scrollTopBtn.style.visibility = 'visible';
+        } else {
+            scrollTopBtn.style.opacity = '0.6';
+        }
+    }
+
+    if (scrollBottomBtn) {
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollPosition = window.scrollY;
+
+        if (documentHeight - scrollPosition - windowHeight > 100) {
+            scrollBottomBtn.style.opacity = '0.9';
+            scrollBottomBtn.style.visibility = 'visible';
+        } else {
+            scrollBottomBtn.style.opacity = '0.6';
+        }
+    }
+});
+
+// Добавляем обработчики для клавиатуры (для удобства)
+document.addEventListener('keydown', function(e) {
+    // Ctrl+Up - в начало
+    if (e.ctrlKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        scrollToTop();
+    }
+    // Ctrl+Down - в конец
+    if (e.ctrlKey && e.key === 'ArrowDown') {
+        e.preventDefault();
+        scrollToBottom();
+    }
+});
+
+// Инициализация кнопок прокрутки при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollTopBtn = document.querySelector('.scroll-top');
+    const scrollBottomBtn = document.querySelector('.scroll-bottom');
+
+    if (scrollTopBtn) {
+        scrollTopBtn.style.opacity = '0.6';
+    }
+    if (scrollBottomBtn) {
+        scrollBottomBtn.style.opacity = '0.6';
+    }
+});
+</script>
+{% endblock %}
