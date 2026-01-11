@@ -1,0 +1,300 @@
+<p>В этом разделе описаны требования к формату Excel файлов для импорта и экспорта карточек в <strong>HomeoRemedyTest</strong>.</p>
+
+<h3>📁 Структура Excel файла</h3>
+
+<p>Файл должен иметь следующие столбцы в указанном порядке:</p>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th>Колонка</th>
+      <th>Название</th>
+      <th>Обязательно</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A</td>
+      <td>№ (ID)</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>B</td>
+      <td>Вопрос</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>C</td>
+      <td>Ответ</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>D</td>
+      <td>Объяснение</td>
+      <td>Нет</td>
+    </tr>
+    <tr>
+      <td>E</td>
+      <td>Тема</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>F</td>
+      <td>Сложность</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>G</td>
+      <td>Скрытый</td>
+      <td>Да</td>
+    </tr>
+    <tr>
+      <td>H</td>
+      <td>Версия</td>
+      <td>Нет</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>📋 Подробное описание колонок</h3>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th>Колонка</th>
+      <th>Описание</th>
+      <th>Формат</th>
+      <th>Пример</th>
+      <th>Примечания</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>A (№)</strong></td>
+      <td>Уникальный номер карточки</td>
+      <td>Число</td>
+      <td><code>1</code>, <code>2</code>, <code>3</code></td>
+      <td>При импорте: если 0 или пусто - будет назначен автоматически</td>
+    </tr>
+    <tr>
+      <td><strong>B (Вопрос)</strong></td>
+      <td>Текст вопроса для самопроверки</td>
+      <td>Текст</td>
+      <td>"Какое средство показано при внезапной лихорадке?"</td>
+      <td>Максимум 1000 символов</td>
+    </tr>
+    <tr>
+      <td><strong>C (Ответ)</strong></td>
+      <td>Правильный ответ на вопрос</td>
+      <td>Текст</td>
+      <td>"Belladonna"</td>
+      <td>Максимум 2000 символов</td>
+    </tr>
+    <tr>
+      <td><strong>D (Объяснение)</strong></td>
+      <td>Подробное объяснение ответа</td>
+      <td>Текст</td>
+      <td>"Belladonna показана при состояниях с внезапным и бурным началом..."</td>
+      <td>Поддерживает переносы строк (Alt+Enter в Excel)</td>
+    </tr>
+    <tr>
+      <td><strong>E (Тема)</strong></td>
+      <td>Категория карточки</td>
+      <td>Текст</td>
+      <td>"Растения, Жаропонижающие"</td>
+      <td>Несколько тем через запятую</td>
+    </tr>
+    <tr>
+      <td><strong>F (Сложность)</strong></td>
+      <td>Уровень сложности вопроса</td>
+      <td>Текст</td>
+      <td>"Средний"</td>
+      <td>Допустимые значения: "Легкий", "Средний", "Сложный" или "easy", "medium", "hard"</td>
+    </tr>
+    <tr>
+      <td><strong>G (Скрытый)</strong></td>
+      <td>Видимость карточки</td>
+      <td>Текст/Логическое</td>
+      <td>"Нет"</td>
+      <td>Допустимые значения: "Да" (скрыта) или "Нет" (видна)</td>
+    </tr>
+    <tr>
+      <td><strong>H (Версия)</strong></td>
+      <td>Метка для группировки карточек</td>
+      <td>Текст</td>
+      <td>"Экзамен по Materia Medica"</td>
+      <td>Любая произвольная метка</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>📝 Пример заполнения Excel файла</h3>
+
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th>№</th>
+      <th>Вопрос</th>
+      <th>Ответ</th>
+      <th>Объяснение</th>
+      <th>Тема</th>
+      <th>Сложность</th>
+      <th>Скрытый</th>
+      <th>Версия</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Какое средство при внезапной лихорадке?</td>
+      <td>Belladonna</td>
+      <td>Показана при внезапном начале, покраснении лица, горячей коже</td>
+      <td>Растения</td>
+      <td>Легкий</td>
+      <td>Нет</td>
+      <td>Тест 1</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Препарат из яда пчелы</td>
+      <td>Apis mellifica</td>
+      <td>Отеки, жгучая боль, улучшение от холода</td>
+      <td>Животные</td>
+      <td>Средний</td>
+      <td>Нет</td>
+      <td>Тест 2</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Показания для Bryonia</td>
+      <td>Сухость, жажда, боли при движении</td>
+      <td>Сухие слизистые, жажда холодных напитков, раздражительность</td>
+      <td>Растения</td>
+      <td>Легкий</td>
+      <td>Да</td>
+      <td>Тест 3</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>⚠️ Частые проблемы при работе с Excel</h3>
+
+<h4>Проблема: "Файл не загружается"</h4>
+<p><strong>Возможные причины:</strong></p>
+<ul>
+  <li>Неправильный формат файла (требуется .xlsx или .xls)</li>
+  <li>Отсутствуют обязательные столбцы</li>
+  <li>Файл слишком большой (>50 MB)</li>
+</ul>
+<p><strong>Решение:</strong></p>
+<ul>
+  <li>Сохраните файл в формате .xlsx</li>
+  <li>Проверьте наличие всех обязательных столбцов</li>
+  <li>Разделите большой файл на несколько частей</li>
+</ul>
+
+<h4>Проблема: "Неправильно отображаются русские буквы"</h4>
+<p><strong>Возможные причины:</strong></p>
+<ul>
+  <li>Неправильная кодировка файла</li>
+  <li>Проблемы с шрифтами в Excel</li>
+</ul>
+<p><strong>Решение:</strong></p>
+<ul>
+  <li>Сохраните файл с кодировкой UTF-8</li>
+  <li>Используйте стандартные шрифты (Arial, Times New Roman)</li>
+</ul>
+
+<h4>Проблема: "Потеряны переносы строк"</h4>
+<p><strong>Возможные причины:</strong></p>
+<ul>
+  <li>В Excel не использовался Alt+Enter для переноса</li>
+  <li>Формат ячеек не позволяет перенос по словам</li>
+</ul>
+<p><strong>Решение:</strong></p>
+<ul>
+  <li>Для переноса строк внутри ячейки используйте Alt+Enter</li>
+  <li>Установите для ячеек формат "Переносить текст"</li>
+</ul>
+
+<h3>💡 Советы по работе с Excel файлами</h3>
+
+<ol>
+  <li><strong>Создавайте резервные копии</strong> перед массовым импортом</li>
+  <li><strong>Используйте предпросмотр</strong> перед импортом для проверки данных</li>
+  <li><strong>Разделяйте темы запятыми</strong> без пробелов: "Растения,Животные,Минералы"</li>
+  <li><strong>Экспортируйте регулярно</strong> для создания резервных копий</li>
+  <li><strong>Проверяйте сложность</strong> - используйте только допустимые значения</li>
+</ol>
+
+<h3>🔄 Миграция между устройствами</h3>
+
+<p>Для переноса данных между устройствами:</p>
+<ol>
+  <li>На исходном устройстве: Экспортируйте все карточки в Excel</li>
+  <li>Перенесите файл Excel на новое устройство (по email, облаку, флешке)</li>
+  <li>На целевом устройстве: Импортируйте файл в режиме "Заменить все"</li>
+  <li>Проверьте, что все данные корректно отображаются</li>
+</ol>
+
+<blockquote>
+  <p><strong>Важно:</strong> Для корректной работы всегда используйте рекомендованный формат .xlsx с кодировкой UTF-8.</p>
+</blockquote>
+
+<style>
+.table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+th {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+}
+
+td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: top;
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+
+code {
+  background-color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  color: #e74c3c;
+}
+
+blockquote {
+  border-left: 4px solid #3498db;
+  margin: 20px 0;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-radius: 0 5px 5px 0;
+  font-style: italic;
+}
+</style>

@@ -800,11 +800,60 @@ def debug_storage():
         return redirect(url_for('index'))
 
 
-@app.route('/docs')
+import os
+
+
 @app.route('/documentation')
 def documentation():
     """Страница документации"""
-    return redirect('https://zerocreator.github.io/homeoremedytest/')
+
+    base_dir = Path(__file__).parent
+    templates_dir = base_dir / 'app' / 'templates' / 'docs'
+
+    # Определяем пути к HTML файлам
+    docs_structure = {
+        'welcome': templates_dir / 'index.html',
+        'first_steps': templates_dir / 'getting-started' / 'first-steps.html',
+        'cards': templates_dir / 'usage' / 'cards.html',
+        'features': templates_dir / 'usage' / 'features.html',
+        'filters': templates_dir / 'usage' / 'filters.html',
+        'import_export': templates_dir / 'usage' / 'import-export.html',
+        'view_modes': templates_dir / 'usage' / 'view-modes.html',
+        'data_format': templates_dir / 'reference' / 'data-format.html',
+        'faq': templates_dir / 'reference' / 'faq.html',
+    }
+
+    # Загружаем содержимое каждого файла
+    docs_content = {}
+    for key, filepath in docs_structure.items():
+        try:
+            if filepath.exists():
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                    # Извлекаем содержимое body
+                    body_start = content.find('<body>')
+                    body_end = content.find('</body>')
+
+                    if body_start != -1 and body_end != -1:
+                        content = content[body_start + 6:body_end].strip()
+
+                    # Удаляем возможные стили
+                    while '<style>' in content and '</style>' in content:
+                        style_start = content.find('<style>')
+                        style_end = content.find('</style>') + 8
+                        content = content[:style_start] + content[style_end:]
+
+                    docs_content[f'{key}_content'] = content
+            else:
+                docs_content[
+                    f'{key}_content'] = f'<div class="alert alert-warning"><p>Файл документации не найден: {filepath}</p></div>'
+
+        except Exception as e:
+            docs_content[
+                f'{key}_content'] = f'<div class="alert alert-error"><p>Ошибка загрузки раздела {key}: {str(e)}</p></div>'
+
+    return render_template('documentation.html', **docs_content)
 
 
 # Контекстный процессор для шаблонов

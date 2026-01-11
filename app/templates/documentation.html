@@ -1,0 +1,882 @@
+{% extends "base.html" %}
+
+{% block title %}Инструкция - HomeoRemedyTest{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<div class="documentation-container">
+    <!-- Левая панель с навигацией -->
+    <aside class="docs-sidebar">
+        <nav class="docs-nav">
+            <div class="docs-search">
+                <input type="text" id="docs-search" placeholder="Поиск в инструкции..." class="docs-search-input">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-section-title" onclick="toggleNavSection('getting-started')">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Начало работы</span>
+                    <i class="fas fa-chevron-down"></i>
+                </h3>
+                <div class="nav-links" id="getting-started-nav">
+                    <a href="#welcome" class="docs-nav-link active" data-section="welcome">
+                        <i class="fas fa-home"></i> Добро пожаловать
+                    </a>
+                    <a href="#first-steps" class="docs-nav-link" data-section="first-steps">
+                        <i class="fas fa-walking"></i> Первые шаги
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-section-title" onclick="toggleNavSection('usage')">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Использование</span>
+                    <i class="fas fa-chevron-down"></i>
+                </h3>
+                <div class="nav-links" id="usage-nav">
+                    <a href="#cards" class="docs-nav-link" data-section="cards">
+                        <i class="fas fa-id-card"></i> Работа с карточками
+                    </a>
+                    <a href="#features" class="docs-nav-link" data-section="features">
+                        <i class="fas fa-star"></i> Основные возможности
+                    </a>
+                    <a href="#filters" class="docs-nav-link" data-section="filters">
+                        <i class="fas fa-filter"></i> Фильтры и поиск
+                    </a>
+                    <a href="#import-export" class="docs-nav-link" data-section="import-export">
+                        <i class="fas fa-file-export"></i> Импорт и экспорт
+                    </a>
+                    <a href="#view-modes" class="docs-nav-link" data-section="view-modes">
+                        <i class="fas fa-eye"></i> Режимы просмотра
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-section-title" onclick="toggleNavSection('reference')">
+                    <i class="fas fa-book-open"></i>
+                    <span>Справочник</span>
+                    <i class="fas fa-chevron-down"></i>
+                </h3>
+                <div class="nav-links" id="reference-nav">
+                    <a href="#data-format" class="docs-nav-link" data-section="data-format">
+                        <i class="fas fa-database"></i> Формат данных
+                    </a>
+                    <a href="#faq" class="docs-nav-link" data-section="faq">
+                        <i class="fas fa-question-circle"></i> Часто задаваемые вопросы (FAQ)
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Основная область с контентом -->
+    <main class="docs-content">
+        <div class="docs-header">
+            <h1><i class="fas fa-book"></i> Инструкция по использованию</h1>
+            <p class="docs-subtitle">Полное руководство по работе с HomeoRemedyTest</p>
+        </div>
+
+        <div class="docs-section" id="welcome">
+            <h2><i class="fas fa-home"></i> Добро пожаловать в HomeoRemedyTest</h2>
+            <div class="section-content">
+                {{ welcome_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="installation" style="display: none;">
+            <h2><i class="fas fa-download"></i> Установка</h2>
+            <div class="section-content">
+                {{ installation_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="first-steps" style="display: none;">
+            <h2><i class="fas fa-walking"></i> Первые шаги</h2>
+            <div class="section-content">
+                {{ first_steps_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="cards" style="display: none;">
+            <h2><i class="fas fa-id-card"></i> Работа с карточками</h2>
+            <div class="section-content">
+                {{ cards_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="features" style="display: none;">
+            <h2><i class="fas fa-star"></i> Основные возможности</h2>
+            <div class="section-content">
+                {{ features_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="filters" style="display: none;">
+            <h2><i class="fas fa-filter"></i> Фильтры и поиск</h2>
+            <div class="section-content">
+                {{ filters_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="import-export" style="display: none;">
+            <h2><i class="fas fa-file-export"></i> Импорт и экспорт</h2>
+            <div class="section-content">
+                {{ import_export_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="view-modes" style="display: none;">
+            <h2><i class="fas fa-eye"></i> Режимы просмотра</h2>
+            <div class="section-content">
+                {{ view_modes_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="card-creation" style="display: none;">
+            <h2><i class="fas fa-edit"></i> Создание карточек</h2>
+            <div class="section-content">
+                {{ card_creation_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="effective-learning" style="display: none;">
+            <h2><i class="fas fa-graduation-cap"></i> Эффективное обучение</h2>
+            <div class="section-content">
+                {{ effective_learning_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="preparation" style="display: none;">
+            <h2><i class="fas fa-book"></i> Подготовка</h2>
+            <div class="section-content">
+                {{ preparation_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="data-format" style="display: none;">
+            <h2><i class="fas fa-database"></i> Формат данных</h2>
+            <div class="section-content">
+                {{ data_format_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="faq" style="display: none;">
+            <h2><i class="fas fa-question-circle"></i> Частые вопросы</h2>
+            <div class="section-content">
+                {{ faq_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="sync" style="display: none;">
+            <h2><i class="fas fa-sync"></i> Синхронизация</h2>
+            <div class="section-content">
+                {{ sync_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-footer">
+            <div class="footer-navigation">
+                <button class="nav-btn prev-btn" onclick="navigatePrev()">
+                    <i class="fas fa-arrow-left"></i> Предыдущий раздел
+                </button>
+                <div class="nav-indicator">
+                    <span id="current-section">1</span> из <span id="total-sections">14</span>
+                </div>
+                <button class="nav-btn next-btn" onclick="navigateNext()">
+                    Следующий раздел <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+            <div class="footer-help">
+                <p><i class="fas fa-question-circle"></i> Нужна дополнительная помощь? Пишите на: shkola.olga@gmail.com</p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Общие стили для документации */
+.documentation-container {
+    display: flex;
+    gap: 40px;
+    max-width: var(--max-content-width);
+    margin: 0 auto;
+    padding: 30px 20px;
+    min-height: calc(100vh - 200px);
+}
+
+/* Левая панель навигации */
+.docs-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.docs-search {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.docs-search-input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    background: var(--bg-light);
+    transition: all var(--transition-fast);
+}
+
+.docs-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.1);
+}
+
+.docs-search .fa-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Специфичные стили для навигации в документации */
+.docs-nav .nav-section {
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.docs-nav .nav-section-title {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 12px 15px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-light);
+    transition: background-color var(--transition-fast);
+}
+
+.docs-nav .nav-section-title:hover {
+    background: var(--bg-secondary);
+}
+
+.docs-nav .nav-section-title .fa-chevron-down {
+    margin-left: auto;
+    font-size: 0.8rem;
+    transition: transform var(--transition-normal);
+    color: var(--text-light);
+}
+
+.docs-nav .nav-section.collapsed .nav-section-title .fa-chevron-down {
+    transform: rotate(-90deg);
+}
+
+.docs-nav .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 5px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-normal);
+}
+
+.docs-nav .nav-section:not(.collapsed) .nav-links {
+    max-height: 500px;
+}
+
+/* Специфичные стили для ссылок в документации */
+.docs-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+    border-left: 3px solid transparent;
+}
+
+.docs-nav-link:hover {
+    background: var(--bg-light);
+    border-left-color: var(--primary-color);
+    padding-left: 15px;
+    color: var(--primary-color);
+}
+
+.docs-nav-link.active {
+    background: rgba(74, 111, 165, 0.1);
+    border-left-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.docs-nav-link i {
+    width: 18px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Основная область контента */
+.docs-content {
+    flex: 1;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    max-width: calc(100% - 320px); /* Чтобы не было слишком широко */
+}
+
+.docs-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.docs-header h1 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.docs-subtitle {
+    color: var(--text-light);
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Секции документации */
+.docs-section {
+    margin-bottom: 40px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.docs-section h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-content {
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.section-content h3 {
+    color: var(--primary-dark);
+    font-size: 1.2rem;
+    margin: 25px 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-content h4 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin: 20px 0 8px 0;
+}
+
+.section-content p {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+.section-content ul, .section-content ol {
+    margin: 10px 0 15px 20px;
+}
+
+.section-content li {
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.section-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.section-content a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.section-content code {
+    background: var(--bg-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.section-content pre {
+    background: var(--bg-light);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    margin: 15px 0;
+    border-left: 4px solid var(--primary-color);
+    max-width: 100%;
+}
+
+.section-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.section-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    margin: 15px 0;
+    padding: 12px 15px;
+    background: var(--bg-light);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Стили для таблиц с горизонтальным скроллом */
+.table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.table-container table {
+    width: 100%;
+    min-width: 600px; /* Минимальная ширина для таблиц */
+    border-collapse: collapse;
+    background: var(--bg-primary);
+}
+
+.table-container th {
+    background: var(--bg-light);
+    color: var(--primary-color);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.table-container td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.table-container tr:last-child td {
+    border-bottom: none;
+}
+
+.table-container tr:hover {
+    background: var(--bg-light);
+}
+
+/* Футер документации */
+.docs-footer {
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.nav-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.nav-btn:disabled {
+    background: var(--border-color);
+    color: var(--text-light);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.nav-indicator {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    flex: 1;
+}
+
+.footer-help {
+    text-align: center;
+    padding: 15px;
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.footer-help i {
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .documentation-container {
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .docs-content {
+        padding: 25px;
+    }
+}
+
+@media (max-width: 992px) {
+    .documentation-container {
+        flex-direction: column;
+    }
+
+    .docs-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+        margin-bottom: 20px;
+    }
+
+    .docs-content {
+        max-width: 100%;
+        padding: 20px;
+    }
+
+    .docs-nav .nav-section:not(.collapsed) .nav-links {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .documentation-container {
+        padding: 15px;
+    }
+
+    .docs-header h1 {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .docs-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .footer-navigation {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-container {
+        margin: 15px -15px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .table-container table {
+        min-width: 800px; /* На мобильных шире для удобства */
+    }
+}
+
+@media (max-width: 480px) {
+    .docs-content {
+        padding: 15px;
+    }
+
+    .section-content pre {
+        padding: 12px;
+        font-size: 0.8rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Список всех разделов в порядке навигации
+const sections = [
+    'welcome', 'installation', 'first-steps',
+    'cards', 'features', 'filters', 'import-export', 'view-modes',
+    'card-creation', 'effective-learning', 'preparation',
+    'data-format', 'faq', 'sync'
+];
+
+let currentSectionIndex = 0;
+
+// Функция переключения секций навигации
+function toggleNavSection(sectionId) {
+    const navSection = document.querySelector(`#${sectionId}-nav`).closest('.nav-section');
+    navSection.classList.toggle('collapsed');
+
+    // Обновляем иконку
+    const icon = navSection.querySelector('.fa-chevron-down');
+    if (navSection.classList.contains('collapsed')) {
+        icon.style.transform = 'rotate(-90deg)';
+    } else {
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Функция показа определенного раздела
+function showSection(sectionId) {
+    // Скрыть все разделы
+    document.querySelectorAll('.docs-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Показать выбранный раздел
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+
+        // Обновить навигацию
+        updateNavigation(sectionId);
+
+        // Обновить индикатор
+        currentSectionIndex = sections.indexOf(sectionId);
+        updateSectionIndicator();
+
+        // Прокрутить к верху раздела
+        window.scrollTo({
+            top: targetSection.offsetTop - 100,
+            behavior: 'smooth'
+        });
+    }
+}
+
+// Функция обновления навигационных ссылок
+function updateNavigation(activeSectionId) {
+    // Убрать активный класс со всех ссылок в документации
+    document.querySelectorAll('.docs-nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+
+    // Добавить активный класс к текущей ссылке
+    const activeLink = document.querySelector(`.docs-nav-link[data-section="${activeSectionId}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+
+        // Раскрываем родительскую секцию навигации
+        const navSection = activeLink.closest('.nav-section');
+        if (navSection && navSection.classList.contains('collapsed')) {
+            navSection.classList.remove('collapsed');
+            navSection.querySelector('.fa-chevron-down').style.transform = 'rotate(0deg)';
+        }
+    }
+}
+
+// Функция обновления индикатора раздела
+function updateSectionIndicator() {
+    document.getElementById('current-section').textContent = currentSectionIndex + 1;
+    document.getElementById('total-sections').textContent = sections.length;
+}
+
+// Функция навигации вперед
+function navigateNext() {
+    if (currentSectionIndex < sections.length - 1) {
+        currentSectionIndex++;
+        showSection(sections[currentSectionIndex]);
+    }
+}
+
+// Функция навигации назад
+function navigatePrev() {
+    if (currentSectionIndex > 0) {
+        currentSectionIndex--;
+        showSection(sections[currentSectionIndex]);
+    }
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализируем все таблицы с контейнерами для скролла
+    initTables();
+
+    // Показать первый раздел
+    showSection('welcome');
+
+    // Все секции навигации кроме первой делаем свернутыми
+    document.querySelectorAll('.docs-nav .nav-section').forEach((section, index) => {
+        if (index > 0) {
+            section.classList.add('collapsed');
+            section.querySelector('.fa-chevron-down').style.transform = 'rotate(-90deg)';
+        }
+    });
+
+    // Добавить обработчики для навигационных ссылок в документации
+    document.querySelectorAll('.docs-nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sectionId = this.getAttribute('data-section');
+            showSection(sectionId);
+        });
+    });
+
+    // Добавить поиск по документации
+    const searchInput = document.getElementById('docs-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+
+            if (searchTerm.length > 2) {
+                // Искать в контенте всех разделов
+                document.querySelectorAll('.docs-section').forEach(section => {
+                    const content = section.textContent.toLowerCase();
+                    const isVisible = content.includes(searchTerm);
+
+                    // Показать/скрыть раздел
+                    section.style.display = isVisible ? 'block' : 'none';
+
+                    // Обновить видимость ссылок в навигации
+                    const sectionId = section.id;
+                    const navLink = document.querySelector(`.docs-nav-link[data-section="${sectionId}"]`);
+                    if (navLink) {
+                        navLink.style.display = isVisible ? 'flex' : 'none';
+                    }
+                });
+            } else {
+                // Сбросить поиск
+                showSection(sections[currentSectionIndex]);
+                document.querySelectorAll('.docs-nav-link').forEach(link => {
+                    link.style.display = 'flex';
+                });
+            }
+        });
+    }
+
+    // Добавить горячие клавиши для навигации (только в документации)
+    const isInDocs = window.location.pathname.includes('/documentation');
+    if (isInDocs) {
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                    e.preventDefault();
+                    navigateNext();
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    e.preventDefault();
+                    navigatePrev();
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    currentSectionIndex = 0;
+                    showSection(sections[currentSectionIndex]);
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    currentSectionIndex = sections.length - 1;
+                    showSection(sections[currentSectionIndex]);
+                }
+            }
+        });
+    }
+});
+
+// Функция для инициализации таблиц с горизонтальным скроллом
+function initTables() {
+    // Находим все таблицы внутри контента документации
+    const sectionContent = document.querySelector('.section-content');
+    if (sectionContent) {
+        sectionContent.querySelectorAll('table').forEach(table => {
+            // Проверяем, не обернута ли таблица уже
+            if (!table.parentElement.classList.contains('table-container')) {
+                // Создаем контейнер для скролла
+                const container = document.createElement('div');
+                container.className = 'table-container';
+
+                // Оборачиваем таблицу в контейнер
+                table.parentNode.insertBefore(container, table);
+                container.appendChild(table);
+            }
+        });
+    }
+}
+
+// Обновляем таблицы при переключении разделов
+const originalShowSection = showSection;
+showSection = function(sectionId) {
+    originalShowSection(sectionId);
+    setTimeout(initTables, 100); // Ждем немного для отрисовки контента
+};
+</script>
+{% endblock %}
