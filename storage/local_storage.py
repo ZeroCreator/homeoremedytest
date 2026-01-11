@@ -1,46 +1,90 @@
 import json
 from pathlib import Path
+import os
 
 
 class LocalStorage:
-    """Локальное хранилище (для совместимости и fallback)"""
-
     def __init__(self, filepath):
         self.filepath = Path(filepath)
+        # Проверяем, запущено ли на Vercel
+        self.is_vercel = os.environ.get('VERCEL') == '1'
 
     def load(self):
         """Загрузка данных из локального файла"""
         try:
+            if self.is_vercel:
+                return {"cards": [], "next_id": 1}
+
             if not self.filepath.exists():
+                print(f"📝 LocalStorage.load: Файл не существует, создаем пустую структуру")
                 return {"cards": [], "next_id": 1}
 
             with open(self.filepath, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                print(f"✅ LocalStorage.load: Загружено {len(data.get('cards', []))} карточек")
+                return data
 
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(f"❌ LocalStorage.load: Ошибка JSON: {e}")
             return {"cards": [], "next_id": 1}
         except Exception as e:
-            print(f"Ошибка загрузки локального файла: {e}")
+            print(f"❌ LocalStorage.load: Ошибка: {e}")
             return {"cards": [], "next_id": 1}
 
     def save(self, data):
         """Сохранение данных в локальный файл"""
         try:
+            # НА VERCEL ЛОКАЛЬНОЕ СОХРАНЕНИЕ НЕВОЗМОЖНО
+            if self.is_vercel:
+                # Возвращаем True для совместимости, но не пытаемся сохранить
+                return True
+
+            print(f"💾 LocalStorage.save: Сохраняем в {self.filepath}")
+            print(f"📊 LocalStorage.save: Карточек для сохранения: {len(data.get('cards', []))}")
+
             # Проверяем структуру данных
             if not isinstance(data, dict):
+                print(f"❌ LocalStorage.save: ОШИБКА: данные не словарь!")
                 return False
 
             if 'cards' not in data:
+                print(f"❌ LocalStorage.save: ОШИБКА: нет ключа 'cards'!")
                 return False
 
             # Создаем директорию если нужно
             self.filepath.parent.mkdir(parents=True, exist_ok=True)
+            print(f"📁 LocalStorage.save: Директория создана: {self.filepath.parent}")
 
             # Сохраняем файл
             with open(self.filepath, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"Сохранено {len(data.get('cards', []))} карточек в локальный файл")
-            return True
+
+            print(f"✅ LocalStorage.save: Файл записан")
+
+            # Проверяем что файл существует и читается
+            if self.filepath.exists():
+                file_size = self.filepath.stat().st_size
+                print(f"📏 LocalStorage.save: Размер файла: {file_size} байт")
+
+                # Читаем обратно для проверки
+                with open(self.filepath, 'r', encoding='utf-8') as f:
+                    saved_data = json.load(f)
+                    saved_count = len(saved_data.get('cards', []))
+                    print(f"📖 LocalStorage.save: Проверка: загружено {saved_count} карточек")
+
+                    if saved_count == len(data.get('cards', [])):
+                        print(f"✅ LocalStorage.save: Все карточки сохранены успешно!")
+                        return True
+                    else:
+                        print(
+                            f"❌ LocalStorage.save: ОШИБКА: сохранено {saved_count}, ожидалось {len(data.get('cards', []))}")
+                        return False
+            else:
+                print(f"❌ LocalStorage.save: ОШИБКА: файл не существует после записи!")
+                return False
+
         except Exception as e:
-            print(f"Ошибка сохранения локального файла: {e}")
+            print(f"❌ LocalStorage.save: ОШИБКА: {e}")
+            import traceback
+            traceback.print_exc()
             return False

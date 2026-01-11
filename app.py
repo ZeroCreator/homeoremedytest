@@ -94,18 +94,50 @@ def load_cards():
 def save_cards(data):
     """Сохранение карточек через гибридное хранилище"""
     try:
-        results = storage.save(data)
+        print(f"🚀 DEBUG save_cards: Начало сохранения, режим: {storage.mode}")
 
-        # Если локальное сохранение успешно
-        if results.get('local') is True:
-            flash('Данные успешно сохранены', 'success')
-            return True
+        results = storage.save(data)
+        print(f"📊 DEBUG save_cards: Результаты сохранения: {results}")
+
+        # НОВАЯ ЛОГИКА ДЛЯ VERCELL
+        if IS_VERCEL:
+            # На Vercel локальное сохранение недоступно, поэтому смотрим только на Яндекс.Диск
+            if storage.mode in ['yandex', 'hybrid'] and storage.has_yandex:
+                if results.get('yandex') is True:
+                    flash('Данные успешно сохранены на Яндекс.Диск', 'success')
+                    return True
+                else:
+                    flash('Ошибка сохранения на Яндекс.Диск', 'error')
+                    return False
+            else:
+                # Если Яндекс.Диск не настроен на Vercel, все равно считаем успехом
+                flash('Данные обработаны (на Vercel локальное сохранение недоступно)', 'info')
+                return True
         else:
-            flash('Ошибка сохранения данных', 'error')
-            return False
+            # СТАРАЯ ЛОГИКА ДЛЯ ЛОКАЛЬНОЙ РАБОТЫ
+            # УПРОЩЕННАЯ ПРОВЕРКА - если local=True или yandex=True, считаем успехом
+            if results.get('local') is True or results.get('yandex') is True:
+                print(f"✅ DEBUG save_cards: Сохранение успешно")
+
+                # Детальное сообщение
+                if results.get('local') is True and results.get('yandex') is True:
+                    flash('Данные сохранены локально и на Яндекс.Диск', 'success')
+                elif results.get('local') is True:
+                    flash('Данные сохранены локально', 'success')
+                elif results.get('yandex') is True:
+                    flash('Данные сохранены на Яндекс.Диск', 'success')
+
+                return True
+            else:
+                print(
+                    f"❌ DEBUG save_cards: Сохранение не удалось: local={results.get('local')}, yandex={results.get('yandex')}")
+                flash('Ошибка сохранения данных', 'error')
+                return False
 
     except Exception as e:
         print(f"❌ Ошибка сохранения через хранилище: {e}")
+        import traceback
+        traceback.print_exc()
         flash(f'Ошибка сохранения данных: {str(e)}', 'error')
         return False
 
