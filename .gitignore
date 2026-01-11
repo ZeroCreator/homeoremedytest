@@ -54,3 +54,4 @@ logs/
 # Environment variables
 .env
 .env.local
+test_cards.json

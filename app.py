@@ -96,17 +96,18 @@ def save_cards(data):
     try:
         results = storage.save(data)
 
-        # Проверяем результаты сохранения
-        if results.get('yandex') is False:
-            flash('Данные сохранены локально, но не удалось синхронизировать с Яндекс.Диском', 'warning')
-        elif results.get('yandex') is True:
-            flash('Данные успешно сохранены и синхронизированы с Яндекс.Диском', 'success')
+        # Если локальное сохранение успешно
+        if results.get('local') is True:
+            flash('Данные успешно сохранены', 'success')
+            return True
         else:
-            flash('Данные успешно сохранены локально', 'success')
+            flash('Ошибка сохранения данных', 'error')
+            return False
 
     except Exception as e:
-        print(f"Ошибка сохранения через хранилище: {e}", file=sys.stderr)
-        flash('Ошибка сохранения данных', 'error')
+        print(f"❌ Ошибка сохранения через хранилище: {e}")
+        flash(f'Ошибка сохранения данных: {str(e)}', 'error')
+        return False
 
 
 def extract_themes(cards_data):
@@ -443,15 +444,15 @@ def card_detail(card_id):
 def edit_card(card_id):
     """Редактирование карточки"""
     try:
-        print(f"DEBUG: edit_card called for card_id={card_id}, method={request.method}")
         cards_data = load_cards()
-        template_vars = get_template_variables(cards_data)
 
         # Ищем карточку
         card = None
-        for c in cards_data.get('cards', []):
+        card_index = -1
+        for i, c in enumerate(cards_data.get('cards', [])):
             if c.get('id') == card_id:
                 card = c
+                card_index = i
                 break
 
         if not card:
@@ -459,7 +460,6 @@ def edit_card(card_id):
             return redirect(url_for('index'))
 
         if request.method == 'POST':
-            print(f"DEBUG: Processing POST data: {request.form}")
             # Получаем данные
             theme = request.form.get('theme', '').strip()
             question = request.form.get('question', '').strip()
@@ -468,38 +468,39 @@ def edit_card(card_id):
             # Валидация
             if not theme or not question or not answer:
                 flash('Все поля обязательны для заполнения', 'error')
-                template_vars['card'] = card
                 return render_template('edit_card.html',
                                        card=card,
                                        difficulty_levels=Config.DIFFICULTY_LEVELS,
-                                       **template_vars)
+                                       **get_template_variables(cards_data))
 
-            # Обновляем данные карточки
-            card['theme'] = theme
-            card['question'] = question
-            card['answer'] = answer
-            card['explanation'] = request.form.get('explanation', '').strip()
-            card['difficulty'] = request.form.get('difficulty', 'medium')
+            # Обновляем поля
+            cards_data['cards'][card_index]['theme'] = theme
+            cards_data['cards'][card_index]['question'] = question
+            cards_data['cards'][card_index]['answer'] = answer
+            cards_data['cards'][card_index]['explanation'] = request.form.get('explanation', '').strip()
+            cards_data['cards'][card_index]['difficulty'] = request.form.get('difficulty', 'medium')
+
             version = request.form.get('version', '').strip()
-            card['version'] = version if version else None
+            if version:
+                cards_data['cards'][card_index]['version'] = version
+            elif 'version' in cards_data['cards'][card_index]:
+                del cards_data['cards'][card_index]['version']
 
-            print(f"DEBUG: Updated card data: {card}")
-            save_cards(cards_data)
+            # Сохраняем
+            if save_cards(cards_data):
+                flash('Вопрос успешно обновлен!', 'success')
+                return redirect(url_for('card_detail', card_id=card_id))
+            else:
+                flash('Ошибка сохранения', 'error')
 
-            flash('Вопрос успешно обновлен!', 'success')
-            return redirect(url_for('card_detail', card_id=card_id))
-
-        # GET запрос
-        template_vars['card'] = card
+        # GET запрос или ошибка
         return render_template('edit_card.html',
                                card=card,
                                difficulty_levels=Config.DIFFICULTY_LEVELS,
-                               **template_vars)
+                               **get_template_variables(cards_data))
 
     except Exception as e:
-        print(f"Ошибка в edit_card: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Ошибка в edit_card: {e}")
         flash('Произошла ошибка при редактировании', 'error')
         return redirect(url_for('index'))
 
