@@ -3,86 +3,146 @@
 {% block title %}Статус системы{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Статус системы</h2>
+<div class="backup-management">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-bar"></i> Статус системы</h1>
+        <p class="subtitle">Обзор состояния приложения и хранилища данных</p>
+    </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Хранилище данных</h5>
+    <!-- Хранилище данных -->
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-database"></i> Хранилище данных</h2>
         </div>
-        <div class="card-body">
-            <table class="table table-bordered">
+
+        <table class="backup-table">
+            <thead>
                 <tr>
-                    <th width="30%">Режим хранения</th>
+                    <th>Параметр</th>
+                    <th>Значение</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Режим хранения</strong></td>
                     <td>{{ status.storage_mode }}</td>
                 </tr>
                 <tr>
-                    <th>Локальный файл</th>
+                    <td><strong>Локальный файл</strong></td>
                     <td>
                         {% if status.local_file_exists %}
-                            <span class="badge bg-success">Существует</span> ({{ status.local_file_size }})
+                            <span class="badge badge-local">
+                                <i class="fas fa-check-circle"></i> Существует
+                            </span>
+                            ({{ status.local_file_size }})
                         {% else %}
-                            <span class="badge bg-danger">Отсутствует</span>
+                            <span class="badge" style="background: #dc3545; color: white;">
+                                <i class="fas fa-times-circle"></i> Отсутствует
+                            </span>
                         {% endif %}
                     </td>
                 </tr>
                 <tr>
-                    <th>Путь к локальному файлу</th>
+                    <td><strong>Путь к локальному файлу</strong></td>
                     <td><code>{{ status.local_file_path }}</code></td>
                 </tr>
                 <tr>
-                    <th>Яндекс.Диск</th>
+                    <td><strong>Яндекс.Диск</strong></td>
                     <td>
                         {% if status.has_yandex %}
                             {% if status.yandex_connected %}
-                                <span class="badge bg-success">Подключен</span> ({{ status.yandex_info }})
+                                <span class="badge badge-yandex">
+                                    <i class="fas fa-check-circle"></i> Подключен
+                                </span>
                             {% else %}
-                                <span class="badge bg-warning">Не подключен</span> ({{ status.yandex_info }})
+                                <span class="badge" style="background: #ffc107; color: #000;">
+                                    <i class="fas fa-exclamation-triangle"></i> Не подключен
+                                </span>
                             {% endif %}
                         {% else %}
-                            <span class="badge bg-secondary">Не настроен</span>
+                            <span class="badge" style="background: #6c757d; color: white;">
+                                <i class="fas fa-cloud-slash"></i> Не настроен
+                            </span>
                         {% endif %}
                     </td>
                 </tr>
                 <tr>
-                    <th>Количество карточек</th>
+                    <td><strong>Всего карточек</strong></td>
                     <td><strong>{{ status.total_cards }}</strong> (видимых: {{ status.visible_cards }}, скрытых: {{ status.hidden_cards }})</td>
                 </tr>
                 <tr>
-                    <th>Количество тем</th>
+                    <td><strong>Количество тем</strong></td>
                     <td>{{ status.themes_count }}</td>
                 </tr>
                 <tr>
-                    <th>Количество версий</th>
+                    <td><strong>Количество версий</strong></td>
                     <td>{{ status.versions_count }}</td>
                 </tr>
-                <tr>
-                    <th>Локальный путь:</th>
-                    <td><code>{{ status.local_path }}</code></td>
-                </tr>
-                <tr>
-                    <th>Путь на Яндекс.Диске:</th>
-                    <td>
-                        {% if has_yandex %}
-                            <code>{{ yandex_path }}</code>
-                        {% else %}
-                            <span class="badge bg-secondary">Не настроен</span>
-                        {% endif %}
-                    </td>
-                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Резервные копии -->
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Резервные копии</h2>
+        </div>
+
+        {% if backups %}
+        <div class="backup-list-table">
+            <table class="backup-table">
+                <thead>
+                    <tr>
+                        <th>Имя файла</th>
+                        <th>Источник</th>
+                        <th>Дата создания</th>
+                        <th>Карточек</th>
+                        <th>Размер</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in backups %}
+                    <tr class="backup-item">
+                        <td class="backup-filename">
+                            <i class="fas fa-file-archive"></i>
+                            {{ backup.filename }}
+                        </td>
+                        <td class="backup-source">
+                            <span class="badge {% if backup.source == 'yandex' %}badge-yandex{% else %}badge-local{% endif %}">
+                                <i class="fas {% if backup.source == 'yandex' %}fa-cloud{% else %}fa-hdd{% endif %}"></i>
+                                {{ backup.source_display }}
+                            </span>
+                        </td>
+                        <td class="backup-date">{{ backup.date }}</td>
+                        <td class="backup-count">{{ backup.card_count }}</td>
+                        <td class="backup-size">{{ backup.size }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3>Нет доступных бэкапов</h3>
+            <p>Создайте первый бэкап, чтобы обезопасить свои данные</p>
+        </div>
+        {% endif %}
     </div>
-    <div class="status-item">
-    <strong>Локальный файл:</strong>
-    <span class="status-badge {% if status.local_file_exists %}success{% else %}warning{% endif %}">
-        {{ 'Существует' if status.local_file_exists else 'Отсутствует' }}
-    </span>
-</div>
 
-    <div class="text-center">
-        <a href="{{ url_for('index') }}" class="btn btn-primary">На главную</a>
-        <a href="{{ url_for('debug_storage') }}" class="btn btn-info">Подробная диагностика</a>
+    <!-- Кнопки действий -->
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('backup_management') }}" class="btn btn-primary">
+            <i class="fas fa-database"></i> Управление бэкапами
+        </a>
+        <a href="{{ url_for('debug_storage') }}" class="btn btn-info">
+            <i class="fas fa-search"></i> Диагностика хранилища
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-home"></i> На главную
+        </a>
     </div>
 </div>
 {% endblock %}

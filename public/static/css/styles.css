@@ -2655,3 +2655,596 @@ css
         font-size: 0.85rem;
     }
 }
+
+/* ==========================================================================
+   СТРАНИЦЫ СИСТЕМЫ: БЭКАПЫ, СТАТУС, ДИАГНОСТИКА
+   ========================================================================== */
+
+/* Стили для страницы бэкапов - в едином стиле с проектом */
+.backup-management {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 30px;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+}
+
+.page-header h1 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    font-size: 2em;
+}
+
+.page-header .subtitle {
+    margin-top: 10px;
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+/* Карточки секций */
+.card-section {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Формы */
+.backup-form, .restore-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: all var(--transition-fast);
+    background-color: var(--bg-light);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+    background-color: var(--bg-primary);
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+.target-section {
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin: 25px 0;
+    border: 2px dashed var(--border-color);
+}
+
+.target-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.target-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.target-option {
+    flex: 1;
+    min-width: 200px;
+}
+
+.target-option input[type="radio"] {
+    display: none;
+}
+
+.target-option label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.target-option input[type="radio"]:checked + label {
+    border-color: var(--primary-color);
+    background: rgba(74, 111, 165, 0.1);
+    box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+}
+
+.target-icon {
+    font-size: 1.5em;
+    color: var(--primary-color);
+}
+
+.target-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.target-description {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+/* Инфо-бокс */
+.info-box {
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin: 20px 0;
+    border-left: 4px solid var(--primary-color);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+.info-item i {
+    color: var(--primary-color);
+    width: 20px;
+}
+
+/* Кнопки */
+.btn {
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--accent-color), #e0a800);
+    color: var(--text-primary);
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-backup, .btn-restore {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto 0;
+    display: block;
+}
+
+/* Таблица бэкапов */
+.backup-list-table {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.backup-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+}
+
+.backup-table th {
+    background: var(--bg-secondary);
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.backup-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.backup-item:hover {
+    background: var(--bg-secondary);
+}
+
+.backup-select {
+    text-align: center;
+    width: 50px;
+}
+
+.backup-radio {
+    transform: scale(1.3);
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.backup-filename {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    min-width: 200px;
+}
+
+.backup-filename label {
+    cursor: pointer;
+    margin-left: 8px;
+    color: var(--text-primary);
+}
+
+.backup-filename i {
+    color: var(--primary-color);
+}
+
+.backup-source {
+    min-width: 120px;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-yandex {
+    background: linear-gradient(135deg, var(--accent-color), #ff9900);
+    color: var(--text-primary);
+}
+
+.badge-local {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+}
+
+.backup-actions {
+    min-width: 120px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 14px;
+    min-width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-sm);
+}
+
+.btn-info {
+    background: var(--primary-light);
+    color: white;
+    border: none;
+}
+
+.btn-info:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #dc3545;
+    transform: translateY(-2px);
+}
+
+/* Предупреждения */
+.warning-box {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin: 20px 0;
+    color: #856404;
+}
+
+.warning-box i {
+    color: #856404;
+    margin-right: 10px;
+}
+
+/* Состояние пустого списка */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-light);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: var(--border-color);
+}
+
+.empty-state h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 100000;
+}
+
+.modal-content {
+    flex: 1;
+    overflow-y: auto;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: white;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast);
+    line-height: 1;
+}
+
+.modal-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 20px;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+    background: var(--bg-secondary);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* Стили для предпросмотра в модальном окне */
+#previewContent {
+    color: var(--text-primary);
+}
+
+.preview-info {
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.preview-info .info-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.preview-info .info-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.preview-info strong {
+    min-width: 120px;
+    color: var(--text-secondary);
+}
+
+.preview-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.theme-tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+}
+
+.preview-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow-sm);
+}
+
+.preview-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.preview-card p {
+    margin: 8px 0;
+    color: var(--text-secondary);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 1.5em;
+    }
+
+    .card-section {
+        padding: 15px;
+    }
+
+    .backup-table {
+        font-size: 0.9em;
+    }
+
+    .backup-table th,
+    .backup-table td {
+        padding: 10px 8px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .target-options {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}

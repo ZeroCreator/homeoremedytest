@@ -68,6 +68,15 @@
                             <a href="{{ url_for('import_cards') }}" class="dropdown-item">
                                 <i class="fas fa-file-import"></i> Импорт из Excel
                             </a>
+                            <!-- Добавляем разделитель -->
+                            <div class="dropdown-divider"></div>
+                            <!-- Новые пункты для бэкапов -->
+                            <a href="{{ url_for('backup_management') }}" class="dropdown-item">
+                                <i class="fas fa-database"></i> Управление бэкапами
+                                {% if backup_count > 0 %}
+                                <span class="badge">{{ backup_count }}</span>
+                                {% endif %}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -87,6 +96,7 @@
         <main class="main-content">
             <div class="content-wrapper">
                 <!-- Боковая панель -->
+                {% if show_filters|default(True) %}
                 <aside class="sidebar">
                     {% block sidebar %}
                     <div class="sidebar-section">
@@ -279,9 +289,10 @@
                     </div>
                     {% endblock %}
                 </aside>
+                {% endif %}
 
                 <!-- Основное содержимое -->
-                <section class="content-area">
+                <section class="content-area {% if not show_filters %}full-width{% endif %}">
                     <!-- Flash сообщения -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}

@@ -3,96 +3,186 @@
 {% block title %}Диагностика хранилища{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Диагностика хранилища</h2>
-
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Локальное хранилище</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Статус:</strong>
-                        {% if local_exists %}
-                        <span class="badge bg-success">✓ Активно</span>
-                        {% else %}
-                        <span class="badge bg-danger">✗ Не найдено</span>
-                        {% endif %}
-                    </p>
-                    <p><strong>Путь:</strong> <code>app/data/test_cards.json</code></p>
-                    <p><strong>Размер:</strong> {{ local_size }} байт</p>
-                    <p><strong>Карточек:</strong> {{ local_cards }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Яндекс.Диск</h5>
-                </div>
-                <div class="card-body">
-                    {% if has_yandex %}
-                        <p><strong>Подключение:</strong>
-                            {% if yandex_status.connected %}
-                            <span class="badge bg-success">✓ Подключен</span>
-                            {% else %}
-                            <span class="badge bg-danger">✗ Ошибка</span>
-                            {% endif %}
-                        </p>
-                        <p><strong>Файл на диске:</strong>
-                            {% if yandex_status.file_exists %}
-                            <span class="badge bg-success">✓ Найден</span>
-                            {% else %}
-                            <span class="badge bg-warning">⚠️ Не найден</span>
-                            {% endif %}
-                        </p>
-                        <p><strong>Карточек в облаке:</strong> {{ yandex_status.cards_count|default(0) }}</p>
-
-                        {% if yandex_status.connected %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            Яндекс.Диск работает корректно
-                        </div>
-                        {% else %}
-                        <div class="alert alert-danger">
-                            <i class="fas fa-times-circle"></i>
-                            Проблема с подключением к Яндекс.Диску
-                        </div>
-                        {% endif %}
-
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-cloud-slash"></i>
-                            Яндекс.Диск не настроен
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+<div class="backup-management">
+    <div class="page-header">
+        <h1><i class="fas fa-search"></i> Диагностика хранилища</h1>
+        <p class="subtitle">Подробная диагностика состояния хранения данных</p>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Информация</h5>
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-hdd"></i> Локальное хранилище</h2>
         </div>
-        <div class="card-body">
-            <p>Текущий режим: <strong>{{ storage_mode }}</strong></p>
-            <p>Синхронизация с Яндекс.Диском работает, если видите в консоли:</p>
-            <ul>
-                <li>"✅ Успешно загружено X карточек с Яндекс.Диска"</li>
-                <li>"✅ Успешно сохранено X карточек на Яндекс.Диск"</li>
-            </ul>
-            <div class="text-center">
-                <a href="{{ url_for('system_status') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-chart-bar"></i> Статус системы
-                </a>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-success">
-                    <i class="fas fa-home"></i> На главную
-                </a>
+
+        <table class="backup-table">
+            <thead>
+                <tr>
+                    <th>Параметр</th>
+                    <th>Значение</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Статус</strong></td>
+                    <td>
+                        {% if local_exists %}
+                        <span class="badge badge-local">
+                            <i class="fas fa-check-circle"></i> Активно
+                        </span>
+                        {% else %}
+                        <span class="badge" style="background: #dc3545; color: white;">
+                            <i class="fas fa-times-circle"></i> Не найдено
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Путь</strong></td>
+                    <td><code>app/data/test_cards.json</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Размер</strong></td>
+                    <td>{{ local_size }} байт</td>
+                </tr>
+                <tr>
+                    <td><strong>Карточек</strong></td>
+                    <td>{{ local_cards }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-cloud"></i> Яндекс.Диск</h2>
+        </div>
+
+        {% if has_yandex %}
+        <table class="backup-table">
+            <thead>
+                <tr>
+                    <th>Параметр</th>
+                    <th>Значение</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Подключение</strong></td>
+                    <td>
+                        {% if yandex_status.connected %}
+                        <span class="badge badge-yandex">
+                            <i class="fas fa-check-circle"></i> Подключен
+                        </span>
+                        {% else %}
+                        <span class="badge" style="background: #dc3545; color: white;">
+                            <i class="fas fa-times-circle"></i> Ошибка
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Файл на диске</strong></td>
+                    <td>
+                        {% if yandex_status.file_exists %}
+                        <span class="badge badge-yandex">
+                            <i class="fas fa-check-circle"></i> Найден
+                        </span>
+                        {% else %}
+                        <span class="badge" style="background: #ffc107; color: #000;">
+                            <i class="fas fa-exclamation-triangle"></i> Не найден
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Карточек в облаке</strong></td>
+                    <td>{{ yandex_status.cards_count|default(0) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        {% if yandex_status.connected %}
+        <div class="info-box" style="margin-top: 20px;">
+            <div class="info-item">
+                <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                <span>Яндекс.Диск работает корректно</span>
             </div>
         </div>
+        {% else %}
+        <div class="warning-box" style="margin-top: 20px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Проблема с подключением к Яндекс.Диску</strong>
+            <p>Проверьте токен OAuth и настройки интеграции</p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="warning-box">
+            <i class="fas fa-cloud-slash"></i>
+            <strong>Яндекс.Диск не настроен</strong>
+            <p>Для активации облачного хранения настройте интеграцию с Яндекс.Диском</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Резервные копии -->
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Резервные копии</h2>
+        </div>
+
+        {% if backups %}
+        <div class="backup-list-table">
+            <table class="backup-table">
+                <thead>
+                    <tr>
+                        <th>Имя файла</th>
+                        <th>Источник</th>
+                        <th>Дата создания</th>
+                        <th>Карточек</th>
+                        <th>Размер</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in backups %}
+                    <tr class="backup-item">
+                        <td class="backup-filename">
+                            <i class="fas fa-file-archive"></i>
+                            {{ backup.filename }}
+                        </td>
+                        <td class="backup-source">
+                            <span class="badge {% if backup.source == 'yandex' %}badge-yandex{% else %}badge-local{% endif %}">
+                                <i class="fas {% if backup.source == 'yandex' %}fa-cloud{% else %}fa-hdd{% endif %}"></i>
+                                {{ backup.source_display }}
+                            </span>
+                        </td>
+                        <td class="backup-date">{{ backup.date }}</td>
+                        <td class="backup-count">{{ backup.card_count }}</td>
+                        <td class="backup-size">{{ backup.size }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3>Нет доступных бэкапов</h3>
+            <p>Создайте первый бэкап, чтобы обезопасить свои данные</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Кнопки действий -->
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('system_status') }}" class="btn btn-info">
+            <i class="fas fa-chart-bar"></i> Статус системы
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-home"></i> На главную
+        </a>
     </div>
 </div>
 {% endblock %}

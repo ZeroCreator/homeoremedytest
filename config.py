@@ -28,7 +28,7 @@ class Config:
     YANDEX_DISK_TOKEN = os.environ.get('YANDEX_DISK_TOKEN')
 
     # Путь на Яндекс.Диске
-    YANDEX_DISK_PATH = os.environ.get('YANDEX_DISK_PATH', 'HomeoRemedyTest/app/data/test_cards.json')
+    YANDEX_DISK_PATH = os.environ.get('YANDEX_DISK_PATH', 'HomeoRemedyTest/data/test_cards.json')
 
     # Путь к локальному файлу данных
     LOCAL_DATA_PATH = os.environ.get('LOCAL_DATA_PATH', 'app/data/test_cards.json')
@@ -60,6 +60,13 @@ class Config:
         'medium': {'name': 'Средний', 'color': '#ef6c00', 'icon': 'fa-balance-scale'},
         'hard': {'name': 'Сложный', 'color': '#c62828', 'icon': 'fa-fire'}
     }
+
+    # Настройки бэкапов
+    BACKUP_DIR = Path('backups')
+    MAX_BACKUPS = int(os.environ.get('MAX_BACKUPS', 50))  # Максимальное количество хранимых бэкапов
+    BACKUP_ON_START = os.environ.get('BACKUP_ON_START', 'false').lower() == 'true'
+    # Путь на Яндекс.Диске для бэкапов
+    YANDEX_DISK_BACKUP_PATH = os.environ.get('YANDEX_DISK_BACKUP_PATH', 'HomeoRemedyTest/backups')
 
     @classmethod
     def print_config(cls):

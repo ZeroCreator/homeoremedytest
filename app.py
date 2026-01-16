@@ -1,5 +1,3 @@
-import os
-import json
 import sys
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
 from datetime import datetime
@@ -9,6 +7,8 @@ from dotenv import load_dotenv
 
 from excel_utils.exporter import create_exporter
 from excel_utils.importer import create_importer
+
+from backup_manager import BackupManager
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -52,6 +52,13 @@ storage = HybridStorage(
     local_path=JSON_FILE,
     yandex_token=Config.YANDEX_DISK_TOKEN,
     yandex_path=Config.YANDEX_DISK_PATH
+)
+
+# Создаем менеджер бэкапов
+backup_manager = BackupManager(
+    base_backup_dir=Config.BACKUP_DIR,
+    storage=storage,
+    yandex_backup_path=Config.YANDEX_DISK_BACKUP_PATH
 )
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
@@ -215,6 +222,7 @@ def get_template_variables(cards_data, **overrides):
         'view_mode': 'grid',
         'storage_mode': storage.mode,
         'has_yandex': storage.has_yandex,
+        'show_filters': True,
         # Параметры пагинации по умолчанию (для режима сетки)
         'page': 1,
         'per_page': 20,
@@ -610,6 +618,7 @@ def import_cards():
         # Получаем данные для сайдбара
         cards_data = load_cards()
         template_vars = get_template_variables(cards_data)
+        template_vars['show_filters'] = False
         return render_template('import.html', **template_vars)
 
     # POST запрос
@@ -751,41 +760,62 @@ def system_status():
     try:
         cards_data = load_cards()
         template_vars = get_template_variables(cards_data)
+        template_vars['show_filters'] = False
 
-        status_info = {
+        # Статус хранилища
+        status = {
             'storage_mode': storage.mode,
-            'has_yandex': storage.has_yandex,
             'local_file_exists': JSON_FILE.exists(),
+            'local_file_size': f"{JSON_FILE.stat().st_size} байт" if JSON_FILE.exists() else "Файл не существует",
             'local_file_path': str(JSON_FILE),
+            'has_yandex': storage.has_yandex,
             'yandex_connected': False,
+            'yandex_info': "Настроен" if storage.has_yandex else "Не настроен",
             'total_cards': len(cards_data.get('cards', [])),
             'visible_cards': sum(1 for card in cards_data.get('cards', []) if not card.get('hidden', False)),
             'hidden_cards': sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
             'themes_count': len(template_vars['all_themes']),
-            'versions_count': len(template_vars['all_versions']),
-            'yandex_path': Config.YANDEX_DISK_PATH,
-            'local_path': str(Config.JSON_FILE)
+            'versions_count': len(template_vars['all_versions'])
         }
-
-        # Получаем информацию о локальном файле
-        if JSON_FILE.exists():
-            size = JSON_FILE.stat().st_size
-            status_info['local_file_size'] = f"{size} байт ({size / 1024:.1f} KB)"
-        else:
-            status_info['local_file_size'] = "Файл не существует"
 
         # Проверяем подключение к Яндекс.Диску
         if storage.has_yandex and hasattr(storage, 'yandex_storage'):
             try:
-                status_info['yandex_connected'] = storage.yandex_storage.test_connection()
-                status_info['yandex_info'] = "Настроен и подключен"
+                status['yandex_connected'] = storage.yandex_storage.test_connection()
             except:
-                status_info['yandex_connected'] = False
-                status_info['yandex_info'] = "Ошибка подключения"
-        else:
-            status_info['yandex_info'] = "Не настроен"
+                status['yandex_connected'] = False
 
-        template_vars['status'] = status_info
+        # Получаем список бэкапов (используем ту же логику, что и в backup_management)
+        backups = backup_manager.list_backups()
+        backup_list = []
+        for backup in backups:
+            try:
+                source_display = 'Яндекс.Диск' if backup.source == 'yandex' else 'Локальный'
+
+                if hasattr(backup, 'created_at'):
+                    date_str = backup.created_at.strftime('%d.%m.%Y %H:%M')
+                else:
+                    date_str = 'Неизвестно'
+
+                size_kb = backup.file_size / 1024
+                size_str = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
+
+                backup_list.append({
+                    'filename': backup.filename,
+                    'source': backup.source,
+                    'source_display': source_display,
+                    'date': date_str,
+                    'card_count': backup.card_count,
+                    'size': size_str,
+                    'from_yandex': backup.source == 'yandex'
+                })
+            except Exception as e:
+                print(f"Ошибка обработки бэкапа {backup.filename}: {e}")
+                continue
+
+        template_vars['status'] = status
+        template_vars['backups'] = backup_list
+
         return render_template('system_status.html', **template_vars)
     except Exception as e:
         print(f"Ошибка в system_status: {e}")
@@ -801,6 +831,7 @@ def debug_storage():
     try:
         cards_data = load_cards()
         template_vars = get_template_variables(cards_data)
+        template_vars['show_filters'] = False
 
         # Проверяем локальный файл
         local_path = JSON_FILE
@@ -814,15 +845,48 @@ def debug_storage():
             yandex_status['file_exists'] = storage.yandex_storage.file_exists()
 
             # Пробуем прочитать файл
-            yandex_data = storage.yandex_storage.load()
-            yandex_status['cards_count'] = len(yandex_data.get('cards', []))
+            try:
+                yandex_data = storage.yandex_storage.load()
+                yandex_status['cards_count'] = len(yandex_data.get('cards', []))
+            except:
+                yandex_status['cards_count'] = 0
 
-        template_vars['local_exists'] = local_exists
-        template_vars['local_size'] = local_size
-        template_vars['local_cards'] = len(cards_data.get('cards', []))
-        template_vars['yandex_status'] = yandex_status
-        template_vars['yandex_path'] = Config.YANDEX_DISK_PATH
-        template_vars['local_path'] = str(Config.JSON_FILE)
+        # Получаем список бэкапов (используем ту же логику, что и в backup_management)
+        backups = backup_manager.list_backups()
+        backup_list = []
+        for backup in backups:
+            try:
+                source_display = 'Яндекс.Диск' if backup.source == 'yandex' else 'Локальный'
+
+                if hasattr(backup, 'created_at'):
+                    date_str = backup.created_at.strftime('%d.%m.%Y %H:%M')
+                else:
+                    date_str = 'Неизвестно'
+
+                size_kb = backup.file_size / 1024
+                size_str = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
+
+                backup_list.append({
+                    'filename': backup.filename,
+                    'source': backup.source,
+                    'source_display': source_display,
+                    'date': date_str,
+                    'card_count': backup.card_count,
+                    'size': size_str,
+                    'from_yandex': backup.source == 'yandex'
+                })
+            except Exception as e:
+                print(f"Ошибка обработки бэкапа {backup.filename}: {e}")
+                continue
+
+        template_vars.update({
+            'local_exists': local_exists,
+            'local_size': local_size,
+            'local_cards': len(cards_data.get('cards', [])),
+            'has_yandex': storage.has_yandex,
+            'yandex_status': yandex_status,
+            'backups': backup_list
+        })
 
         return render_template('debug_storage.html', **template_vars)
     except Exception as e:
@@ -831,9 +895,6 @@ def debug_storage():
         traceback.print_exc()
         flash('Ошибка отладки хранилища', 'error')
         return redirect(url_for('index'))
-
-
-import os
 
 
 @app.route('/documentation')
@@ -889,6 +950,181 @@ def documentation():
     return render_template('documentation.html', **docs_content)
 
 
+@app.route('/backup/create', methods=['POST'])
+def create_backup():
+    """Создание бэкапа"""
+    try:
+        description = request.form.get('description', '').strip()
+        backup_target = request.form.get('backup_target', 'both')
+
+        success, message = backup_manager.create_backup(description, backup_target)
+
+        if success:
+            flash(message, 'success')
+        else:
+            flash(f'Ошибка: {message}', 'error')
+
+    except Exception as e:
+        flash(f'Ошибка создания бэкапа: {str(e)}', 'error')
+
+    return redirect(url_for('backup_management'))
+
+
+@app.route('/backup/manage')
+def backup_management():
+    """Управление бэкапами"""
+    try:
+        cards_data = load_cards()
+        template_vars = get_template_variables(cards_data)
+        template_vars['show_filters'] = False
+
+        # Получаем список бэкапов
+        backups = backup_manager.list_backups()
+
+        # Подготавливаем данные для отображения
+        backup_list = []
+        for backup in backups:
+            try:
+                # Определяем источник бэкапа
+                source_display = 'Яндекс.Диск' if backup.source == 'yandex' else 'Локальный'
+
+                # Форматируем дату
+                if hasattr(backup, 'created_at'):
+                    date_str = backup.created_at.strftime('%d.%m.%Y %H:%M')
+                else:
+                    date_str = 'Неизвестно'
+
+                # Форматируем размер
+                size_kb = backup.file_size / 1024
+                size_str = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
+
+                # Получаем описание
+                description = getattr(backup, 'description', '')
+
+                backup_list.append({
+                    'filename': backup.filename,
+                    'source': backup.source,  # 'yandex' или 'local'
+                    'source_display': source_display,  # Для отображения
+                    'date': date_str,
+                    'card_count': backup.card_count,
+                    'size': size_str,
+                    'description': description,
+                    'from_yandex': backup.source == 'yandex',
+                    'created_at': backup.created_at if hasattr(backup, 'created_at') else None
+                })
+            except Exception as e:
+                print(f"Ошибка обработки бэкапа {backup.filename}: {e}")
+                continue  # Пропускаем проблемный бэкап
+
+        template_vars['backups'] = backup_list
+
+        # ДОБАВЛЕНО: Отладочная информация
+        print(f"\n📊 Информация для шаблона:")
+        print(f"   Всего бэкапов: {len(backup_list)}")
+        for b in backup_list:
+            print(f"   - {b['filename']}: источник={b['source']}, from_yandex={b['from_yandex']}")
+
+        return render_template('backup_management.html', **template_vars)
+    except Exception as e:
+        print(f"Ошибка в backup_management: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Ошибка загрузки списка бэкапов', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/backup/restore', methods=['POST'])
+def restore_backup():
+    """Восстановление из бэкапа"""
+    try:
+        backup_name = request.form.get('backup_name')
+        from_yandex = request.form.get('from_yandex', 'false').lower() == 'true'
+        restore_target = request.form.get('restore_target', 'both')
+
+        if not backup_name:
+            flash('Не выбран бэкап для восстановления', 'error')
+            return redirect(url_for('backup_management'))
+
+        success, message = backup_manager.restore_backup(
+            backup_name,
+            from_yandex,
+            restore_target
+        )
+
+        if success:
+            flash(message, 'success')
+        else:
+            flash(f'Ошибка восстановления: {message}', 'error')
+
+    except Exception as e:
+        flash(f'Ошибка восстановления: {str(e)}', 'error')
+
+    return redirect(url_for('backup_management'))
+
+
+@app.route('/backup/delete', methods=['POST'])
+def delete_backup():
+    """Удаление бэкапа"""
+    try:
+        backup_name = request.form.get('backup_name')
+        from_yandex = request.form.get('from_yandex', 'false').lower() == 'true'
+
+        if not backup_name:
+            return jsonify({'success': False, 'error': 'Не выбран бэкап для удаления'}), 400
+
+        success, message = backup_manager.delete_backup(backup_name, from_yandex)
+
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'error': message}), 400
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Ошибка удаления: {str(e)}'}), 500
+
+@app.route('/backup/auto_create')
+def auto_create_backup():
+    """Автоматическое создание бэкапа (например, по расписанию)"""
+    try:
+        success, message = backup_manager.create_backup("Автоматический бэкап")
+        return jsonify({'success': success, 'message': message})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/test-storage')
+def test_storage():
+    """API для тестирования хранилища"""
+    try:
+        # Тест загрузки
+        data = storage.load()
+        cards_count = len(data.get('cards', []))
+
+        # Тест сохранения (сохраняем те же данные)
+        result = storage.save(data)
+
+        message_parts = []
+        message_parts.append(f"✅ Хранилище работает корректно")
+        message_parts.append(f"Загружено карточек: {cards_count}")
+        message_parts.append(f"Режим: {storage.mode}")
+        message_parts.append(
+            f"Яндекс.Диск: {'Подключен' if storage.has_yandex and result.get('yandex', False) else 'Не настроен'}")
+
+        if storage.mode == 'hybrid':
+            message_parts.append(f"Локальное сохранение: {'✅ Успешно' if result.get('local', False) else '❌ Ошибка'}")
+            message_parts.append(f"Облачное сохранение: {'✅ Успешно' if result.get('yandex', False) else '❌ Ошибка'}")
+
+        return jsonify({
+            'success': True,
+            'message': '\n'.join(message_parts),
+            'details': result
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'❌ Ошибка при тестировании хранилища: {str(e)}'
+        }), 500
+
+
 # Контекстный процессор для шаблонов
 @app.context_processor
 def inject_globals():
@@ -898,9 +1134,9 @@ def inject_globals():
         'storage_mode': storage.mode,
         'has_yandex': storage.has_yandex,
         'yandex_path': Config.YANDEX_DISK_PATH,
-        'local_path': str(Config.JSON_FILE)
+        'local_path': str(Config.JSON_FILE),
+        'backup_count': len(backup_manager.list_backups())
     }
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

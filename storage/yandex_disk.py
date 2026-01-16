@@ -112,17 +112,20 @@ class YandexDiskStorage:
             print(f"❌ Критическая ошибка при загрузке: {type(e).__name__}: {e}")
             return {"cards": [], "themes": [], "next_id": 1}
 
-    def save(self, data):
+    def save(self, data, custom_path=None):
         """Сохранение данных на Яндекс.Диск через REST API"""
         try:
             print(f"🔄 Сохранение данных на Яндекс.Диск...")
+
+            # Используем custom_path если указан, иначе стандартный filename
+            path_to_save = custom_path if custom_path else f'/{self.filename}'
 
             # Получаем ссылку для загрузки через REST API
             response = requests.get(
                 f"{self.base_url}/resources/upload",
                 headers=self.headers,
                 params={
-                    'path': f'/{self.filename}',
+                    'path': path_to_save,
                     'overwrite': 'true'
                 },
                 timeout=10

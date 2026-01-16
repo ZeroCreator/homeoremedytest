@@ -1,0 +1,646 @@
+import json
+import shutil
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple
+import os
+from dataclasses import dataclass
+
+
+@dataclass
+class BackupInfo:
+    filename: str
+    path: Path
+    created_at: datetime
+    card_count: int
+    file_size: int
+    source: str = 'local'  # 'local' или 'yandex'
+    description: str = ""  # Добавлено поле для описания
+
+    def __post_init__(self):
+        """Инициализация после создания объекта"""
+        # Убедимся, что created_at - это datetime объект
+        if isinstance(self.created_at, str):
+            try:
+                self.created_at = datetime.fromisoformat(self.created_at)
+            except:
+                self.created_at = datetime.now()
+
+        # Удаляем информацию о часовом поясе для сравнения
+        if hasattr(self.created_at, 'tzinfo') and self.created_at.tzinfo is not None:
+            self.created_at = self.created_at.replace(tzinfo=None)
+
+
+class BackupManager:
+    """Менеджер для работы с бэкапами"""
+
+    def __init__(self, base_backup_dir: Path, storage, yandex_backup_path=None):
+        """
+        Args:
+            base_backup_dir: Базовая директория для бэкапов
+            storage: Гибридное хранилище
+            yandex_backup_path: путь для бэкапов на Яндекс.Диске
+        """
+        self.base_backup_dir = base_backup_dir
+        self.storage = storage
+        self.is_vercel = os.environ.get('VERCEL') == '1'
+        self.yandex_backup_path = yandex_backup_path or 'backups'  # По умолчанию 'backups'
+
+        # Создаем директорию для бэкапов
+        if not self.is_vercel:
+            self.base_backup_dir.mkdir(parents=True, exist_ok=True)
+
+    def create_backup(self, description: str = "", backup_target: str = 'both') -> Tuple[bool, str]:
+        """
+        Создание бэкапа текущих данных
+
+        Args:
+            description: описание бэкапа
+            backup_target: куда сохранять ('local', 'yandex', 'both')
+
+        Returns:
+            Tuple[bool, str]: (успех, сообщение)
+        """
+        try:
+            # Загружаем текущие данные через хранилище
+            data = self.storage.load()
+            if not data or 'cards' not in data:
+                return False, "Нет данных для бэкапа"
+
+            # Создаем имя файла с временной меткой
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            if description:
+                safe_desc = description.replace(' ', '_').replace('/', '_')
+                filename = f"backup_{timestamp}_{safe_desc}.json"
+            else:
+                filename = f"backup_{timestamp}.json"
+
+            results = []
+
+            # Добавляем метаданные в бэкап
+            backup_data = {
+                **data,
+                "_backup_info": {
+                    "created_at": datetime.now().isoformat(),
+                    "description": description,
+                    "created_by": "HomeoRemedyTest",
+                    "backup_target": backup_target
+                }
+            }
+
+            # Сохраняем локально
+            local_success = False
+            if backup_target in ['local', 'both'] and not self.is_vercel:
+                local_success = self._save_local_backup(filename, backup_data)
+                if local_success:
+                    results.append("локально")
+                else:
+                    results.append("локально: ошибка")
+
+            # Сохраняем на Яндекс.Диск
+            yandex_success = False
+            if backup_target in ['yandex', 'both'] and self.storage.has_yandex:
+                yandex_success = self._save_yandex_backup(filename, backup_data)
+                if yandex_success:
+                    results.append("Яндекс.Диск")
+                else:
+                    results.append("Яндекс.Диск: ошибка")
+
+            # Формируем сообщение
+            if backup_target == 'both':
+                if local_success and yandex_success:
+                    message = f"Бэкап создан локально и на Яндекс.Диске ({filename})"
+                elif local_success:
+                    message = f"Бэкап создан локально, ошибка Яндекс.Диска ({filename})"
+                elif yandex_success:
+                    message = f"Бэкап создан на Яндекс.Диске, ошибка локального сохранения ({filename})"
+                else:
+                    message = f"Ошибка создания бэкапа"
+            elif backup_target == 'local':
+                if local_success:
+                    message = f"Бэкап создан локально ({filename})"
+                else:
+                    message = f"Ошибка локального создания бэкапа"
+            elif backup_target == 'yandex':
+                if yandex_success:
+                    message = f"Бэкап создан на Яндекс.Диске ({filename})"
+                else:
+                    message = f"Ошибка создания бэкапа на Яндекс.Диске"
+            else:
+                message = f"Неизвестная цель бэкапа"
+
+            return (local_success or yandex_success), message
+
+        except Exception as e:
+            return False, f"Ошибка создания бэкапа: {str(e)}"
+
+    def _save_local_backup(self, filename: str, data: dict) -> bool:
+        """Сохранение локального бэкапа"""
+        try:
+            backup_path = self.base_backup_dir / filename
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            return True
+        except Exception as e:
+            print(f"Ошибка локального сохранения бэкапа: {e}")
+            return False
+
+    def _save_yandex_backup(self, filename: str, data: dict) -> bool:
+        """Сохранение бэкапа на Яндекс.Диск"""
+        try:
+            if not self.storage.has_yandex:
+                return False
+
+            # Создаем папку для бэкапов на Яндекс.Диске
+            if not self._create_yandex_folder(self.yandex_backup_path):
+                print(f"Не удалось создать папку {self.yandex_backup_path} на Яндекс.Диске")
+                return False
+
+            # Сохраняем файл
+            yandex_path = f"{self.yandex_backup_path}/{filename}"
+            return self._upload_to_yandex_disk(yandex_path, data)
+
+        except Exception as e:
+            print(f"Ошибка сохранения бэкапа на Яндекс.Диск: {e}")
+            return False
+
+    def _create_yandex_folder(self, folder_name: str) -> bool:
+        """Создание папки на Яндекс.Диске"""
+        try:
+            import requests
+
+            headers = {
+                'Authorization': f'OAuth {self.storage.yandex_storage.oauth_token}',
+                'Accept': 'application/json'
+            }
+
+            response = requests.put(
+                f"{self.storage.yandex_storage.base_url}/resources",
+                headers=headers,
+                params={'path': f'/{folder_name}'},
+                timeout=10
+            )
+
+            # 201 - создана, 409 - уже существует (это нормально)
+            if response.status_code in [201, 409]:
+                return True
+            else:
+                print(f"Ошибка создания папки {folder_name}: {response.status_code}")
+                return False
+
+        except Exception as e:
+            print(f"Ошибка при создании папки на Яндекс.Диске: {e}")
+            return False
+
+    def _upload_to_yandex_disk(self, path: str, data: dict) -> bool:
+        """Загрузка файла на Яндекс.Диск"""
+        try:
+            import requests
+            import json
+
+            headers = {
+                'Authorization': f'OAuth {self.storage.yandex_storage.oauth_token}',
+                'Accept': 'application/json'
+            }
+
+            # Получаем ссылку для загрузки
+            response = requests.get(
+                f"{self.storage.yandex_storage.base_url}/resources/upload",
+                headers=headers,
+                params={'path': f'/{path}', 'overwrite': 'true'},
+                timeout=10
+            )
+
+            if response.status_code != 200:
+                print(f"Ошибка получения ссылки для загрузки {path}: {response.status_code}")
+                return False
+
+            upload_url = response.json().get('href')
+            if not upload_url:
+                print(f"Не удалось получить ссылку для загрузки {path}")
+                return False
+
+            # Конвертируем данные в JSON
+            json_data = json.dumps(data, ensure_ascii=False, indent=2)
+
+            # Загружаем файл
+            upload_response = requests.put(
+                upload_url,
+                data=json_data.encode('utf-8'),
+                headers={'Content-Type': 'application/json'},
+                timeout=10
+            )
+
+            if upload_response.status_code in [200, 201, 202]:
+                print(f"Успешно сохранено на Яндекс.Диск: {path}")
+                return True
+            else:
+                print(f"Ошибка загрузки на Яндекс.Диск {path}: {upload_response.status_code}")
+                return False
+
+        except Exception as e:
+            print(f"Ошибка сохранения на Яндекс.Диск: {e}")
+            return False
+
+    def list_backups(self) -> List[BackupInfo]:
+        """Получение списка доступных бэкапов"""
+        backups = []
+
+        try:
+            print(f"🔍 Поиск бэкапов. Режим Vercel: {self.is_vercel}")
+
+            # Локальные бэкапы
+            if not self.is_vercel and self.base_backup_dir.exists():
+                print(f"🔍 Поиск локальных бэкапов в: {self.base_backup_dir}")
+                local_files = list(self.base_backup_dir.glob("backup_*.json"))
+                print(f"📁 Найдено {len(local_files)} локальных файлов")
+
+                for filepath in local_files:
+                    backup_info = self._get_backup_info(filepath, source='local')
+                    if backup_info:
+                        print(f"✅ Локальный бэкап: {backup_info.filename}, источник: {backup_info.source}")
+                        backups.append(backup_info)
+
+            # Бэкапы на Яндекс.Диске
+            if self.storage.has_yandex:
+                print(f"🔍 Поиск бэкапов на Яндекс.Диске...")
+                yandex_backups = self._list_yandex_backups()
+                print(f"☁️ Найдено {len(yandex_backups)} бэкапов на Яндекс.Диске")
+                backups.extend(yandex_backups)
+
+            # Сортируем по дате (новые сначала)
+            if backups:
+                try:
+                    backups.sort(key=lambda x: x.created_at, reverse=True)
+                    print(f"📊 Всего бэкапов: {len(backups)}")
+                    for i, backup in enumerate(backups[:5]):  # Покажем первые 5
+                        print(f"  {i + 1}. {backup.filename} - {backup.source} - {backup.card_count} карточек")
+                except Exception as e:
+                    print(f"⚠️ Ошибка сортировки бэкапов: {e}")
+
+        except Exception as e:
+            print(f"❌ Ошибка получения списка бэкапов: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return backups
+
+    def _get_backup_info(self, filepath: Path, source: str) -> Optional[BackupInfo]:
+        """Получение информации о локальном бэкапе"""
+        try:
+            filename = filepath.name
+
+            # Извлекаем дату из имени файла
+            date_str = filename.replace('backup_', '').replace('.json', '')
+
+            # Парсим дату - исправленная логика
+            try:
+                # Пробуем извлечь временную метку (первые 15 симвов формата YYYYMMDD_HHMMSS)
+                if '_' in date_str:
+                    # Разделяем по знакам подчеркивания
+                    parts = date_str.split('_')
+                    if len(parts) >= 2:
+                        date_part = parts[0] + '_' + parts[1]
+                        try:
+                            # Формат: YYYYMMDD_HHMMSS
+                            if len(date_part) == 15 and '_' in date_part:
+                                created_at = datetime.strptime(date_part, '%Y%m%d_%H%M%S')
+                            else:
+                                created_at = datetime.fromtimestamp(filepath.stat().st_ctime)
+                        except:
+                            created_at = datetime.fromtimestamp(filepath.stat().st_ctime)
+                    else:
+                        created_at = datetime.fromtimestamp(filepath.stat().st_ctime)
+                else:
+                    created_at = datetime.fromtimestamp(filepath.stat().st_ctime)
+            except:
+                created_at = datetime.fromtimestamp(filepath.stat().st_ctime)
+
+            # Читаем файл для подсчета карточек
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                card_count = len(data.get('cards', []))
+
+            # ДОБАВЛЕНО: Получаем описание из метаданных
+            description = ""
+            if '_backup_info' in data and 'description' in data['_backup_info']:
+                description = data['_backup_info'].get('description', '')
+
+            return BackupInfo(
+                filename=filename,
+                path=filepath,
+                created_at=created_at,
+                card_count=card_count,
+                file_size=filepath.stat().st_size,
+                source=source,
+                description=description  # Добавляем описание
+            )
+
+        except Exception as e:
+            print(f"Ошибка чтения бэкапа {filepath}: {e}")
+            return None
+
+    def _list_yandex_backups(self) -> List[BackupInfo]:
+        """Получение списка бэкапов с Яндекс.Диска"""
+        backups = []
+
+        try:
+            if not self.storage.has_yandex or not self.storage.yandex_storage:
+                return backups
+
+            print(f"🔍 Поиск бэкапов на Яндекс.Диске в папке: {self.yandex_backup_path}")
+
+            # Используем метод из yandex_storage для получения списка файлов
+            import requests
+
+            headers = {
+                'Authorization': f'OAuth {self.storage.yandex_storage.oauth_token}',
+                'Accept': 'application/json'
+            }
+
+            # Проверяем, существует ли папка с бэкапами
+            response = requests.get(
+                f"{self.storage.yandex_storage.base_url}/resources",
+                headers=headers,
+                params={'path': f'/{self.yandex_backup_path}'},
+                timeout=30
+            )
+
+            if response.status_code == 404:
+                print(f"📁 Папка {self.yandex_backup_path} не существует на Яндекс.Диске")
+                return backups
+
+            if response.status_code != 200:
+                print(f"❌ Ошибка получения списка бэкапов с Яндекс.Диска: {response.status_code}")
+                print(f"   Ответ: {response.text[:200]}")
+                return backups
+
+            items = response.json().get('_embedded', {}).get('items', [])
+            print(f"📊 Найдено {len(items)} файлов в папке {self.yandex_backup_path}")
+
+            for item in items:
+                filename = item.get('name', '')
+                if filename.startswith('backup_') and filename.endswith('.json'):
+                    try:
+                        print(f"🔄 Обработка бэкапа: {filename}")
+
+                        # Получаем информацию о файле
+                        created_at_str = item['modified'].replace('Z', '+00:00')
+                        created_at = datetime.fromisoformat(created_at_str)
+                        created_at = created_at.replace(tzinfo=None)
+
+                        # Загружаем файл для получения информации
+                        file_path = f"{self.yandex_backup_path}/{filename}"
+                        data = self._download_from_yandex_disk(file_path)
+
+                        if data:
+                            card_count = len(data.get('cards', []))
+                            # Получаем описание из метаданных
+                            description = ""
+                            if '_backup_info' in data and 'description' in data['_backup_info']:
+                                description = data['_backup_info'].get('description', '')
+                        else:
+                            card_count = 0
+                            description = ""
+
+                        # Создаем объект BackupInfo с указанием источника
+                        backup_info = BackupInfo(
+                            filename=filename,
+                            path=Path(f"yandex:{item['path']}"),
+                            created_at=created_at,
+                            card_count=card_count,
+                            file_size=item.get('size', 0),
+                            source='yandex',  # Важно: указываем источник
+                            description=description
+                        )
+
+                        # ДОБАВЛЕНО: Проверяем, что источник правильно установлен
+                        print(f"✅ Создан BackupInfo: {filename}, источник: {backup_info.source}")
+
+                        backups.append(backup_info)
+
+                    except Exception as e:
+                        print(f"❌ Ошибка обработки бэкапа {filename}: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        continue
+
+            print(f"✅ Найдено {len(backups)} бэкапов на Яндекс.Диске")
+
+        except Exception as e:
+            print(f"❌ Ошибка получения бэкапов с Яндекс.Диска: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return backups
+
+    def _download_from_yandex_disk(self, path: str) -> Optional[Dict]:
+        """Загрузка файла с Яндекс.Диска"""
+        try:
+            import requests
+
+            headers = {
+                'Authorization': f'OAuth {self.storage.yandex_storage.oauth_token}',
+                'Accept': 'application/json'
+            }
+
+            # Получаем ссылку для скачивания
+            response = requests.get(
+                f"{self.storage.yandex_storage.base_url}/resources/download",
+                headers=headers,
+                params={'path': f'/{path}'},
+                timeout=10
+            )
+
+            if response.status_code != 200:
+                print(f"Ошибка загрузки файла {path}: {response.status_code}")
+                return None
+
+            download_url = response.json().get('href')
+            if not download_url:
+                print(f"Не удалось получить ссылку для скачивания {path}")
+                return None
+
+            # Скачиваем файл
+            file_response = requests.get(download_url, timeout=10)
+            if file_response.status_code == 200:
+                return json.loads(file_response.text)
+            else:
+                print(f"Ошибка скачивания файла {path}: {file_response.status_code}")
+                return None
+
+        except Exception as e:
+            print(f"Ошибка загрузки с Яндекс.Диска: {e}")
+            return None
+
+    def restore_backup(self, backup_name: str, from_yandex: bool = False, restore_target: str = 'local') -> Tuple[
+        bool, str]:
+        """
+        Восстановление из бэкапа
+
+        Args:
+            backup_name: имя файла бэкапа
+            from_yandex: True если бэкап с Яндекс.Диска
+            restore_target: куда восстанавливать ('local', 'yandex', 'both')
+
+        Returns:
+            Tuple[bool, str]: (успех, сообщение)
+        """
+        try:
+            print(f"\n🔄 Восстановление бэкапа:")
+            print(f"   📂 Файл: {backup_name}")
+            print(f"   📍 Источник: {'Яндекс.Диск' if from_yandex else 'локальный'}")
+            print(f"   🎯 Цель: {restore_target}")
+
+            # Загружаем данные из бэкапа
+            if from_yandex:
+                if not self.storage.has_yandex:
+                    return False, "Яндекс.Диск не настроен"
+
+                # Формируем путь к бэкапу на Яндекс.Диске
+                yandex_path = f"{self.yandex_backup_path}/{backup_name}"
+                print(f"📥 Загрузка с Яндекс.Диска: {yandex_path}")
+                data = self._download_from_yandex_disk(yandex_path)
+                if data is None:
+                    return False, "Не удалось загрузить бэкап с Яндекс.Диска"
+            else:
+                backup_path = self.base_backup_dir / backup_name
+                print(f"📥 Загрузка локально: {backup_path}")
+                if not backup_path.exists():
+                    return False, "Локальный бэкап не найден"
+
+                with open(backup_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+            if not data or 'cards' not in data:
+                return False, "Неверный формат бэкапа"
+
+            card_count = len(data.get('cards', []))
+            print(f"📊 Карточек в бэкапе: {card_count}")
+
+            # Удаляем служебную информацию о бэкапе
+            if '_backup_info' in data:
+                del data['_backup_info']
+
+            # Восстанавливаем next_id если его нет
+            if 'next_id' not in data:
+                max_id = max((card.get('id', 0) for card in data.get('cards', [])), default=0)
+                data['next_id'] = max_id + 1
+
+            results = []
+
+            # ВОССТАНАВЛИВАЕМ ЛОКАЛЬНО
+            if restore_target in ['local', 'both']:
+                print("💾 Восстановление в локальный файл данных...")
+
+                # Путь к основному файлу данных
+                local_path = self.storage.local_storage.filepath
+                print(f"   📍 Путь к файлу данных: {local_path}")
+
+                # УДАЛЕНА ЧАСТЬ СОЗДАНИЯ .bak ФАЙЛА!
+
+                try:
+                    # Сохраняем напрямую в файл
+                    with open(local_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+
+                    # Проверяем сохранение
+                    if local_path.exists():
+                        with open(local_path, 'r', encoding='utf-8') as f:
+                            saved_data = json.load(f)
+                            saved_count = len(saved_data.get('cards', []))
+
+                        if saved_count == card_count:
+                            print(f"✅ Основной файл данных успешно восстановлен: {saved_count} карточек")
+                            results.append(f"локально ({saved_count} карточек)")
+
+                            # Обновляем кэш хранилища
+                            self.storage.local_storage.data = data
+                        else:
+                            print(f"❌ Ошибка: в файле {saved_count} карточек вместо {card_count}")
+                            return False, f"Ошибка: сохранено {saved_count} карточек вместо {card_count}"
+                    else:
+                        print("❌ Основной файл данных не создан")
+                        return False, "Основной файл данных не создан"
+
+                except Exception as e:
+                    print(f"❌ Ошибка сохранения локально: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    return False, f"Ошибка сохранения в основной файл: {str(e)}"
+
+            # ВОССТАНАВЛИВАЕМ НА ЯНДЕКС.ДИСК
+            if restore_target in ['yandex', 'both'] and self.storage.has_yandex:
+                print("☁️ Восстановление на Яндекс.Диск...")
+
+                try:
+                    # Сохраняем в основной файл на Яндекс.Диске
+                    yandex_success = self.storage.yandex_storage.save(data)
+
+                    if yandex_success:
+                        print(f"✅ Данные восстановлены на Яндекс.Диск: {card_count} карточек")
+                        results.append(f"Яндекс.Диск ({card_count} карточек)")
+                    else:
+                        print("❌ Не удалось сохранить на Яндекс.Диск")
+                        results.append("Яндекс.Диск: ошибка")
+
+                except Exception as e:
+                    print(f"❌ Ошибка сохранения на Яндекс.Диск: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    results.append("Яндекс.Диск: ошибка")
+
+            if results:
+                message = f"Данные восстановлены в: {', '.join(results)}"
+                print(f"✅ {message}")
+                return True, message
+            else:
+                return False, "Не удалось восстановить данные ни в одно хранилище"
+
+        except Exception as e:
+            print(f"❌ Ошибка восстановления: {e}")
+            import traceback
+            traceback.print_exc()
+            return False, f"Ошибка восстановления: {str(e)}"
+
+    def delete_backup(self, backup_name: str, from_yandex: bool = False) -> Tuple[bool, str]:
+        """Удаление бэкапа"""
+        try:
+            if from_yandex:
+                # Удаляем с Яндекс.Диска
+                if not self.storage.has_yandex:
+                    return False, "Яндекс.Диск не настроен"
+
+                import requests
+
+                headers = {
+                    'Authorization': f'OAuth {self.storage.yandex_storage.oauth_token}',
+                    'Accept': 'application/json'
+                }
+
+                path = f"{self.yandex_backup_path}/{backup_name}"
+                response = requests.delete(
+                    f"{self.storage.yandex_storage.base_url}/resources",
+                    headers=headers,
+                    params={'path': f'/{path}', 'permanently': 'true'},
+                    timeout=10
+                )
+
+                if response.status_code in [200, 202, 204]:
+                    return True, f"Бэкап {backup_name} удален с Яндекс.Диска"
+                else:
+                    return False, f"Ошибка удаления: {response.status_code}"
+            else:
+                # Удаляем локальный файл
+                if self.is_vercel:
+                    return False, "На Vercel нельзя удалять локальные файлы"
+
+                backup_path = self.base_backup_dir / backup_name
+                if backup_path.exists():
+                    backup_path.unlink()
+                    return True, f"Локальный бэкап {backup_name} удален"
+                else:
+                    return False, "Бэкап не найден"
+
+        except Exception as e:
+            return False, f"Ошибка удаления: {str(e)}"

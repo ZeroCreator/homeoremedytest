@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Управление бэкапами{% endblock %}
+
+{% block content %}
+<div class="backup-management">
+    <div class="page-header">
+        <h1><i class="fas fa-database"></i> Управление бэкапами</h1>
+        <p class="subtitle">Создание, восстановление и управление резервными копиями данных</p>
+    </div>
+
+    <!-- Создание бэкапа -->
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-plus-circle"></i> Создать новый бэкап</h2>
+        </div>
+        
+        <div class="backup-create-form">
+            <form action="{{ url_for('create_backup') }}" method="POST" class="backup-form">
+                <div class="form-group">
+                    <label for="description">
+                        <i class="fas fa-comment-alt"></i> Описание (необязательно):
+                    </label>
+                    <input type="text" 
+                           id="description" 
+                           name="description" 
+                           class="form-control"
+                           placeholder="Например: 'Перед массовым импортом'">
+                    <small class="form-text">Поможет понять, зачем был создан этот бэкап</small>
+                </div>
+                
+                <!-- Выбор цели бэкапа -->
+                <div class="target-section">
+                    <h4><i class="fas fa-bullseye"></i> Куда сохранить бэкап?</h4>
+                    <div class="target-options">
+                        <div class="target-option">
+                            <input type="radio" name="backup_target" value="local" id="backup_local" checked>
+                            <label for="backup_local">
+                                <span class="target-icon"><i class="fas fa-hdd"></i></span>
+                                <div>
+                                    <span class="target-label">Только локально</span>
+                                    <span class="target-description">Сохранить бэкап в локальную папку</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        {% if has_yandex %}
+                        <div class="target-option">
+                            <input type="radio" name="backup_target" value="yandex" id="backup_yandex">
+                            <label for="backup_yandex">
+                                <span class="target-icon"><i class="fas fa-cloud"></i></span>
+                                <div>
+                                    <span class="target-label">Только на Яндекс.Диск</span>
+                                    <span class="target-description">Сохранить бэкап только в облако</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="target-option">
+                            <input type="radio" name="backup_target" value="both" id="backup_both">
+                            <label for="backup_both">
+                                <span class="target-icon"><i class="fas fa-sync-alt"></i></span>
+                                <div>
+                                    <span class="target-label">Локально и на Яндекс.Диск</span>
+                                    <span class="target-description">Сохранить бэкап везде</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Текущий режим хранения: <strong>{{ storage_mode }}</strong></span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Всего карточек: <strong>{{ total_cards }}</strong></span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-backup">
+                    <i class="fas fa-save"></i> Создать бэкап
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Восстановление из бэкапа -->
+    <div class="card-section">
+        <div class="section-header">
+            <h2><i class="fas fa-redo"></i> Восстановить из бэкапа</h2>
+        </div>
+        
+        <div class="restore-section">
+            {% if backups %}
+            <form action="{{ url_for('restore_backup') }}" method="POST" id="restoreForm" class="restore-form">
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-history"></i> Выберите бэкап для восстановления:
+                    </label>
+                    
+                    <div class="backup-list-table">
+                        <table class="backup-table">
+                            <thead>
+                                <tr>
+                                    <th width="60">Выбрать</th>
+                                    <th>Имя файла</th>
+                                    <th>Источник</th>
+                                    <th>Дата создания</th>
+                                    <th>Карточек</th>
+                                    <th>Размер</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in backups %}
+                                <tr class="backup-item">
+                                       <td class="backup-select">
+                                            <input type="radio"
+                                                   name="backup_name"
+                                                   value="{{ backup.filename }}"
+                                                   id="backup_{{ loop.index }}"
+                                                   data-source="{{ backup.source }}"
+                                                   class="backup-radio"
+                                                   onchange="updateSelectedBackup(this)"
+                                                   {% if loop.first %}checked{% endif %}>
+                                        </td>
+                                    <td class="backup-filename">
+                                        <i class="fas fa-file-archive"></i>
+                                        <label for="backup_{{ loop.index }}">{{ backup.filename }}</label>
+                                    </td>
+                                   <td class="backup-source">
+                                        <span class="badge {% if backup.source == 'yandex' %}badge-yandex{% else %}badge-local{% endif %}">
+                                            <i class="fas {% if backup.source == 'yandex' %}fa-cloud{% else %}fa-hdd{% endif %}"></i>
+                                            {{ backup.source_display }}
+                                        </span>
+                                        <!-- ДЛЯ ОТЛАДКИ: -->
+                                        <small class="text-muted d-block">
+                                            source: {{ backup.source }}, from_yandex: {{ backup.from_yandex|string|lower }}
+                                        </small>
+                                    </td>
+                                    <td class="backup-date">{{ backup.date }}</td>
+                                    <td class="backup-count">{{ backup.card_count }}</td>
+                                    <td class="backup-size">{{ backup.size }}</td>
+                                    <td class="backup-actions">
+                                        <div class="action-buttons">
+                                            <!-- Удаление -->
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    onclick="deleteBackup('{{ backup.filename }}', {{ 'true' if backup.source == 'yandex' else 'false' }})"
+                                                    title="Удалить бэкап">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <input type="hidden" name="from_yandex" id="backup-source" value="{{ 'true' if backups[0].source == 'yandex' else 'false' }}">
+                </div>
+                
+                <!-- Выбор цели восстановления -->
+                <div class="target-section">
+                    <h4><i class="fas fa-bullseye"></i> Куда восстановить данные?</h4>
+                    <div class="target-options">
+                        <div class="target-option">
+                            <input type="radio" name="restore_target" value="local" id="restore_local">
+                            <label for="restore_local">
+                                <span class="target-icon"><i class="fas fa-hdd"></i></span>
+                                <div>
+                                    <span class="target-label">Только локально</span>
+                                    <span class="target-description">Восстановить данные в локальный файл</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        {% if has_yandex %}
+                        <div class="target-option">
+                            <input type="radio" name="restore_target" value="yandex" id="restore_yandex">
+                            <label for="restore_yandex">
+                                <span class="target-icon"><i class="fas fa-cloud"></i></span>
+                                <div>
+                                    <span class="target-label">Только на Яндекс.Диск</span>
+                                    <span class="target-description">Восстановить данные только в облако</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="target-option">
+                            <input type="radio" name="restore_target" value="both" id="restore_both" checked>
+                            <label for="restore_both">
+                                <span class="target-icon"><i class="fas fa-sync-alt"></i></span>
+                                <div>
+                                    <span class="target-label">Локально и на Яндекс.Диск</span>
+                                    <span class="target-description">Восстановить данные везде</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Внимание!</strong> Восстановление из бэкапа перезапишет все текущие данные. 
+                    Рекомендуется создать новый бэкап перед восстановлением.
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-backup" onclick="return confirmRestore()" id="restoreBtn">
+                    <i class="fas fa-redo"></i> Восстановить из выбранного бэкапа
+                </button>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3>Нет доступных бэкапов</h3>
+                <p>Создайте первый бэкап, чтобы обезопасить свои данные</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для удаления -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-trash"></i> Удаление бэкапа</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Вы уверены, что хотите удалить этот бэкап?</p>
+                <input type="hidden" id="deleteBackupName">
+                <input type="hidden" id="deleteFromYandex">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateSelectedBackup(radio) {
+    const sourceField = document.getElementById('backup-source');
+    const restoreBtn = document.getElementById('restoreBtn');
+    
+    if (radio.checked) {
+        const source = radio.getAttribute('data-source'); // 'yandex' или 'local'
+        const fromYandex = source === 'yandex';
+        sourceField.value = fromYandex ? 'true' : 'false';
+        restoreBtn.disabled = false;
+    }
+}
+
+function previewBackup(filename, fromYandex) {
+    const modal = document.getElementById('previewModal');
+    const content = document.getElementById('previewContent');
+
+    // Показываем загрузку
+    content.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: #007bff;"></i>
+            <p style="margin-top: 20px; color: #333;">Загрузка предпросмотра...</p>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Загружаем предпросмотр
+    fetch(`/backup/preview/${filename}?from_yandex=${fromYandex}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const preview = data.preview;
+                
+                let themesHtml = '';
+                if (preview.themes && preview.themes.length > 0) {
+                    themesHtml = `
+                        <div class="preview-themes">
+                            ${preview.themes.slice(0, 10).map(theme => 
+                                `<span class="theme-tag">${theme}</span>`
+                            ).join('')}
+                            ${preview.themes.length > 10 ? `<span class="theme-tag">+${preview.themes.length - 10} еще</span>` : ''}
+                        </div>
+                    `;
+                }
+
+                let sampleCardsHtml = '';
+                if (preview.sample_cards && preview.sample_cards.length > 0) {
+                    sampleCardsHtml = preview.sample_cards.map(card => `
+                        <div class="preview-card">
+                            <h4>${card.question || 'Без вопроса'}</h4>
+                            <p><strong>Ответ:</strong> ${card.answer || 'Нет ответа'}</p>
+                            <p><strong>Тема:</strong> ${card.theme || 'Не указана'}</p>
+                            ${card.difficulty ? `<p><strong>Сложность:</strong> ${card.difficulty}</p>` : ''}
+                        </div>
+                    `).join('');
+                }
+                
+                const date = preview.created_at && preview.created_at !== 'Неизвестно' 
+                    ? new Date(preview.created_at).toLocaleString('ru-RU') 
+                    : preview.created_at || 'Неизвестно';
+
+                content.innerHTML = `
+                    <div class="preview-info">
+                        <div class="info-item">
+                            <strong>Карточек:</strong> ${preview.cards_count}
+                        </div>
+                        <div class="info-item">
+                            <strong>Создан:</strong> ${date}
+                        </div>
+                        ${preview.description ? `
+                        <div class="info-item">
+                            <strong>Описание:</strong> ${preview.description}
+                        </div>
+                        ` : ''}
+                        ${preview.themes && preview.themes.length > 0 ? `
+                        <div class="info-item">
+                            <strong>Темы:</strong>
+                            ${themesHtml}
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <h4 style="color: #333; margin-top: 20px;">Пример карточек:</h4>
+                    ${sampleCardsHtml || '<p style="color: #666;">Нет примеров для отображения</p>'}
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        ${data.error || 'Ошибка загрузки предпросмотра'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Ошибка подключения: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function deleteBackup(filename, fromYandex) {
+    const modal = document.getElementById('deleteModal');
+    const message = document.getElementById('deleteMessage');
+    const nameField = document.getElementById('deleteBackupName');
+    const sourceField = document.getElementById('deleteFromYandex');
+
+    nameField.value = filename;
+    sourceField.value = fromYandex;
+    message.innerHTML = `Вы уверены, что хотите удалить бэкап <strong>${filename}</strong>?`;
+
+    modal.style.display = 'flex';
+}
+
+function confirmDelete() {
+    const nameField = document.getElementById('deleteBackupName');
+    const sourceField = document.getElementById('deleteFromYandex');
+
+    const formData = new FormData();
+    formData.append('backup_name', nameField.value);
+    formData.append('from_yandex', sourceField.value);
+
+    fetch('/backup/delete', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Ошибка при удалении бэкапа');
+        }
+    })
+    .catch(error => {
+        alert('Ошибка подключения: ' + error.message);
+    });
+}
+
+function closeModal() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function confirmRestore() {
+    const selectedRadio = document.querySelector('input[name="backup_name"]:checked');
+    if (!selectedRadio) {
+        alert('Выберите бэкап для восстановления');
+        return false;
+    }
+
+    const backupName = selectedRadio.value;
+    const source = selectedRadio.getAttribute('data-source');
+    const target = document.querySelector('input[name="restore_target"]:checked').value;
+
+    let message = 'ВНИМАНИЕ: Это действие перезапишет данные. Вы уверены?\n\n';
+    message += `Бэкап: ${backupName} (${source === 'yandex' ? 'Яндекс.Диск' : 'локальный'})\n`;
+    message += `Цель: ${target === 'local' ? 'локально' : target === 'yandex' ? 'Яндекс.Диск' : 'везде'}`;
+
+    return confirm(message);
+}
+
+// Закрытие модальных окон при нажатии Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+    }
+});
+
+// Закрытие модальных окон при клике на оверлей
+window.onclick = function(event) {
+    const previewModal = document.getElementById('previewModal');
+    const deleteModal = document.getElementById('deleteModal');
+
+    if (event.target === previewModal) {
+        closeModal();
+    }
+    if (event.target === deleteModal) {
+        closeDeleteModal();
+    }
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    const restoreBtn = document.getElementById('restoreBtn');
+    if (restoreBtn) {
+        const hasSelected = document.querySelector('input[name="backup_name"]:checked');
+        restoreBtn.disabled = !hasSelected;
+    }
+
+    // Выбираем первый бэкап по умолчанию
+    const firstRadio = document.querySelector('input[name="backup_name"]');
+    if (firstRadio) {
+        updateSelectedBackup(firstRadio);
+    }
+});
+</script>
+{% endblock %}
