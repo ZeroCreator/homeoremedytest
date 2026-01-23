@@ -1,5 +1,4 @@
 import sys
-import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
 from datetime import datetime
 from pathlib import Path
@@ -57,10 +56,6 @@ backup_manager = BackupManager(
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
-# КЕШ ДАННЫХ ПРИЛОЖЕНИЯ
-_app_data_cache = None
-_cache_timestamp = None
-
 
 def allowed_file(filename):
     """Проверка расширения файла"""
@@ -72,41 +67,6 @@ def allowed_file(filename):
 def init_folders():
     try:
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-        # Выводим сообщение только если это не рестарт в режиме отладки
-        if not IS_RELOADER:
-            print(f"Created upload dir: {UPLOAD_DIR}")
-
-        # Загружаем начальные данные через хранилище
-        global _app_data_cache, _cache_timestamp
-
-        # Запоминаем количество локальных карточек до проверки
-        local_count = 0
-        if JSON_FILE.exists():
-            try:
-                with open(JSON_FILE, 'r', encoding='utf-8') as f:
-                    local_data = json.load(f)
-                    local_count = len(local_data.get('cards', []))
-            except:
-                local_count = 0
-
-        # Загружаем данные с проверкой Яндекс.Диска
-        _app_data_cache = storage.load()
-        _cache_timestamp = datetime.now()
-
-        # Проверяем, добавились ли новые карточки
-        loaded_count = len(_app_data_cache.get('cards', []))
-        if loaded_count > local_count:
-            new_cards = loaded_count - local_count
-            # Flash сообщение будет показано на следующей странице
-            # Для этого нужно использовать сессии или другой механизм
-            # Пока просто логируем
-            print(f"🎉 Обнаружено {new_cards} новых карточек с Яндекс.Диска!")
-
-        # Выводим сообщение только если это не рестарт в режиме отладки
-        if not IS_RELOADER:
-            print(f"Initial data loaded: {loaded_count} cards")
-
     except Exception as e:
         print(f"Error in init_folders: {e}", file=sys.stderr)
 
@@ -115,48 +75,24 @@ def init_folders():
 init_folders()
 
 
-# Функции для работы с данными через кеш
-def get_cached_data():
-    """Получение данных из кеша"""
-    global _app_data_cache
-    return _app_data_cache if _app_data_cache is not None else {"cards": [], "next_id": 1}
-
-
-def update_cache(data):
-    """Обновление кеша данных"""
-    global _app_data_cache, _cache_timestamp
-    _app_data_cache = data
-    _cache_timestamp = datetime.now()
-
-
 def load_cards():
-    """Загрузка карточек из кеша"""
-    return get_cached_data()
+    """Загрузка карточек из хранилища"""
+    return storage.load()
 
 
 def save_cards(data):
-    """Сохранение карточек через гибридное хранилище и обновление кеша"""
+    """Сохранение карточек через хранилище"""
     try:
-        print(f"🚀 DEBUG save_cards: Начало сохранения, режим: {storage.mode}")
-
         results = storage.save(data)
-        print(f"📊 DEBUG save_cards: Результаты сохранения: {results}")
 
-        # Обновляем кеш после успешного сохранения
         if results.get('local') is True:
-            update_cache(data)
-            flash('Данные успешно сохранены локально', 'success')
+            flash('Данные успешно сохранены', 'success')
             return True
         else:
-            print(f"❌ DEBUG save_cards: Сохранение не удалось: local={results.get('local')}")
-            flash('Ошибка сохранения данных локально', 'error')
+            flash('Ошибка сохранения данных', 'error')
             return False
-
     except Exception as e:
-        print(f"❌ Ошибка сохранения через хранилище: {e}")
-        import traceback
-        traceback.print_exc()
-        flash(f'Ошибка сохранения данных: {str(e)}', 'error')
+        flash(f'Ошибка: {str(e)}', 'error')
         return False
 
 
@@ -243,6 +179,48 @@ def get_template_variables(cards_data, **overrides):
     }
     base_vars.update(overrides)
     return base_vars
+
+
+def sync_cards_to_yandex():
+    """Синхронизация локальных карточек на Яндекс.Диск"""
+    if not storage.has_yandex:
+        return False, "Яндекс.Диск не настроен"
+
+    try:
+        # Загружаем локальные данные
+        local_data = storage.local_storage.load()
+
+        # Сохраняем на Яндекс.Диск (полная перезапись)
+        success = storage.yandex_storage.save(local_data)
+
+        if success:
+            return True, f"Синхронизировано {len(local_data.get('cards', []))} карточек на Яндекс.Диск"
+        return False, "Не удалось сохранить на Яндекс.Диск"
+
+    except Exception as e:
+        return False, f"Ошибка синхронизации: {str(e)}"
+
+
+def sync_cards_from_yandex():
+    """Синхронизация карточек с Яндекс.Диска на локальное хранилище"""
+    if not storage.has_yandex:
+        return False, "Яндекс.Диск не настроен"
+
+    try:
+        # Загружаем данные с Яндекс.Диска
+        yandex_data = storage.yandex_storage.load()
+        if not yandex_data:
+            return False, "На Яндекс.Диске нет данных"
+
+        # Сохраняем локально (полная замена)
+        success = storage.local_storage.save(yandex_data)
+
+        if success:
+            return True, f"Синхронизировано {len(yandex_data.get('cards', []))} карточек с Яндекс.Диска"
+        return False, "Не удалось сохранить локально"
+
+    except Exception as e:
+        return False, f"Ошибка синхронизации: {str(e)}"
 
 
 # Маршруты
@@ -407,11 +385,16 @@ def toggle_hidden(card_id):
 def create_card():
     """Создание карточки"""
     try:
+        # Загружаем текущие данные
         cards_data = load_cards()
+        print(
+            f"🔍 create_card: Загружено {len(cards_data.get('cards', []))} карточек, next_id: {cards_data.get('next_id', 0)}")
+
+        # Получаем переменные для шаблона
         template_vars = get_template_variables(cards_data)
 
         if request.method == 'POST':
-            # Получаем данные
+            # Получаем данные из формы
             theme = request.form.get('theme', '').strip()
             question = request.form.get('question', '').strip()
             answer = request.form.get('answer', '').strip()
@@ -423,7 +406,7 @@ def create_card():
                                        difficulty_levels=Config.DIFFICULTY_LEVELS,
                                        **template_vars)
 
-            # Создаем карточку
+            # Создаем новую карточку
             new_card = {
                 "id": cards_data['next_id'],
                 "theme": theme,
@@ -435,19 +418,32 @@ def create_card():
                 "hidden": False,
             }
 
+            print(f"🔍 create_card: Создаем карточку ID: {new_card['id']}")
+
+            # Добавляем карточку в данные
             cards_data['cards'].append(new_card)
             cards_data['next_id'] += 1
 
-            save_cards(cards_data)
-            flash('Вопрос успешно добавлен!', 'success')
-            return redirect(url_for('index'))
+            print(
+                f"🔍 create_card: После добавления - карточек: {len(cards_data.get('cards', []))}, next_id: {cards_data['next_id']}")
 
-        # GET запрос
+            # Сохраняем данные
+            if save_cards(cards_data):
+                print(f"✅ create_card: Карточка {new_card['id']} успешно создана и сохранена")
+                flash('Вопрос успешно добавлен!', 'success')
+                return redirect(url_for('index'))
+            else:
+                print(f"❌ create_card: Ошибка сохранения карточки")
+                flash('Ошибка сохранения карточки', 'error')
+
+        # GET запрос - показываем форму
         return render_template('create_card.html',
                                difficulty_levels=Config.DIFFICULTY_LEVELS,
                                **template_vars)
     except Exception as e:
-        print(f"Ошибка в create_card: {e}")
+        print(f"❌ Ошибка в create_card: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Произошла ошибка при создании вопроса', 'error')
         return redirect(url_for('index'))
 
@@ -567,14 +563,15 @@ def delete_card(card_id):
         cards_data['cards'] = [c for c in cards_data.get('cards', []) if c['id'] != card_id]
 
         if len(cards_data.get('cards', [])) < initial_count:
-            save_cards(cards_data)
-            flash('Вопрос успешно удален!', 'success')
+            if save_cards(cards_data):
+                flash('Вопрос успешно удален!', 'success')
+            else:
+                flash('Ошибка сохранения удаления', 'error')
         else:
             flash('Карточка не найдена', 'error')
 
         return redirect(url_for('index'))
     except Exception as e:
-        print(f"Ошибка в delete_card: {e}")
         flash('Произошла ошибка при удалении', 'error')
         return redirect(url_for('index'))
 
@@ -1108,12 +1105,17 @@ def auto_create_backup():
 def sync_to_yandex():
     """Ручная синхронизация на Яндекс.Диск"""
     try:
-        success, message = storage.sync_to_yandex()
+        # Загружаем локальные данные
+        data = storage.local_storage.load()
 
-        if success:
-            flash(f'✅ {message}', 'success')
+        if storage.has_yandex:
+            success = storage.yandex_storage.save(data)
+            if success:
+                flash(f'✅ Синхронизировано {len(data.get("cards", []))} карточек', 'success')
+            else:
+                flash('❌ Ошибка синхронизации с Яндекс.Диском', 'error')
         else:
-            flash(f'❌ {message}', 'error')
+            flash('❌ Яндекс.Диск не настроен', 'error')
 
         return redirect(url_for('system_status'))
     except Exception as e:
@@ -1125,17 +1127,24 @@ def sync_to_yandex():
 def load_from_yandex():
     """Принудительная загрузка с Яндекс.Диска"""
     try:
-        success, message, data = storage.force_load_from_yandex()
+        if not storage.has_yandex:
+            flash('❌ Яндекс.Диск не настроен', 'error')
+            return redirect(url_for('system_status'))
 
-        if success:
-            flash(f'✅ {message}', 'success')
+        # Загружаем с Яндекс.Диска
+        data = storage.yandex_storage.load()
+        if data:
+            # Сохраняем локально (полная замена)
+            storage.local_storage.save(data)
+            flash(f'✅ Загружено {len(data.get("cards", []))} карточек', 'success')
         else:
-            flash(f'❌ {message}', 'error')
+            flash('❌ Не удалось загрузить данные', 'error')
 
         return redirect(url_for('system_status'))
     except Exception as e:
         flash(f'❌ Ошибка загрузки: {str(e)}', 'error')
         return redirect(url_for('system_status'))
+
 
 # Контекстный процессор для шаблонов
 @app.context_processor
