@@ -59,9 +59,26 @@ class HybridStorage:
         print(message)
 
     def load(self):
-        """Загрузка данных - только локальные данные"""
-        # ВСЕГДА загружаем только локальные данные
-        return self.local_storage.load()
+        """Загрузка данных - гибридный режим"""
+
+        # Проверяем, существует ли локальный файл
+        if self.local_path.exists():
+            # Локальный файл есть - загружаем из него
+            return self.local_storage.load()
+        else:
+            # Локального файла нет
+            # В гибридном режиме пробуем загрузить с Яндекс.Диска
+            if self.mode == 'hybrid' and self.has_yandex:
+                try:
+                    data = self.yandex_storage.load()
+                    if data:
+                        return data
+                    else:
+                        return {"cards": [], "next_id": 1}
+                except Exception:
+                    return {"cards": [], "next_id": 1}
+            else:
+                return {"cards": [], "next_id": 1}
 
     def save(self, data):
         """Сохранение данных - ТОЛЬКО локально в гибридном режиме"""

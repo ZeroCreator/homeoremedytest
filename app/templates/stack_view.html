@@ -163,13 +163,13 @@ function renderCurrentCard() {
     const card = cardsData[currentIndex];
     currentCardElement = createCardElement(card);
 
-    // Устанавливаем начальные стили
-    const isMobile = window.innerWidth <= 768;
-    currentCardElement.style.position = 'absolute';
-    currentCardElement.style.top = isMobile ? '10px' : '20px';
-    currentCardElement.style.left = '50%';
-    currentCardElement.style.transform = 'translateX(-50%)';
+    // Устанавливаем простые стили без сложного позиционирования
+    currentCardElement.style.position = 'relative';
+    currentCardElement.style.margin = '0 auto 20px';
+    currentCardElement.style.display = 'block';
     currentCardElement.style.opacity = '1';
+    currentCardElement.style.transform = 'none';
+    currentCardElement.style.left = '0';
 
     // Добавляем в контейнер
     stackContainer.appendChild(currentCardElement);
@@ -411,44 +411,60 @@ function finishDrag() {
     // Анимация ухода карточки
     if (Math.abs(dragOffset) > threshold) {
         const moveDirection = dragOffset > 0 ? 'prev' : 'next';
-        const moveDistance = dragOffset > 0 ? 500 : -500;
 
-        currentCardElement.style.transition = 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
-        currentCardElement.style.transform = `translateX(calc(-50% + ${moveDistance}px))`;
+        // Простая смена без сложных трансформаций
+        currentCardElement.style.transition = 'opacity 0.3s ease';
         currentCardElement.style.opacity = '0';
 
-        // Сохраняем старую карточку для удаления
-        const oldCard = currentCardElement;
-        const oldCardIndex = currentIndex;
-
         // Меняем индекс
+        const oldIndex = currentIndex;
         if (moveDirection === 'prev') {
             currentIndex = getCardIndex(currentIndex - 1);
         } else {
             currentIndex = getCardIndex(currentIndex + 1);
         }
 
-        // Сразу создаем новую карточку
-        setTimeout(() => {
-            createAndAnimateNewCard(oldCard, moveDirection);
-        }, 150);
+        // Если карточка изменилась, рендерим новую
+        if (oldIndex !== currentIndex) {
+            setTimeout(() => {
+                renderCurrentCard();
+                updateNavigation();
+            }, 150);
+        }
 
     } else {
         // Возвращаем на место
-        currentCardElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-        currentCardElement.style.transform = 'translateX(-50%)';
+        currentCardElement.style.transition = 'transform 0.3s ease';
+        currentCardElement.style.transform = 'none';
         currentCardElement.style.opacity = '1';
-
-        setTimeout(() => {
-            if (currentCardElement) {
-                currentCardElement.style.transition = '';
-            }
-        }, 300);
     }
 
     isDragging = false;
     startX = 0;
     dragOffset = 0;
+}
+
+// Упрощаем навигацию по кнопкам
+function goToIndex(newIndex) {
+    if (cardsData.length === 0) return false;
+
+    const oldIndex = currentIndex;
+    currentIndex = getCardIndex(newIndex);
+
+    if (currentIndex === oldIndex) return false;
+
+    // Простая смена с fade
+    if (currentCardElement) {
+        currentCardElement.style.transition = 'opacity 0.3s ease';
+        currentCardElement.style.opacity = '0';
+
+        setTimeout(() => {
+            renderCurrentCard();
+            updateNavigation();
+        }, 150);
+    }
+
+    return true;
 }
 
 // Создание и анимация новой карточки
