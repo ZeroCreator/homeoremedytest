@@ -1,4 +1,5 @@
 import sys
+import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
 from datetime import datetime
 from pathlib import Path
@@ -6,6 +7,7 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import os
 
+# Проверяем, не является ли это рестартом в режиме отладки
 # WERKZEUG_RUN_MAIN устанавливается Flask при рестарте в режиме отладки
 IS_RELOADER = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
 
@@ -55,6 +57,10 @@ backup_manager = BackupManager(
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
+# КЕШ ДАННЫХ ПРИЛОЖЕНИЯ
+_app_data_cache = None
+_cache_timestamp = None
+
 
 def allowed_file(filename):
     """Проверка расширения файла"""
@@ -72,11 +78,34 @@ def init_folders():
             print(f"Created upload dir: {UPLOAD_DIR}")
 
         # Загружаем начальные данные через хранилище
-        data = storage.load()
+        global _app_data_cache, _cache_timestamp
+
+        # Запоминаем количество локальных карточек до проверки
+        local_count = 0
+        if JSON_FILE.exists():
+            try:
+                with open(JSON_FILE, 'r', encoding='utf-8') as f:
+                    local_data = json.load(f)
+                    local_count = len(local_data.get('cards', []))
+            except:
+                local_count = 0
+
+        # Загружаем данные с проверкой Яндекс.Диска
+        _app_data_cache = storage.load()
+        _cache_timestamp = datetime.now()
+
+        # Проверяем, добавились ли новые карточки
+        loaded_count = len(_app_data_cache.get('cards', []))
+        if loaded_count > local_count:
+            new_cards = loaded_count - local_count
+            # Flash сообщение будет показано на следующей странице
+            # Для этого нужно использовать сессии или другой механизм
+            # Пока просто логируем
+            print(f"🎉 Обнаружено {new_cards} новых карточек с Яндекс.Диска!")
 
         # Выводим сообщение только если это не рестарт в режиме отладки
         if not IS_RELOADER:
-            print(f"Initial data loaded: {len(data.get('cards', []))} cards")
+            print(f"Initial data loaded: {loaded_count} cards")
 
     except Exception as e:
         print(f"Error in init_folders: {e}", file=sys.stderr)
@@ -86,58 +115,42 @@ def init_folders():
 init_folders()
 
 
-# Функции для работы с данными через гибридное хранилище
+# Функции для работы с данными через кеш
+def get_cached_data():
+    """Получение данных из кеша"""
+    global _app_data_cache
+    return _app_data_cache if _app_data_cache is not None else {"cards": [], "next_id": 1}
+
+
+def update_cache(data):
+    """Обновление кеша данных"""
+    global _app_data_cache, _cache_timestamp
+    _app_data_cache = data
+    _cache_timestamp = datetime.now()
+
+
 def load_cards():
-    """Загрузка карточек через гибридное хранилище"""
-    try:
-        return storage.load()
-    except Exception as e:
-        print(f"Ошибка загрузки через хранилище: {e}", file=sys.stderr)
-        return {"cards": [], "themes": Config.DEFAULT_THEMES.copy(), "next_id": 1}
+    """Загрузка карточек из кеша"""
+    return get_cached_data()
 
 
 def save_cards(data):
-    """Сохранение карточек через гибридное хранилище"""
+    """Сохранение карточек через гибридное хранилище и обновление кеша"""
     try:
         print(f"🚀 DEBUG save_cards: Начало сохранения, режим: {storage.mode}")
 
         results = storage.save(data)
         print(f"📊 DEBUG save_cards: Результаты сохранения: {results}")
 
-        # НОВАЯ ЛОГИКА ДЛЯ VERCELL
-        if IS_VERCEL:
-            # На Vercel локальное сохранение недоступно, поэтому смотрим только на Яндекс.Диск
-            if storage.mode in ['yandex', 'hybrid'] and storage.has_yandex:
-                if results.get('yandex') is True:
-                    flash('Данные успешно сохранены на Яндекс.Диск', 'success')
-                    return True
-                else:
-                    flash('Ошибка сохранения на Яндекс.Диск', 'error')
-                    return False
-            else:
-                # Если Яндекс.Диск не настроен на Vercel, все равно считаем успехом
-                flash('Данные обработаны (на Vercel локальное сохранение недоступно)', 'info')
-                return True
+        # Обновляем кеш после успешного сохранения
+        if results.get('local') is True:
+            update_cache(data)
+            flash('Данные успешно сохранены локально', 'success')
+            return True
         else:
-            # СТАРАЯ ЛОГИКА ДЛЯ ЛОКАЛЬНОЙ РАБОТЫ
-            # УПРОЩЕННАЯ ПРОВЕРКА - если local=True или yandex=True, считаем успехом
-            if results.get('local') is True or results.get('yandex') is True:
-                print(f"✅ DEBUG save_cards: Сохранение успешно")
-
-                # Детальное сообщение
-                if results.get('local') is True and results.get('yandex') is True:
-                    flash('Данные сохранены локально и на Яндекс.Диск', 'success')
-                elif results.get('local') is True:
-                    flash('Данные сохранены локально', 'success')
-                elif results.get('yandex') is True:
-                    flash('Данные сохранены на Яндекс.Диск', 'success')
-
-                return True
-            else:
-                print(
-                    f"❌ DEBUG save_cards: Сохранение не удалось: local={results.get('local')}, yandex={results.get('yandex')}")
-                flash('Ошибка сохранения данных', 'error')
-                return False
+            print(f"❌ DEBUG save_cards: Сохранение не удалось: local={results.get('local')}")
+            flash('Ошибка сохранения данных локально', 'error')
+            return False
 
     except Exception as e:
         print(f"❌ Ошибка сохранения через хранилище: {e}")

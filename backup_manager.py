@@ -1,4 +1,5 @@
 import json
+import time
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -46,9 +47,26 @@ class BackupManager:
         self.is_vercel = os.environ.get('VERCEL') == '1'
         self.yandex_backup_path = yandex_backup_path or 'backups'  # По умолчанию 'backups'
 
+        # Проверяем, не является ли это рестартом в режиме отладки
+        self.is_reloader = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
+
+        # Кеш списка бэкапов
+        self._backups_cache = None
+        self._backups_cache_time = None
+        self._cache_ttl = 300  # 5 минут
+
         # Создаем директорию для бэкапов
         if not self.is_vercel:
             self.base_backup_dir.mkdir(parents=True, exist_ok=True)
+
+    def log_info(self, message):
+        """Логирование информационных сообщений с учетом режима рестарта"""
+        if not self.is_reloader:
+            print(message)
+
+    def log_error(self, message):
+        """Логирование ошибок (всегда выводится)"""
+        print(f"❌ {message}")
 
     def create_backup(self, description: str = "", backup_target: str = 'both') -> Tuple[bool, str]:
         """
@@ -129,6 +147,10 @@ class BackupManager:
             else:
                 message = f"Неизвестная цель бэкапа"
 
+            # Очищаем кеш, так как добавили новый бэкап
+            self._backups_cache = None
+            self._backups_cache_time = None
+
             return (local_success or yandex_success), message
 
         except Exception as e:
@@ -142,7 +164,7 @@ class BackupManager:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             return True
         except Exception as e:
-            print(f"Ошибка локального сохранения бэкапа: {e}")
+            self.log_error(f"Ошибка локального сохранения бэкапа: {e}")
             return False
 
     def _save_yandex_backup(self, filename: str, data: dict) -> bool:
@@ -153,7 +175,7 @@ class BackupManager:
 
             # Создаем папку для бэкапов на Яндекс.Диске
             if not self._create_yandex_folder(self.yandex_backup_path):
-                print(f"Не удалось создать папку {self.yandex_backup_path} на Яндекс.Диске")
+                self.log_error(f"Не удалось создать папку {self.yandex_backup_path} на Яндекс.Диске")
                 return False
 
             # Сохраняем файл
@@ -161,7 +183,7 @@ class BackupManager:
             return self._upload_to_yandex_disk(yandex_path, data)
 
         except Exception as e:
-            print(f"Ошибка сохранения бэкапа на Яндекс.Диск: {e}")
+            self.log_error(f"Ошибка сохранения бэкапа на Яндекс.Диск: {e}")
             return False
 
     def _create_yandex_folder(self, folder_name: str) -> bool:
@@ -185,11 +207,11 @@ class BackupManager:
             if response.status_code in [201, 409]:
                 return True
             else:
-                print(f"Ошибка создания папки {folder_name}: {response.status_code}")
+                self.log_error(f"Ошибка создания папки {folder_name}: {response.status_code}")
                 return False
 
         except Exception as e:
-            print(f"Ошибка при создании папки на Яндекс.Диске: {e}")
+            self.log_error(f"Ошибка при создании папки на Яндекс.Диске: {e}")
             return False
 
     def _upload_to_yandex_disk(self, path: str, data: dict) -> bool:
@@ -212,12 +234,12 @@ class BackupManager:
             )
 
             if response.status_code != 200:
-                print(f"Ошибка получения ссылки для загрузки {path}: {response.status_code}")
+                self.log_error(f"Ошибка получения ссылки для загрузки {path}: {response.status_code}")
                 return False
 
             upload_url = response.json().get('href')
             if not upload_url:
-                print(f"Не удалось получить ссылку для загрузки {path}")
+                self.log_error(f"Не удалось получить ссылку для загрузки {path}")
                 return False
 
             # Конвертируем данные в JSON
@@ -232,56 +254,60 @@ class BackupManager:
             )
 
             if upload_response.status_code in [200, 201, 202]:
-                print(f"Успешно сохранено на Яндекс.Диск: {path}")
+                self.log_info(f"Успешно сохранено на Яндекс.Диск: {path}")
                 return True
             else:
-                print(f"Ошибка загрузки на Яндекс.Диск {path}: {upload_response.status_code}")
+                self.log_error(f"Ошибка загрузки на Яндекс.Диск {path}: {upload_response.status_code}")
                 return False
 
         except Exception as e:
-            print(f"Ошибка сохранения на Яндекс.Диск: {e}")
+            self.log_error(f"Ошибка сохранения на Яндекс.Диск: {e}")
             return False
 
-    def list_backups(self) -> List[BackupInfo]:
-        """Получение списка доступных бэкапов"""
-        backups = []
+    def list_backups(self, force_refresh=False) -> List[BackupInfo]:
+        """Получение списка доступных бэкапов (с кешированием)"""
+        # Проверяем кеш
+        current_time = time.time()
+        if (not force_refresh and
+                self._backups_cache is not None and
+                self._backups_cache_time is not None and
+                (current_time - self._backups_cache_time) < self._cache_ttl):
+            return self._backups_cache
 
+        backups = []
         try:
-            print(f"🔍 Поиск бэкапов. Режим Vercel: {self.is_vercel}")
+            self.log_info(f"🔍 Загрузка списка бэкапов...")
 
             # Локальные бэкапы
             if not self.is_vercel and self.base_backup_dir.exists():
-                print(f"🔍 Поиск локальных бэкапов в: {self.base_backup_dir}")
                 local_files = list(self.base_backup_dir.glob("backup_*.json"))
-                print(f"📁 Найдено {len(local_files)} локальных файлов")
+                self.log_info(f"📁 Найдено {len(local_files)} локальных файлов")
 
                 for filepath in local_files:
                     backup_info = self._get_backup_info(filepath, source='local')
                     if backup_info:
-                        print(f"✅ Локальный бэкап: {backup_info.filename}, источник: {backup_info.source}")
                         backups.append(backup_info)
 
             # Бэкапы на Яндекс.Диске
             if self.storage.has_yandex:
-                print(f"🔍 Поиск бэкапов на Яндекс.Диске...")
                 yandex_backups = self._list_yandex_backups()
-                print(f"☁️ Найдено {len(yandex_backups)} бэкапов на Яндекс.Диске")
+                self.log_info(f"☁️ Найдено {len(yandex_backups)} бэкапов на Яндекс.Диске")
                 backups.extend(yandex_backups)
 
             # Сортируем по дате (новые сначала)
             if backups:
                 try:
                     backups.sort(key=lambda x: x.created_at, reverse=True)
-                    print(f"📊 Всего бэкапов: {len(backups)}")
-                    for i, backup in enumerate(backups[:5]):  # Покажем первые 5
-                        print(f"  {i + 1}. {backup.filename} - {backup.source} - {backup.card_count} карточек")
+                    self.log_info(f"📊 Всего бэкапов: {len(backups)}")
                 except Exception as e:
-                    print(f"⚠️ Ошибка сортировки бэкапов: {e}")
+                    self.log_error(f"⚠️ Ошибка сортировки бэкапов: {e}")
+
+            # Сохраняем в кеш
+            self._backups_cache = backups
+            self._backups_cache_time = current_time
 
         except Exception as e:
-            print(f"❌ Ошибка получения списка бэкапов: {e}")
-            import traceback
-            traceback.print_exc()
+            self.log_error(f"❌ Ошибка получения списка бэкапов: {e}")
 
         return backups
 
@@ -337,7 +363,7 @@ class BackupManager:
             )
 
         except Exception as e:
-            print(f"Ошибка чтения бэкапа {filepath}: {e}")
+            self.log_error(f"Ошибка чтения бэкапа {filepath}: {e}")
             return None
 
     def _list_yandex_backups(self) -> List[BackupInfo]:
@@ -348,7 +374,7 @@ class BackupManager:
             if not self.storage.has_yandex or not self.storage.yandex_storage:
                 return backups
 
-            print(f"🔍 Поиск бэкапов на Яндекс.Диске в папке: {self.yandex_backup_path}")
+            self.log_info(f"🔍 Поиск бэкапов на Яндекс.Диске в папке: {self.yandex_backup_path}")
 
             # Используем метод из yandex_storage для получения списка файлов
             import requests
@@ -367,22 +393,21 @@ class BackupManager:
             )
 
             if response.status_code == 404:
-                print(f"📁 Папка {self.yandex_backup_path} не существует на Яндекс.Диске")
+                self.log_info(f"📁 Папка {self.yandex_backup_path} не существует на Яндекс.Диске")
                 return backups
 
             if response.status_code != 200:
-                print(f"❌ Ошибка получения списка бэкапов с Яндекс.Диска: {response.status_code}")
-                print(f"   Ответ: {response.text[:200]}")
+                self.log_error(f"❌ Ошибка получения списка бэкапов с Яндекс.Диска: {response.status_code}")
                 return backups
 
             items = response.json().get('_embedded', {}).get('items', [])
-            print(f"📊 Найдено {len(items)} файлов в папке {self.yandex_backup_path}")
+            self.log_info(f"📊 Найдено {len(items)} файлов в папке {self.yandex_backup_path}")
 
             for item in items:
                 filename = item.get('name', '')
                 if filename.startswith('backup_') and filename.endswith('.json'):
                     try:
-                        print(f"🔄 Обработка бэкапа: {filename}")
+                        self.log_info(f"🔄 Обработка бэкапа: {filename}")
 
                         # Получаем информацию о файле
                         created_at_str = item['modified'].replace('Z', '+00:00')
@@ -415,20 +440,20 @@ class BackupManager:
                         )
 
                         # ДОБАВЛЕНО: Проверяем, что источник правильно установлен
-                        print(f"✅ Создан BackupInfo: {filename}, источник: {backup_info.source}")
+                        self.log_info(f"✅ Создан BackupInfo: {filename}, источник: {backup_info.source}")
 
                         backups.append(backup_info)
 
                     except Exception as e:
-                        print(f"❌ Ошибка обработки бэкапа {filename}: {e}")
+                        self.log_error(f"❌ Ошибка обработки бэкапа {filename}: {e}")
                         import traceback
                         traceback.print_exc()
                         continue
 
-            print(f"✅ Найдено {len(backups)} бэкапов на Яндекс.Диске")
+            self.log_info(f"✅ Найдено {len(backups)} бэкапов на Яндекс.Диске")
 
         except Exception as e:
-            print(f"❌ Ошибка получения бэкапов с Яндекс.Диска: {e}")
+            self.log_error(f"❌ Ошибка получения бэкапов с Яндекс.Диска: {e}")
             import traceback
             traceback.print_exc()
 
@@ -453,12 +478,12 @@ class BackupManager:
             )
 
             if response.status_code != 200:
-                print(f"Ошибка загрузки файла {path}: {response.status_code}")
+                self.log_error(f"Ошибка загрузки файла {path}: {response.status_code}")
                 return None
 
             download_url = response.json().get('href')
             if not download_url:
-                print(f"Не удалось получить ссылку для скачивания {path}")
+                self.log_error(f"Не удалось получить ссылку для скачивания {path}")
                 return None
 
             # Скачиваем файл
@@ -466,11 +491,11 @@ class BackupManager:
             if file_response.status_code == 200:
                 return json.loads(file_response.text)
             else:
-                print(f"Ошибка скачивания файла {path}: {file_response.status_code}")
+                self.log_error(f"Ошибка скачивания файла {path}: {file_response.status_code}")
                 return None
 
         except Exception as e:
-            print(f"Ошибка загрузки с Яндекс.Диска: {e}")
+            self.log_error(f"Ошибка загрузки с Яндекс.Диска: {e}")
             return None
 
     def restore_backup(self, backup_name: str, from_yandex: bool = False, restore_target: str = 'local') -> Tuple[
@@ -487,10 +512,10 @@ class BackupManager:
             Tuple[bool, str]: (успех, сообщение)
         """
         try:
-            print(f"\n🔄 Восстановление бэкапа:")
-            print(f"   📂 Файл: {backup_name}")
-            print(f"   📍 Источник: {'Яндекс.Диск' if from_yandex else 'локальный'}")
-            print(f"   🎯 Цель: {restore_target}")
+            self.log_info(f"\n🔄 Восстановление бэкапа:")
+            self.log_info(f"   📂 Файл: {backup_name}")
+            self.log_info(f"   📍 Источник: {'Яндекс.Диск' if from_yandex else 'локальный'}")
+            self.log_info(f"   🎯 Цель: {restore_target}")
 
             # Загружаем данные из бэкапа
             if from_yandex:
@@ -499,13 +524,13 @@ class BackupManager:
 
                 # Формируем путь к бэкапу на Яндекс.Диске
                 yandex_path = f"{self.yandex_backup_path}/{backup_name}"
-                print(f"📥 Загрузка с Яндекс.Диска: {yandex_path}")
+                self.log_info(f"📥 Загрузка с Яндекс.Диска: {yandex_path}")
                 data = self._download_from_yandex_disk(yandex_path)
                 if data is None:
                     return False, "Не удалось загрузить бэкап с Яндекс.Диска"
             else:
                 backup_path = self.base_backup_dir / backup_name
-                print(f"📥 Загрузка локально: {backup_path}")
+                self.log_info(f"📥 Загрузка локально: {backup_path}")
                 if not backup_path.exists():
                     return False, "Локальный бэкап не найден"
 
@@ -516,7 +541,7 @@ class BackupManager:
                 return False, "Неверный формат бэкапа"
 
             card_count = len(data.get('cards', []))
-            print(f"📊 Карточек в бэкапе: {card_count}")
+            self.log_info(f"📊 Карточек в бэкапе: {card_count}")
 
             # Удаляем служебную информацию о бэкапе
             if '_backup_info' in data:
@@ -531,13 +556,11 @@ class BackupManager:
 
             # ВОССТАНАВЛИВАЕМ ЛОКАЛЬНО
             if restore_target in ['local', 'both']:
-                print("💾 Восстановление в локальный файл данных...")
+                self.log_info("💾 Восстановление в локальный файл данных...")
 
                 # Путь к основному файлу данных
                 local_path = self.storage.local_storage.filepath
-                print(f"   📍 Путь к файлу данных: {local_path}")
-
-                # УДАЛЕНА ЧАСТЬ СОЗДАНИЯ .bak ФАЙЛА!
+                self.log_info(f"   📍 Путь к файлу данных: {local_path}")
 
                 try:
                     # Сохраняем напрямую в файл
@@ -551,54 +574,59 @@ class BackupManager:
                             saved_count = len(saved_data.get('cards', []))
 
                         if saved_count == card_count:
-                            print(f"✅ Основной файл данных успешно восстановлен: {saved_count} карточек")
+                            self.log_info(f"✅ Основной файл данных успешно восстановлен: {saved_count} карточек")
                             results.append(f"локально ({saved_count} карточек)")
 
                             # Обновляем кэш хранилища
                             self.storage.local_storage.data = data
                         else:
-                            print(f"❌ Ошибка: в файле {saved_count} карточек вместо {card_count}")
+                            self.log_error(f"❌ Ошибка: в файле {saved_count} карточек вместо {card_count}")
                             return False, f"Ошибка: сохранено {saved_count} карточек вместо {card_count}"
                     else:
-                        print("❌ Основной файл данных не создан")
+                        self.log_error("❌ Основной файл данных не создан")
                         return False, "Основной файл данных не создан"
 
                 except Exception as e:
-                    print(f"❌ Ошибка сохранения локально: {e}")
+                    self.log_error(f"❌ Ошибка сохранения локально: {e}")
                     import traceback
                     traceback.print_exc()
                     return False, f"Ошибка сохранения в основной файл: {str(e)}"
 
             # ВОССТАНАВЛИВАЕМ НА ЯНДЕКС.ДИСК
             if restore_target in ['yandex', 'both'] and self.storage.has_yandex:
-                print("☁️ Восстановление на Яндекс.Диск...")
+                self.log_info("☁️ Восстановление на Яндекс.Диск...")
 
                 try:
                     # Сохраняем в основной файл на Яндекс.Диске
                     yandex_success = self.storage.yandex_storage.save(data)
 
                     if yandex_success:
-                        print(f"✅ Данные восстановлены на Яндекс.Диск: {card_count} карточек")
+                        self.log_info(f"✅ Данные восстановлены на Яндекс.Диск: {card_count} карточек")
                         results.append(f"Яндекс.Диск ({card_count} карточек)")
                     else:
-                        print("❌ Не удалось сохранить на Яндекс.Диск")
+                        self.log_error("❌ Не удалось сохранить на Яндекс.Диск")
                         results.append("Яндекс.Диск: ошибка")
 
                 except Exception as e:
-                    print(f"❌ Ошибка сохранения на Яндекс.Диск: {e}")
+                    self.log_error(f"❌ Ошибка сохранения на Яндекс.Диск: {e}")
                     import traceback
                     traceback.print_exc()
                     results.append("Яндекс.Диск: ошибка")
 
             if results:
                 message = f"Данные восстановлены в: {', '.join(results)}"
-                print(f"✅ {message}")
+                self.log_info(f"✅ {message}")
+
+                # Очищаем кеш бэкапов после восстановления
+                self._backups_cache = None
+                self._backups_cache_time = None
+
                 return True, message
             else:
                 return False, "Не удалось восстановить данные ни в одно хранилище"
 
         except Exception as e:
-            print(f"❌ Ошибка восстановления: {e}")
+            self.log_error(f"❌ Ошибка восстановления: {e}")
             import traceback
             traceback.print_exc()
             return False, f"Ошибка восстановления: {str(e)}"
@@ -627,6 +655,9 @@ class BackupManager:
                 )
 
                 if response.status_code in [200, 202, 204]:
+                    # Очищаем кеш после удаления
+                    self._backups_cache = None
+                    self._backups_cache_time = None
                     return True, f"Бэкап {backup_name} удален с Яндекс.Диска"
                 else:
                     return False, f"Ошибка удаления: {response.status_code}"
@@ -638,6 +669,9 @@ class BackupManager:
                 backup_path = self.base_backup_dir / backup_name
                 if backup_path.exists():
                     backup_path.unlink()
+                    # Очищаем кеш после удаления
+                    self._backups_cache = None
+                    self._backups_cache_time = None
                     return True, f"Локальный бэкап {backup_name} удален"
                 else:
                     return False, "Бэкап не найден"

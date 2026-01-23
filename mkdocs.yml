@@ -17,10 +17,11 @@ nav:
     - Импорт/экспорт: usage/import-export.md
   - Советы:
     - Эффективное обучение: tips/effective-learning.md
-    - Подготовка к тестам: tips/preparation.md
     - Рекомендации по созданию карточек: tips/card-creation.md
+    - Подготовка к тестам: tips/preparation.md
   - Справочник:
     - Формат данных: reference/data-format.md
+    - Хранение и бэкапы: reference/storage-backup.md
     - Синхронизация данных: reference/sync.md
     - Частые вопросы: reference/faq.md
 
