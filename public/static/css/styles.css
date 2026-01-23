@@ -917,6 +917,31 @@ input:checked + .slider:before {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
+    align-items: center; /* Выравниваем по вертикали */
+}
+
+/* Убираем flex у кнопок для grid */
+.card-actions .action-btn {
+    width: 100%;
+    flex: none !important; /* Отключаем flex растягивание */
+    padding: 12px 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+}
+
+/* Убираем лишние отступы у иконок в кнопках */
+.card-actions .action-btn i {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.9rem;
+}
+
+.card-actions .action-btn span {
+    margin-left: 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .action-btn {
@@ -1295,12 +1320,41 @@ input:checked + .slider:before {
     .card-difficulty {
         width: 32px;
         height: 32px;
-        padding: 0;
+        padding: 0 !important;
         font-size: 0;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative;
     }
 
     .card-difficulty i {
         font-size: 0.9rem;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        width: 1em !important;
+        height: 1em !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Специфичные иконки сложности */
+    .card-difficulty.easy i.fa-check-circle { /* для легкой */
+        transform: translate(-50%, -50%) scale(0.95) !important;
+    }
+
+    .card-difficulty.medium i.fa-exclamation-circle { /* для средней */
+        transform: translate(-50%, -50%) scale(0.95) !important;
+    }
+
+    .card-difficulty.hard i.fa-times-circle { /* для сложной */
+        transform: translate(-50%, -50%) scale(0.95) !important;
     }
 
     .card-actions {
@@ -3247,4 +3301,398 @@ css
     .btn {
         width: 100%;
     }
+}
+
+/* ==========================================================================
+   УЛУЧШЕННЫЕ СТИЛИ ДЛЯ БЛОКОВ ВЫБОРА ЦЕЛИ
+   ========================================================================== */
+.target-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: stretch; /* Выравниваем по высоте */
+}
+
+.target-option {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.target-option input[type="radio"] {
+    display: none;
+}
+
+.target-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 25px 20px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    height: 100%;
+    min-height: 170px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.target-option label:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.target-option input[type="radio"]:checked + label {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg,
+        rgba(74, 111, 165, 0.05),
+        rgba(74, 111, 165, 0.1)
+    );
+    box-shadow:
+        0 4px 12px rgba(74, 111, 165, 0.1),
+        0 0 0 2px var(--primary-color);
+}
+
+.target-option input[type="radio"]:checked + label::before {
+    content: "✓";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.target-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-bottom: 5px;
+}
+
+.target-label {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    line-height: 1.3;
+    margin-bottom: 8px;
+}
+
+.target-description {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+/* Десктоп - фиксированная высота и выравнивание */
+@media (min-width: 1025px) {
+    .target-options {
+        flex-wrap: nowrap;
+    }
+
+    .target-option {
+        min-height: 180px;
+    }
+
+    .target-option label {
+        min-height: 180px;
+    }
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+    .target-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .target-option label {
+        min-height: auto;
+        flex-direction: row;
+        text-align: left;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .target-icon {
+        font-size: 1.8rem;
+        margin-right: 15px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .target-label {
+        text-align: left;
+        margin-bottom: 5px;
+    }
+
+    .target-description {
+        text-align: left;
+    }
+}
+
+/* ==========================================================================
+   СТРАНИЦА СТАТУСА СИСТЕМЫ - ИСПРАВЛЕНИЯ (СПЕЦИФИЧНЫЕ)
+   ========================================================================== */
+
+/* Стили ТОЛЬКО для страницы статуса (.backup-management) */
+
+/* 1. Контейнер таблицы статуса */
+.backup-management .status-table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.backup-management .status-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+}
+
+.backup-management .status-table th {
+    background: var(--bg-secondary);
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.backup-management .status-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+/* 2. Длинные пути в статусе */
+.backup-management .file-path {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    word-break: break-all;
+    white-space: normal;
+    display: block;
+    line-height: 1.4;
+    background: var(--bg-light);
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    margin-top: 5px;
+}
+
+/* 3. Кнопки синхронизации ТОЛЬКО в странице статуса */
+.backup-management .sync-buttons {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.backup-management .sync-form {
+    display: inline-block;
+}
+
+.backup-management .sync-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    min-width: 200px;
+}
+
+/* 4. Кнопки действий ТОЛЬКО в странице статуса */
+.backup-management .action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.backup-management .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    min-width: 180px;
+}
+
+/* 5. Мобильные стили ТОЛЬКО для страницы статуса */
+@media (max-width: 768px) {
+    /* Таблица на мобильных */
+    .backup-management .status-table th,
+    .backup-management .status-table td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+    }
+
+    .backup-management .file-path {
+        font-size: 0.85em;
+        padding: 6px 10px;
+    }
+
+    /* Кнопки синхронизации на мобильных - вертикально */
+    .backup-management .sync-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .backup-management .sync-btn {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Кнопки действий на мобильных - вертикально */
+    .backup-management .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .backup-management .action-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ==========================================================================
+   ИСПРАВЛЕНИЕ ТАБЛИЦЫ ДЛЯ СТРАНИЦЫ ДИАГНОСТИКИ
+   ========================================================================== */
+
+/* Унифицированные стили для таблиц на странице диагностики */
+.backup-management .backup-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Фиксированная ширина колонок */
+}
+
+.backup-management .backup-table th,
+.backup-management .backup-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    text-align: left;
+}
+
+/* Фиксируем ширину первой колонки для всех таблиц */
+.backup-management .backup-table th:first-child,
+.backup-management .backup-table td:first-child {
+    width: 35%; /* Фиксированная ширина для колонки "Параметр" */
+    min-width: 160px;
+    max-width: 200px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Вторая колонка занимает остальное пространство */
+.backup-management .backup-table th:nth-child(2),
+.backup-management .backup-table td:nth-child(2) {
+    width: 65%; /* Оставшаяся ширина для колонки "Значение" */
+    word-break: break-word;
+    color: var(--text-secondary);
+}
+
+/* Для таблиц с большим количеством колонок (бэкапы) */
+.backup-management .backup-list-table .backup-table {
+    table-layout: auto; /* Автоматическая ширина для таблицы с бэкапами */
+}
+
+.backup-management .backup-list-table .backup-table th:first-child,
+.backup-management .backup-list-table .backup-table td:first-child {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+    .backup-management .backup-table {
+        table-layout: auto; /* На мобильных переключаем на авто */
+        display: block;
+        overflow-x: auto;
+    }
+
+    .backup-management .backup-table th:first-child,
+    .backup-management .backup-table td:first-child {
+        width: auto;
+        min-width: 120px;
+    }
+
+    .backup-management .backup-table th:nth-child(2),
+    .backup-management .backup-table td:nth-child(2) {
+        width: auto;
+    }
+}
+/* ==========================================================================
+   СБАЛАНСИРОВАННОЕ РАСПРЕДЕЛЕНИЕ СТОЛБЦОВ ТАБЛИЦЫ РЕЗЕРВНЫХ КОПИЙ
+   ========================================================================== */
+
+.backup-management .backup-list-table .backup-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.backup-management .backup-list-table .backup-table th,
+.backup-management .backup-list-table .backup-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+/* Имя файла - самый важный */
+.backup-management .backup-list-table .backup-table th:nth-child(1),
+.backup-management .backup-list-table .backup-table td:nth-child(1) {
+    width: 30%; /* Немного уменьшили */
+}
+
+/* Источник */
+.backup-management .backup-list-table .backup-table th:nth-child(2),
+.backup-management .backup-list-table .backup-table td:nth-child(2) {
+    width: 25%;
+    text-align: center;
+}
+
+/* Дата создания */
+.backup-management .backup-list-table .backup-table th:nth-child(3),
+.backup-management .backup-list-table .backup-table td:nth-child(3) {
+    width: 20%;
+    text-align: center;
+}
+
+/* Карточек */
+.backup-management .backup-list-table .backup-table th:nth-child(4),
+.backup-management .backup-list-table .backup-table td:nth-child(4) {
+    width: 10%;
+    text-align: center;
+}
+
+/* Размер */
+.backup-management .backup-list-table .backup-table th:nth-child(5),
+.backup-management .backup-list-table .backup-table td:nth-child(5) {
+    width: 15%;
+    text-align: right;
 }

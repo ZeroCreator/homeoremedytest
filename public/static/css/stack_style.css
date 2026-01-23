@@ -750,15 +750,30 @@
 
     /* Скрываем текст сложности, оставляем только иконку */
     .stack-main-card .card-difficulty {
-        font-size: 0 !important;
-        padding: 5px !important;
         width: 36px !important;
         height: 36px !important;
+        padding: 0 !important;
+        font-size: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: relative !important;
     }
 
     .stack-main-card .card-difficulty i {
         font-size: 1rem !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
         margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        width: 1em !important;
+        height: 1em !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* Вопрос */
@@ -864,7 +879,3 @@
         height: 36px !important;
     }
 }
-
-/* ==========================================================================
-   КОНЕЦ ФАЙЛА
-   ========================================================================== */

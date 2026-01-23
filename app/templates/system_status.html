@@ -15,71 +15,75 @@
             <h2><i class="fas fa-database"></i> Хранилище данных</h2>
         </div>
 
-        <table class="backup-table">
-            <thead>
-                <tr>
-                    <th>Параметр</th>
-                    <th>Значение</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Режим хранения</strong></td>
-                    <td>{{ status.storage_mode }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Локальный файл</strong></td>
-                    <td>
-                        {% if status.local_file_exists %}
-                            <span class="badge badge-local">
-                                <i class="fas fa-check-circle"></i> Существует
-                            </span>
-                            ({{ status.local_file_size }})
-                        {% else %}
-                            <span class="badge" style="background: #dc3545; color: white;">
-                                <i class="fas fa-times-circle"></i> Отсутствует
-                            </span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>Путь к локальному файлу</strong></td>
-                    <td><code>{{ status.local_file_path }}</code></td>
-                </tr>
-                <tr>
-                    <td><strong>Яндекс.Диск</strong></td>
-                    <td>
-                        {% if status.has_yandex %}
-                            {% if status.yandex_connected %}
-                                <span class="badge badge-yandex">
-                                    <i class="fas fa-check-circle"></i> Подключен
+        <div class="status-table-container">
+            <table class="backup-table status-table">
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Значение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="status-param"><strong>Режим хранения</strong></td>
+                        <td class="status-value">{{ status.storage_mode }}</td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>Локальный файл</strong></td>
+                        <td class="status-value">
+                            {% if status.local_file_exists %}
+                                <span class="badge badge-local">
+                                    <i class="fas fa-check-circle"></i> Существует
                                 </span>
+                                ({{ status.local_file_size }})
                             {% else %}
-                                <span class="badge" style="background: #ffc107; color: #000;">
-                                    <i class="fas fa-exclamation-triangle"></i> Не подключен
+                                <span class="badge badge-missing">
+                                    <i class="fas fa-times-circle"></i> Отсутствует
                                 </span>
                             {% endif %}
-                        {% else %}
-                            <span class="badge" style="background: #6c757d; color: white;">
-                                <i class="fas fa-cloud-slash"></i> Не настроен
-                            </span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>Всего карточек</strong></td>
-                    <td><strong>{{ status.total_cards }}</strong> (видимых: {{ status.visible_cards }}, скрытых: {{ status.hidden_cards }})</td>
-                </tr>
-                <tr>
-                    <td><strong>Количество тем</strong></td>
-                    <td>{{ status.themes_count }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Количество версий</strong></td>
-                    <td>{{ status.versions_count }}</td>
-                </tr>
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    <tr class="path-row">
+                        <td class="status-param"><strong>Путь к локальному файлу</strong></td>
+                        <td class="status-value path-value">
+                            <code class="file-path">{{ status.local_file_path }}</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>Яндекс.Диск</strong></td>
+                        <td class="status-value">
+                            {% if status.has_yandex %}
+                                {% if status.yandex_connected %}
+                                    <span class="badge badge-yandex">
+                                        <i class="fas fa-check-circle"></i> Подключен
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> Не подключен
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-disabled">
+                                    <i class="fas fa-cloud-slash"></i> Не настроен
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>Всего карточек</strong></td>
+                        <td class="status-value"><strong>{{ status.total_cards }}</strong> (видимых: {{ status.visible_cards }}, скрытых: {{ status.hidden_cards }})</td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>Количество тем</strong></td>
+                        <td class="status-value">{{ status.themes_count }}</td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>Количество версий</strong></td>
+                        <td class="status-value">{{ status.versions_count }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Резервные копии -->
@@ -133,25 +137,25 @@
     </div>
 
     <!-- Кнопки синхронизации -->
-    <div class="sync-controls" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+    <div class="sync-controls card-section">
         <h3><i class="fas fa-sync"></i> Управление синхронизацией</h3>
 
-        <div class="sync-buttons" style="display: flex; gap: 15px; margin-top: 15px;">
-            <form action="{{ url_for('sync_to_yandex') }}" method="POST" style="display: inline;">
-                <button type="submit" class="btn btn-primary">
+        <div class="sync-buttons">
+            <form action="{{ url_for('sync_to_yandex') }}" method="POST" class="sync-form">
+                <button type="submit" class="btn btn-primary sync-btn">
                     <i class="fas fa-upload"></i> Синхронизировать на Яндекс.Диск
                 </button>
             </form>
 
-            <form action="{{ url_for('load_from_yandex') }}" method="POST" style="display: inline;">
-                <button type="submit" class="btn btn-secondary"
+            <form action="{{ url_for('load_from_yandex') }}" method="POST" class="sync-form">
+                <button type="submit" class="btn btn-secondary sync-btn"
                         onclick="return confirm('Внимание! Это заменит локальные данные версией с Яндекс.Диска. Продолжить?')">
                     <i class="fas fa-download"></i> Загрузить с Яндекс.Диска
                 </button>
             </form>
         </div>
 
-        <div class="sync-info" style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+        <div class="sync-info">
             <p><i class="fas fa-info-circle"></i>
                 В гибридном режиме изменения сохраняются только локально.
                 Используйте кнопки для управления синхронизацией с Яндекс.Диском.
@@ -160,14 +164,14 @@
     </div>
 
     <!-- Кнопки действий -->
-    <div style="text-align: center; margin-top: 30px;">
-        <a href="{{ url_for('backup_management') }}" class="btn btn-primary">
+    <div class="action-buttons">
+        <a href="{{ url_for('backup_management') }}" class="btn btn-primary action-btn">
             <i class="fas fa-database"></i> Управление бэкапами
         </a>
-        <a href="{{ url_for('debug_storage') }}" class="btn btn-info">
+        <a href="{{ url_for('debug_storage') }}" class="btn btn-info action-btn">
             <i class="fas fa-search"></i> Диагностика хранилища
         </a>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary action-btn">
             <i class="fas fa-home"></i> На главную
         </a>
     </div>
