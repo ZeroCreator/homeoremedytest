@@ -4,6 +4,10 @@ from datetime import datetime
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+import os
+
+# WERKZEUG_RUN_MAIN устанавливается Flask при рестарте в режиме отладки
+IS_RELOADER = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
 
 from excel_utils.exporter import create_exporter
 from excel_utils.importer import create_importer
@@ -16,26 +20,14 @@ load_dotenv()
 # Импортируем конфигурацию
 from config import Config
 
-# Выводим конфигурацию
-Config.print_config()
-
 # Импортируем пути из paths.py
 from paths import UPLOAD_DIR, STATIC_DIR, TEMPLATE_DIR, IS_VERCEL
 
 # Используем JSON_FILE из Config
 JSON_FILE = Config.JSON_FILE
 
-# Импортируем модули для работы с Excel
-from excel_utils.exporter import ExcelExporter
-from excel_utils.importer import ExcelImporter
-
 # Импортируем гибридное хранилище
 from storage import HybridStorage
-
-print(f"Starting app...")
-print(f"JSON file path: {JSON_FILE}")
-print(f"Upload dir: {UPLOAD_DIR}")
-print(f"Is Vercel: {IS_VERCEL}")
 
 # Создаем Flask приложение
 app = Flask(__name__,
@@ -74,11 +66,17 @@ def allowed_file(filename):
 def init_folders():
     try:
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-        print(f"Created upload dir: {UPLOAD_DIR}")
+
+        # Выводим сообщение только если это не рестарт в режиме отладки
+        if not IS_RELOADER:
+            print(f"Created upload dir: {UPLOAD_DIR}")
 
         # Загружаем начальные данные через хранилище
         data = storage.load()
-        print(f"Initial data loaded: {len(data.get('cards', []))} cards")
+
+        # Выводим сообщение только если это не рестарт в режиме отладки
+        if not IS_RELOADER:
+            print(f"Initial data loaded: {len(data.get('cards', []))} cards")
 
     except Exception as e:
         print(f"Error in init_folders: {e}", file=sys.stderr)
@@ -915,6 +913,8 @@ def documentation():
         'view_modes': templates_dir / 'usage' / 'view-modes.html',
         'data_format': templates_dir / 'reference' / 'data-format.html',
         'faq': templates_dir / 'reference' / 'faq.html',
+        'storage_backup': templates_dir / 'reference' / 'storage-backup.html',  # НОВОЕ
+        'sync': templates_dir / 'reference' / 'sync.html',  # НОВОЕ
     }
 
     # Загружаем содержимое каждого файла
@@ -1090,40 +1090,39 @@ def auto_create_backup():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/api/test-storage')
-def test_storage():
-    """API для тестирования хранилища"""
+
+@app.route('/storage/sync_to_yandex', methods=['POST'])
+def sync_to_yandex():
+    """Ручная синхронизация на Яндекс.Диск"""
     try:
-        # Тест загрузки
-        data = storage.load()
-        cards_count = len(data.get('cards', []))
+        success, message = storage.sync_to_yandex()
 
-        # Тест сохранения (сохраняем те же данные)
-        result = storage.save(data)
+        if success:
+            flash(f'✅ {message}', 'success')
+        else:
+            flash(f'❌ {message}', 'error')
 
-        message_parts = []
-        message_parts.append(f"✅ Хранилище работает корректно")
-        message_parts.append(f"Загружено карточек: {cards_count}")
-        message_parts.append(f"Режим: {storage.mode}")
-        message_parts.append(
-            f"Яндекс.Диск: {'Подключен' if storage.has_yandex and result.get('yandex', False) else 'Не настроен'}")
-
-        if storage.mode == 'hybrid':
-            message_parts.append(f"Локальное сохранение: {'✅ Успешно' if result.get('local', False) else '❌ Ошибка'}")
-            message_parts.append(f"Облачное сохранение: {'✅ Успешно' if result.get('yandex', False) else '❌ Ошибка'}")
-
-        return jsonify({
-            'success': True,
-            'message': '\n'.join(message_parts),
-            'details': result
-        })
-
+        return redirect(url_for('system_status'))
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'❌ Ошибка при тестировании хранилища: {str(e)}'
-        }), 500
+        flash(f'❌ Ошибка синхронизации: {str(e)}', 'error')
+        return redirect(url_for('system_status'))
 
+
+@app.route('/storage/load_from_yandex', methods=['POST'])
+def load_from_yandex():
+    """Принудительная загрузка с Яндекс.Диска"""
+    try:
+        success, message, data = storage.force_load_from_yandex()
+
+        if success:
+            flash(f'✅ {message}', 'success')
+        else:
+            flash(f'❌ {message}', 'error')
+
+        return redirect(url_for('system_status'))
+    except Exception as e:
+        flash(f'❌ Ошибка загрузки: {str(e)}', 'error')
+        return redirect(url_for('system_status'))
 
 # Контекстный процессор для шаблонов
 @app.context_processor

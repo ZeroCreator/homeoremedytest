@@ -9,16 +9,6 @@ IS_VERCEL = os.environ.get('VERCEL') == '1'
 if not IS_VERCEL:
     load_dotenv()
 
-# Для отладки: печатаем все переменные (без значений токенов)
-if IS_VERCEL:
-    print("=" * 60)
-    print("VERCEL ENVIRONMENT DETECTED")
-    print("=" * 60)
-else:
-    print("=" * 60)
-    print("LOCAL ENVIRONMENT")
-    print("=" * 60)
-
 class Config:
     # Безопасность
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -68,25 +58,7 @@ class Config:
     # Путь на Яндекс.Диске для бэкапов
     YANDEX_DISK_BACKUP_PATH = os.environ.get('YANDEX_DISK_BACKUP_PATH', 'HomeoRemedyTest/backups')
 
-    @classmethod
-    def print_config(cls):
-        """Вывод конфигурации для отладки"""
-        print("=" * 60)
-        print("КОНФИГУРАЦИЯ ПРИЛОЖЕНИЯ")
-        print("=" * 60)
-
-        # Безопасность (частично скрыто)
-        print(
-            f"SECRET_KEY: {'установлен' if cls.SECRET_KEY and cls.SECRET_KEY != 'dev-secret-key-change-in-production' else 'используется дефолтный'}")
-
-        # Хранилище
-        print(f"STORAGE_MODE: {cls.STORAGE_MODE}")
-        print(f"YANDEX_DISK_TOKEN: {'установлен' if cls.YANDEX_DISK_TOKEN else 'не установлен'}")
-        print(f"YANDEX_DISK_PATH: {cls.YANDEX_DISK_PATH}")
-        print(f"LOCAL_DATA_PATH: {cls.LOCAL_DATA_PATH}")
-        print(f"JSON_FILE: {cls.JSON_FILE}")
-
-        # Приложение
-        print(f"CARDS_PER_PAGE: {cls.CARDS_PER_PAGE}")
-        print(f"SEARCH_DELAY: {cls.SEARCH_DELAY}")
-        print("=" * 60)
+    # Синхронизация при старте
+    # Если True - всегда синхронизировать с Яндекс.Диском при старте
+    # Если False - загружать только локальные данные, если файл существует
+    SYNC_ON_STARTUP = True  # Измените на True если хотите всегда синхронизировать

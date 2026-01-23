@@ -132,6 +132,33 @@
         {% endif %}
     </div>
 
+    <!-- Кнопки синхронизации -->
+    <div class="sync-controls" style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <h3><i class="fas fa-sync"></i> Управление синхронизацией</h3>
+
+        <div class="sync-buttons" style="display: flex; gap: 15px; margin-top: 15px;">
+            <form action="{{ url_for('sync_to_yandex') }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Синхронизировать на Яндекс.Диск
+                </button>
+            </form>
+
+            <form action="{{ url_for('load_from_yandex') }}" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-secondary"
+                        onclick="return confirm('Внимание! Это заменит локальные данные версией с Яндекс.Диска. Продолжить?')">
+                    <i class="fas fa-download"></i> Загрузить с Яндекс.Диска
+                </button>
+            </form>
+        </div>
+
+        <div class="sync-info" style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+            <p><i class="fas fa-info-circle"></i>
+                В гибридном режиме изменения сохраняются только локально.
+                Используйте кнопки для управления синхронизацией с Яндекс.Диском.
+            </p>
+        </div>
+    </div>
+
     <!-- Кнопки действий -->
     <div style="text-align: center; margin-top: 30px;">
         <a href="{{ url_for('backup_management') }}" class="btn btn-primary">

@@ -68,6 +68,12 @@
                     <a href="#faq" class="docs-nav-link" data-section="faq">
                         <i class="fas fa-question-circle"></i> Часто задаваемые вопросы (FAQ)
                     </a>
+                    <a href="#storage-backup" class="docs-nav-link" data-section="storage-backup">
+                        <i class="fas fa-save"></i> Хранение и бэкапы
+                    </a>
+                    <a href="#sync" class="docs-nav-link" data-section="sync">
+                        <i class="fas fa-sync"></i> Синхронизация данных
+                    </a>
                 </div>
             </div>
         </nav>
@@ -168,6 +174,13 @@
             <h2><i class="fas fa-question-circle"></i> Частые вопросы</h2>
             <div class="section-content">
                 {{ faq_content|safe }}
+            </div>
+        </div>
+
+        <div class="docs-section" id="storage-backup" style="display: none;">
+            <h2><i class="fas fa-save"></i> Хранение данных и бэкапы</h2>
+            <div class="section-content">
+                {{ storage_backup_content|safe }}
             </div>
         </div>
 
@@ -678,10 +691,10 @@
 <script>
 // Список всех разделов в порядке навигации
 const sections = [
-    'welcome', 'installation', 'first-steps',
-    'cards', 'features', 'filters', 'import-export', 'view-modes',
-    'card-creation', 'effective-learning', 'preparation',
-    'data-format', 'faq', 'sync'
+    'welcome', 'first_steps',
+    'cards', 'features', 'filters', 'import_export', 'view_modes',
+    'storage_backup', 'sync',
+    'data_format', 'faq'
 ];
 
 let currentSectionIndex = 0;

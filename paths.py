@@ -19,17 +19,10 @@ JSON_FILE = LOCAL_DATA_PATH
 if IS_VERCEL:
     # На Vercel: uploads в /tmp
     UPLOAD_DIR = Path('/tmp/uploads')
-    print(f"VERCEL environment detected")
 else:
     # Локальная разработка
     UPLOAD_DIR = BASE_DIR / 'uploads'
-    print("LOCAL environment")
 
 # Статические пути
 STATIC_DIR = BASE_DIR / 'public' / 'static'
 TEMPLATE_DIR = BASE_DIR / 'app' / 'templates'
-
-# Выводим для отладки
-print(f"JSON_FILE: {JSON_FILE}")
-print(f"JSON exists: {JSON_FILE.exists()}")
-print(f"UPLOAD_DIR: {UPLOAD_DIR}")
