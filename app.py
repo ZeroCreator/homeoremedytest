@@ -7,6 +7,7 @@ import os
 import shutil
 import json
 
+
 # Импортируем всё из config
 from config import Config, BASE_DIR, IS_VERCEL
 
@@ -18,15 +19,18 @@ app = Flask(__name__,
             static_folder=str(Config.STATIC_DIR),
             template_folder=str(Config.TEMPLATE_DIR))
 
+
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 app.config['JSON_FILE'] = JSON_FILE
 app.config['UPLOAD_FOLDER'] = Config.UPLOAD_DIR
+
 
 # Импорты остальных модулей
 from excel_utils.exporter import create_exporter
 from excel_utils.importer import create_importer
 from backup_manager import BackupManager
 from storage import HybridStorage
+
 
 # Создаем гибридное хранилище
 storage = HybridStorage(
@@ -36,12 +40,15 @@ storage = HybridStorage(
     yandex_path=Config.YANDEX_DISK_PATH
 )
 
-# Создаем менеджер бэкапов
+
+# Создаем менеджер бэкапов с использованием MAX_BACKUPS
 backup_manager = BackupManager(
     base_backup_dir=Config.BACKUP_DIR,
     storage=storage,
-    yandex_backup_path=Config.YANDEX_DISK_BACKUP_PATH
+    yandex_backup_path=Config.YANDEX_DISK_BACKUP_PATH,
+    max_backups=Config.MAX_BACKUPS  # ДОБАВЛЕНО!
 )
+
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 
@@ -80,6 +87,22 @@ if IS_VERCEL:
         if sample_data.exists():
             shutil.copy2(sample_data, JSON_FILE)
             print(f"✅ Скопированы примеры данных в {JSON_FILE}")
+
+
+# Автоматическое создание бэкапа при запуске (если настроено)
+if Config.BACKUP_ON_START and not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    try:
+        print("🔄 Создание автоматического бэкапа при запуске...")
+        success, message = backup_manager.create_backup(
+            description="Автоматический бэкап при запуске",
+            backup_target='both'
+        )
+        if success:
+            print(f"✅ {message}")
+        else:
+            print(f"⚠️ {message}")
+    except Exception as e:
+        print(f"⚠️ Ошибка при создании автоматического бэкапа: {e}")
 
 
 def load_cards():
@@ -336,7 +359,8 @@ def index():
         template_name = 'stack_view.html' if view_mode == 'stack' else 'index.html'
 
         if view_mode == 'stack':
-            stack_template_path = Path(TEMPLATE_DIR) / 'stack_view.html'
+            base_dir = Path(__file__).parent
+            stack_template_path = base_dir / 'templates' / 'stack_view.html'
             if not stack_template_path.exists():
                 template_name = 'index.html'
                 flash('Режим стопки карточек временно недоступен', 'info')
@@ -790,7 +814,9 @@ def system_status():
             'visible_cards': sum(1 for card in cards_data.get('cards', []) if not card.get('hidden', False)),
             'hidden_cards': sum(1 for card in cards_data.get('cards', []) if card.get('hidden', False)),
             'themes_count': len(template_vars['all_themes']),
-            'versions_count': len(template_vars['all_versions'])
+            'versions_count': len(template_vars['all_versions']),
+            'max_backups': Config.MAX_BACKUPS,
+            'backup_on_start': Config.BACKUP_ON_START
         }
 
         # Проверяем подключение к Яндекс.Диску
@@ -800,7 +826,7 @@ def system_status():
             except:
                 status['yandex_connected'] = False
 
-        # Получаем список бэкапов (используем ту же логику, что и в backup_management)
+        # Получаем список бэкапов
         backups = backup_manager.list_backups()
         backup_list = []
         for backup in backups:
@@ -866,7 +892,7 @@ def debug_storage():
             except:
                 yandex_status['cards_count'] = 0
 
-        # Получаем список бэкапов (используем ту же логику, что и в backup_management)
+        # Получаем список бэкапов
         backups = backup_manager.list_backups()
         backup_list = []
         for backup in backups:
@@ -989,7 +1015,6 @@ def create_backup():
 
 @app.route('/backup/manage')
 def backup_management():
-    """Управление бэкапами"""
     try:
         cards_data = load_cards()
         template_vars = get_template_variables(cards_data)
@@ -1020,8 +1045,8 @@ def backup_management():
 
                 backup_list.append({
                     'filename': backup.filename,
-                    'source': backup.source,  # 'yandex' или 'local'
-                    'source_display': source_display,  # Для отображения
+                    'source': backup.source,
+                    'source_display': source_display,
                     'date': date_str,
                     'card_count': backup.card_count,
                     'size': size_str,
@@ -1031,15 +1056,13 @@ def backup_management():
                 })
             except Exception as e:
                 print(f"Ошибка обработки бэкапа {backup.filename}: {e}")
-                continue  # Пропускаем проблемный бэкап
+                continue
 
         template_vars['backups'] = backup_list
 
-        # ДОБАВЛЕНО: Отладочная информация
-        print(f"\n📊 Информация для шаблона:")
-        print(f"   Всего бэкапов: {len(backup_list)}")
-        for b in backup_list:
-            print(f"   - {b['filename']}: источник={b['source']}, from_yandex={b['from_yandex']}")
+        # Передаем настройки бэкапов
+        template_vars['max_backups'] = Config.MAX_BACKUPS
+        template_vars['backup_on_start'] = Config.BACKUP_ON_START
 
         return render_template('backup_management.html', **template_vars)
     except Exception as e:

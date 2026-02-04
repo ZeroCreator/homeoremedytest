@@ -2776,7 +2776,7 @@ css
 
 /* Формы */
 .backup-form, .restore-form {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -3647,52 +3647,88 @@ css
     }
 }
 /* ==========================================================================
-   СБАЛАНСИРОВАННОЕ РАСПРЕДЕЛЕНИЕ СТОЛБЦОВ ТАБЛИЦЫ РЕЗЕРВНЫХ КОПИЙ
+   ТАБЛИЦА БЭКАПОВ - ТОЛЬКО ДЛЯ УПРАВЛЕНИЯ БЭКАПАМИ
    ========================================================================== */
+
+/* ОБЩИЕ СТИЛИ ТАБЛИЦ - ДЛЯ ВСЕХ ТАБЛИЦ */
+.backup-management table,
+.status-table,
+.system-status table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* СПЕЦИФИЧНЫЕ СТИЛИ ТОЛЬКО ДЛЯ ТАБЛИЦЫ В УПРАВЛЕНИИ БЭКАПАМИ */
+.backup-management .backup-list-table {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
 
 .backup-management .backup-list-table .backup-table {
     width: 100%;
+    min-width: 800px;
     border-collapse: collapse;
-    table-layout: fixed;
+    font-size: 14px;
 }
 
-.backup-management .backup-list-table .backup-table th,
+/* Все остальные стили таблицы бэкапов оборачиваем в .backup-management */
+.backup-management .backup-list-table .backup-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.backup-management .backup-list-table .backup-table th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border: none;
+    white-space: nowrap;
+}
+
 .backup-management .backup-list-table .backup-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 16px 12px;
+    border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
+    color: #333;
+    transition: background-color 0.2s;
 }
 
-/* Имя файла - самый важный */
-.backup-management .backup-list-table .backup-table th:nth-child(1),
-.backup-management .backup-list-table .backup-table td:nth-child(1) {
-    width: 30%; /* Немного уменьшили */
-}
-
-/* Источник */
-.backup-management .backup-list-table .backup-table th:nth-child(2),
-.backup-management .backup-list-table .backup-table td:nth-child(2) {
-    width: 25%;
+/* СТИЛИ ДЛЯ КОНКРЕТНЫХ КОЛОНОК ТОЛЬКО В ТАБЛИЦЕ БЭКАПОВ */
+.backup-management .backup-list-table .backup-table td.backup-select {
     text-align: center;
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
 }
 
-/* Дата создания */
-.backup-management .backup-list-table .backup-table th:nth-child(3),
-.backup-management .backup-list-table .backup-table td:nth-child(3) {
-    width: 20%;
-    text-align: center;
+.backup-management .backup-list-table .backup-table td.backup-filename {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    color: #2c3e50;
+    max-width: 250px;
 }
 
-/* Карточек */
-.backup-management .backup-list-table .backup-table th:nth-child(4),
-.backup-management .backup-list-table .backup-table td:nth-child(4) {
-    width: 10%;
-    text-align: center;
+.backup-management .backup-list-table .backup-table td.backup-filename i {
+    color: #667eea;
+    flex-shrink: 0;
 }
 
-/* Размер */
-.backup-management .backup-list-table .backup-table th:nth-child(5),
-.backup-management .backup-list-table .backup-table td:nth-child(5) {
-    width: 15%;
-    text-align: right;
+.backup-management .backup-list-table .backup-table td.backup-filename label {
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
 }

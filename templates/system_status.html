@@ -81,6 +81,24 @@
                         <td class="status-param"><strong>Количество версий</strong></td>
                         <td class="status-value">{{ status.versions_count }}</td>
                     </tr>
+                    <tr>
+                        <td class="status-param"><strong>MAX_BACKUPS</strong></td>
+                        <td class="status-value">{{ max_backups }}</td>
+                    </tr>
+                    <tr>
+                        <td class="status-param"><strong>BACKUP_ON_START</strong></td>
+                        <td class="status-value">
+                            {% if backup_on_start %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Включено
+                                </span>
+                            {% else %}
+                                <span class="badge badge-secondary">
+                                    <i class="fas fa-times-circle"></i> Выключено
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

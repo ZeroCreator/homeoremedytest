@@ -9,26 +9,53 @@
         <p class="subtitle">Создание, восстановление и управление резервными копиями данных</p>
     </div>
 
+    <!-- Информация о текущих настройках -->
+    <div class="card-section" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px;">
+        <div class="section-header">
+            <h2><i class="fas fa-cog"></i> Текущие настройки бэкапов</h2>
+        </div>
+
+        <div class="settings-info" style="padding: 15px;">
+            <div class="row" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <div class="setting-item" style="flex: 1; min-width: 200px; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="margin-top: 0;"><i class="fas fa-hashtag"></i> MAX_BACKUPS</h4>
+                    <p style="font-size: 24px; font-weight: bold; color: #4a6fa5; margin: 10px 0;">{{ max_backups }}</p>
+                    <p style="margin: 5px 0;">Максимальное количество хранимых бэкапов</p>
+                    <small style="color: #666; display: block; margin-top: 10px;">При превышении лимита старые бэкапы удаляются автоматически</small>
+                </div>
+
+                <div class="setting-item" style="flex: 1; min-width: 200px; padding: 15px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h4 style="margin-top: 0;"><i class="fas fa-play-circle"></i> BACKUP_ON_START</h4>
+                    <p style="font-size: 24px; font-weight: bold; margin: 10px 0; color: {% if backup_on_start %}#28a745{% else %}#dc3545{% endif %};">
+                        {{ 'ДА' if backup_on_start else 'НЕТ' }}
+                    </p>
+                    <p style="margin: 5px 0;">Создание бэкапа при запуске</p>
+                    <small style="color: #666; display: block; margin-top: 10px;">Автоматическая защита при каждом запуске приложения</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Создание бэкапа -->
     <div class="card-section">
         <div class="section-header">
             <h2><i class="fas fa-plus-circle"></i> Создать новый бэкап</h2>
         </div>
-        
+
         <div class="backup-create-form">
             <form action="{{ url_for('create_backup') }}" method="POST" class="backup-form">
                 <div class="form-group">
                     <label for="description">
                         <i class="fas fa-comment-alt"></i> Описание (необязательно):
                     </label>
-                    <input type="text" 
-                           id="description" 
-                           name="description" 
+                    <input type="text"
+                           id="description"
+                           name="description"
                            class="form-control"
                            placeholder="Например: 'Перед массовым импортом'">
                     <small class="form-text">Поможет понять, зачем был создан этот бэкап</small>
                 </div>
-                
+
                 <!-- Выбор цели бэкапа -->
                 <div class="target-section">
                     <h4><i class="fas fa-bullseye"></i> Куда сохранить бэкап?</h4>
@@ -43,7 +70,7 @@
                                 </div>
                             </label>
                         </div>
-                        
+
                         {% if has_yandex %}
                         <div class="target-option">
                             <input type="radio" name="backup_target" value="yandex" id="backup_yandex">
@@ -55,7 +82,7 @@
                                 </div>
                             </label>
                         </div>
-                        
+
                         <div class="target-option">
                             <input type="radio" name="backup_target" value="both" id="backup_both">
                             <label for="backup_both">
@@ -69,7 +96,7 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="info-box">
                     <div class="info-item">
                         <i class="fas fa-info-circle"></i>
@@ -80,7 +107,7 @@
                         <span>Всего карточек: <strong>{{ total_cards }}</strong></span>
                     </div>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary btn-backup">
                     <i class="fas fa-save"></i> Создать бэкап
                 </button>
@@ -93,21 +120,21 @@
         <div class="section-header">
             <h2><i class="fas fa-redo"></i> Восстановить из бэкапа</h2>
         </div>
-        
+
         <div class="restore-section">
             {% if backups %}
             <form action="{{ url_for('restore_backup') }}" method="POST" id="restoreForm" class="restore-form">
-                
+
                 <div class="form-group">
                     <label>
                         <i class="fas fa-history"></i> Выберите бэкап для восстановления:
                     </label>
-                    
+
                     <div class="backup-list-table">
                         <table class="backup-table">
                             <thead>
                                 <tr>
-                                    <th width="60">Выбрать</th>
+                                    <th>Выбрать</th>
                                     <th>Имя файла</th>
                                     <th>Источник</th>
                                     <th>Дата создания</th>
@@ -138,10 +165,6 @@
                                             <i class="fas {% if backup.source == 'yandex' %}fa-cloud{% else %}fa-hdd{% endif %}"></i>
                                             {{ backup.source_display }}
                                         </span>
-                                        <!-- ДЛЯ ОТЛАДКИ: -->
-                                        <small class="text-muted d-block">
-                                            source: {{ backup.source }}, from_yandex: {{ backup.from_yandex|string|lower }}
-                                        </small>
                                     </td>
                                     <td class="backup-date">{{ backup.date }}</td>
                                     <td class="backup-count">{{ backup.card_count }}</td>
@@ -161,10 +184,10 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <input type="hidden" name="from_yandex" id="backup-source" value="{{ 'true' if backups[0].source == 'yandex' else 'false' }}">
                 </div>
-                
+
                 <!-- Выбор цели восстановления -->
                 <div class="target-section">
                     <h4><i class="fas fa-bullseye"></i> Куда восстановить данные?</h4>
@@ -179,7 +202,7 @@
                                 </div>
                             </label>
                         </div>
-                        
+
                         {% if has_yandex %}
                         <div class="target-option">
                             <input type="radio" name="restore_target" value="yandex" id="restore_yandex">
@@ -191,7 +214,7 @@
                                 </div>
                             </label>
                         </div>
-                        
+
                         <div class="target-option">
                             <input type="radio" name="restore_target" value="both" id="restore_both" checked>
                             <label for="restore_both">
@@ -205,13 +228,13 @@
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="warning-box">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Внимание!</strong> Восстановление из бэкапа перезапишет все текущие данные. 
+                    <strong>Внимание!</strong> Восстановление из бэкапа перезапишет все текущие данные.
                     Рекомендуется создать новый бэкап перед восстановлением.
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary btn-backup" onclick="return confirmRestore()" id="restoreBtn">
                     <i class="fas fa-redo"></i> Восстановить из выбранного бэкапа
                 </button>
@@ -256,105 +279,13 @@
 function updateSelectedBackup(radio) {
     const sourceField = document.getElementById('backup-source');
     const restoreBtn = document.getElementById('restoreBtn');
-    
+
     if (radio.checked) {
         const source = radio.getAttribute('data-source'); // 'yandex' или 'local'
         const fromYandex = source === 'yandex';
         sourceField.value = fromYandex ? 'true' : 'false';
         restoreBtn.disabled = false;
     }
-}
-
-function previewBackup(filename, fromYandex) {
-    const modal = document.getElementById('previewModal');
-    const content = document.getElementById('previewContent');
-
-    // Показываем загрузку
-    content.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-            <i class="fas fa-spinner fa-spin fa-2x" style="color: #007bff;"></i>
-            <p style="margin-top: 20px; color: #333;">Загрузка предпросмотра...</p>
-        </div>
-    `;
-    
-    modal.style.display = 'flex';
-    
-    // Загружаем предпросмотр
-    fetch(`/backup/preview/${filename}?from_yandex=${fromYandex}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const preview = data.preview;
-                
-                let themesHtml = '';
-                if (preview.themes && preview.themes.length > 0) {
-                    themesHtml = `
-                        <div class="preview-themes">
-                            ${preview.themes.slice(0, 10).map(theme => 
-                                `<span class="theme-tag">${theme}</span>`
-                            ).join('')}
-                            ${preview.themes.length > 10 ? `<span class="theme-tag">+${preview.themes.length - 10} еще</span>` : ''}
-                        </div>
-                    `;
-                }
-
-                let sampleCardsHtml = '';
-                if (preview.sample_cards && preview.sample_cards.length > 0) {
-                    sampleCardsHtml = preview.sample_cards.map(card => `
-                        <div class="preview-card">
-                            <h4>${card.question || 'Без вопроса'}</h4>
-                            <p><strong>Ответ:</strong> ${card.answer || 'Нет ответа'}</p>
-                            <p><strong>Тема:</strong> ${card.theme || 'Не указана'}</p>
-                            ${card.difficulty ? `<p><strong>Сложность:</strong> ${card.difficulty}</p>` : ''}
-                        </div>
-                    `).join('');
-                }
-                
-                const date = preview.created_at && preview.created_at !== 'Неизвестно' 
-                    ? new Date(preview.created_at).toLocaleString('ru-RU') 
-                    : preview.created_at || 'Неизвестно';
-
-                content.innerHTML = `
-                    <div class="preview-info">
-                        <div class="info-item">
-                            <strong>Карточек:</strong> ${preview.cards_count}
-                        </div>
-                        <div class="info-item">
-                            <strong>Создан:</strong> ${date}
-                        </div>
-                        ${preview.description ? `
-                        <div class="info-item">
-                            <strong>Описание:</strong> ${preview.description}
-                        </div>
-                        ` : ''}
-                        ${preview.themes && preview.themes.length > 0 ? `
-                        <div class="info-item">
-                            <strong>Темы:</strong>
-                            ${themesHtml}
-                        </div>
-                        ` : ''}
-                    </div>
-
-                    <h4 style="color: #333; margin-top: 20px;">Пример карточек:</h4>
-                    ${sampleCardsHtml || '<p style="color: #666;">Нет примеров для отображения</p>'}
-                `;
-            } else {
-                content.innerHTML = `
-                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
-                        <i class="fas fa-exclamation-circle"></i>
-                        ${data.error || 'Ошибка загрузки предпросмотра'}
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            content.innerHTML = `
-                <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
-                    <i class="fas fa-exclamation-circle"></i>
-                    Ошибка подключения: ${error.message}
-                </div>
-            `;
-        });
 }
 
 function deleteBackup(filename, fromYandex) {
@@ -394,10 +325,6 @@ function confirmDelete() {
     });
 }
 
-function closeModal() {
-    document.getElementById('previewModal').style.display = 'none';
-}
-
 function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
 }
@@ -423,19 +350,14 @@ function confirmRestore() {
 // Закрытие модальных окон при нажатии Escape
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        closeModal();
         closeDeleteModal();
     }
 });
 
 // Закрытие модальных окон при клике на оверлей
 window.onclick = function(event) {
-    const previewModal = document.getElementById('previewModal');
     const deleteModal = document.getElementById('deleteModal');
 
-    if (event.target === previewModal) {
-        closeModal();
-    }
     if (event.target === deleteModal) {
         closeDeleteModal();
     }

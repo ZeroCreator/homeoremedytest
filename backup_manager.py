@@ -34,19 +34,21 @@ class BackupInfo:
 class BackupManager:
     """Менеджер для работы с бэкапами"""
 
-    def __init__(self, base_backup_dir: Path, storage, yandex_backup_path=None):
+    def __init__(self, base_backup_dir: Path, storage, yandex_backup_path=None, max_backups=50):
         """
         Args:
             base_backup_dir: Базовая директория для бэкапов
             storage: Гибридное хранилище
             yandex_backup_path: путь для бэкапов на Яндекс.Диске
+            max_backups: максимальное количество хранимых бэкапов (0 = без ограничений)
         """
         from config import IS_VERCEL
 
         self.base_backup_dir = base_backup_dir
         self.storage = storage
         self.is_vercel = IS_VERCEL
-        self.yandex_backup_path = yandex_backup_path or 'backups'  # По умолчанию 'backups'
+        self.yandex_backup_path = yandex_backup_path or 'backups'
+        self.max_backups = max_backups
 
         # Проверяем, не является ли это рестартом в режиме отладки
         self.is_reloader = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
@@ -117,6 +119,9 @@ class BackupManager:
                 local_success = self._save_local_backup(filename, backup_data)
                 if local_success:
                     results.append("локально")
+                    # Очищаем старые бэкапы, если превышен лимит
+                    if self.max_backups > 0:
+                        self._cleanup_old_backups(source='local')
                 else:
                     results.append("локально: ошибка")
 
@@ -126,6 +131,9 @@ class BackupManager:
                 yandex_success = self._save_yandex_backup(filename, backup_data)
                 if yandex_success:
                     results.append("Яндекс.Диск")
+                    # Очищаем старые бэкапы, если превышен лимит
+                    if self.max_backups > 0:
+                        self._cleanup_old_backups(source='yandex')
                 else:
                     results.append("Яндекс.Диск: ошибка")
 
@@ -160,6 +168,26 @@ class BackupManager:
 
         except Exception as e:
             return False, f"Ошибка создания бэкапа: {str(e)}"
+
+    def _cleanup_old_backups(self, source: str = 'local'):
+        """Очистка старых бэкапов при превышении лимита"""
+        try:
+            backups = self.list_backups(force_refresh=True)
+
+            # Фильтруем бэкапы по источнику
+            source_backups = [b for b in backups if b.source == source]
+
+            # Сортируем по дате (самые старые первыми)
+            source_backups.sort(key=lambda x: x.created_at)
+
+            # Удаляем лишние
+            while len(source_backups) > self.max_backups:
+                oldest = source_backups.pop(0)
+                self.log_info(f"🚮 Удаление старого бэкапа ({source}): {oldest.filename}")
+                self.delete_backup(oldest.filename, from_yandex=(source == 'yandex'))
+
+        except Exception as e:
+            self.log_error(f"Ошибка очистки старых бэкапов ({source}): {e}")
 
     def _save_local_backup(self, filename: str, data: dict) -> bool:
         """Сохранение локального бэкапа"""
