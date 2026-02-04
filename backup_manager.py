@@ -41,9 +41,11 @@ class BackupManager:
             storage: Гибридное хранилище
             yandex_backup_path: путь для бэкапов на Яндекс.Диске
         """
+        from config import IS_VERCEL
+
         self.base_backup_dir = base_backup_dir
         self.storage = storage
-        self.is_vercel = os.environ.get('VERCEL') == '1'
+        self.is_vercel = IS_VERCEL
         self.yandex_backup_path = yandex_backup_path or 'backups'  # По умолчанию 'backups'
 
         # Проверяем, не является ли это рестартом в режиме отладки
@@ -56,7 +58,11 @@ class BackupManager:
 
         # Создаем директорию для бэкапов
         if not self.is_vercel:
-            self.base_backup_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                self.base_backup_dir.mkdir(parents=True, exist_ok=True)
+                self.log_info(f"✅ Директория для бэкапов: {self.base_backup_dir}")
+            except Exception as e:
+                self.log_error(f"❌ Ошибка создания директории бэкапов: {e}")
 
     def log_info(self, message):
         """Логирование информационных сообщений с учетом режима рестарта"""

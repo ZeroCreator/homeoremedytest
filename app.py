@@ -3,41 +3,30 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, f
 from datetime import datetime
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
 import os
+import shutil
+import json
 
-# Проверяем, не является ли это рестартом в режиме отладки
-# WERKZEUG_RUN_MAIN устанавливается Flask при рестарте в режиме отладки
-IS_RELOADER = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
-
-from excel_utils.exporter import create_exporter
-from excel_utils.importer import create_importer
-
-from backup_manager import BackupManager
-
-# Загружаем переменные окружения
-load_dotenv()
-
-# Импортируем конфигурацию
-from config import Config
-
-# Импортируем пути из paths.py
-from paths import UPLOAD_DIR, STATIC_DIR, TEMPLATE_DIR, IS_VERCEL
+# Импортируем всё из config
+from config import Config, BASE_DIR, IS_VERCEL
 
 # Используем JSON_FILE из Config
 JSON_FILE = Config.JSON_FILE
 
-# Импортируем гибридное хранилище
-from storage import HybridStorage
-
 # Создаем Flask приложение
 app = Flask(__name__,
-            static_folder=str(STATIC_DIR),
-            template_folder=str(TEMPLATE_DIR))
+            static_folder=str(Config.STATIC_DIR),
+            template_folder=str(Config.TEMPLATE_DIR))
 
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 app.config['JSON_FILE'] = JSON_FILE
-app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
+app.config['UPLOAD_FOLDER'] = Config.UPLOAD_DIR
+
+# Импорты остальных модулей
+from excel_utils.exporter import create_exporter
+from excel_utils.importer import create_importer
+from backup_manager import BackupManager
+from storage import HybridStorage
 
 # Создаем гибридное хранилище
 storage = HybridStorage(
@@ -63,16 +52,34 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# Инициализируем папки
-def init_folders():
-    try:
-        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        print(f"Error in init_folders: {e}", file=sys.stderr)
+# Копирование файлов на Vercel (после создания app)
+if IS_VERCEL:
+    print(f"🔍 Vercel окружение: копирование файлов...")
 
+    # Копируем шаблоны
+    templates_src = BASE_DIR / 'templates'
+    if templates_src.exists():
+        print(f"📁 Копирование шаблонов из {templates_src} в {Config.TEMPLATE_DIR}")
+        for item in templates_src.iterdir():
+            if item.is_dir():
+                shutil.copytree(item, Config.TEMPLATE_DIR / item.name, dirs_exist_ok=True)
+            else:
+                shutil.copy2(item, Config.TEMPLATE_DIR / item.name)
 
-# Инициализируем папки
-init_folders()
+    # Копируем данные
+    data_src = BASE_DIR / 'data'
+    if data_src.exists():
+        print(f"📁 Копирование данных из {data_src} в {Config.DATA_DIR}")
+        for item in data_src.iterdir():
+            if item.is_file() and item.suffix == '.json':
+                shutil.copy2(item, Config.DATA_DIR / item.name)
+
+    # Копируем пример данных если основной файл не существует
+    if not JSON_FILE.exists():
+        sample_data = BASE_DIR / 'data' / 'test_cards.json'
+        if sample_data.exists():
+            shutil.copy2(sample_data, JSON_FILE)
+            print(f"✅ Скопированы примеры данных в {JSON_FILE}")
 
 
 def load_cards():

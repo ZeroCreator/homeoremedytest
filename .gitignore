@@ -47,11 +47,10 @@ Thumbs.db
 *.log
 logs/
 
-# Data files (можно добавить для тестовых данных)
-# app/data/test_data.json
-# app/data/test_*.json
 
 # Environment variables
 .env
 .env.local
+
 test_cards.json
+/backups
