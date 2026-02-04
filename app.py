@@ -910,7 +910,7 @@ def documentation():
     """Страница документации"""
 
     base_dir = Path(__file__).parent
-    templates_dir = base_dir / 'app' / 'templates' / 'docs'
+    templates_dir = base_dir / 'templates' / 'docs'
 
     # Определяем пути к HTML файлам
     docs_structure = {
