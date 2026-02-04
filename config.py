@@ -21,7 +21,7 @@ class Config:
     YANDEX_DISK_PATH = os.environ.get('YANDEX_DISK_PATH', 'HomeoRemedyTest/data/test_cards.json')
 
     # Путь к локальному файлу данных
-    LOCAL_DATA_PATH = os.environ.get('LOCAL_DATA_PATH', 'app/data/test_cards.json')
+    LOCAL_DATA_PATH = os.environ.get('LOCAL_DATA_PATH', 'data/test_cards.json')
     # Преобразуем в абсолютный путь
     _base_dir = Path(__file__).parent.parent
     JSON_FILE = _base_dir / LOCAL_DATA_PATH if not Path(LOCAL_DATA_PATH).is_absolute() else Path(LOCAL_DATA_PATH)
