@@ -7,7 +7,7 @@ class StorageMode(Enum):
     """Режимы хранения данных"""
     LOCAL = "local"  # Только локальный файл
     YANDEX_DISK = "yandex"  # Только Яндекс.Диск
-    HYBRID = "hybrid"  # Гибридный режим (только чтение из облака при старте)
+    HYBRID = "hybrid"  # Гибридный режим
 
 
 class HybridStorage:
@@ -25,6 +25,7 @@ class HybridStorage:
         """
         self.mode = mode or os.environ.get('STORAGE_MODE', 'hybrid')
         self.local_path = Path(local_path) if local_path else Path('app/data/test_cards.json')
+        self.is_vercel = os.environ.get('VERCEL') == '1'
 
         # Проверяем, не является ли это рестартом в режиме отладки
         self.is_reloader = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
@@ -60,50 +61,59 @@ class HybridStorage:
 
     def load(self):
         """Загрузка данных - гибридный режим"""
+        # На Vercel в гибридном режиме загружаем с Яндекс.Диска
+        if self.is_vercel and self.mode == 'hybrid' and self.has_yandex:
+            data = self.yandex_storage.load()
+            return data if data else {"cards": [], "next_id": 1}
 
-        # Проверяем, существует ли локальный файл
-        if self.local_path.exists():
-            # Локальный файл есть - загружаем из него
-            return self.local_storage.load()
-        else:
-            # Локального файла нет
-            # В гибридном режиме пробуем загрузить с Яндекс.Диска
-            if self.mode == 'hybrid' and self.has_yandex:
-                try:
-                    data = self.yandex_storage.load()
-                    if data:
-                        return data
-                    else:
-                        return {"cards": [], "next_id": 1}
-                except Exception:
+        # Локально в гибридном режиме: сначала локальный файл, потом Яндекс.Диск
+        elif self.mode == 'hybrid':
+            if self.local_path.exists():
+                return self.local_storage.load()
+            elif self.has_yandex:
+                data = self.yandex_storage.load()
+                if data:
+                    self.local_storage.save(data)
+                    return data
+                else:
                     return {"cards": [], "next_id": 1}
             else:
                 return {"cards": [], "next_id": 1}
 
-    def save(self, data):
-        """Сохранение данных - ТОЛЬКО локально в гибридном режиме"""
-        self.log_info(f"Сохранение данных в режиме: {self.mode}")
-        results = {}
+        # Режим только Яндекс.Диск
+        elif self.mode == 'yandex' and self.has_yandex:
+            data = self.yandex_storage.load()
+            return data if data else {"cards": [], "next_id": 1}
 
-        # Всегда сохраняем локально
-        results['local'] = self.local_storage.save(data)
-
-        # Сохраняем на Яндекс.Диск только если это режим 'yandex'
-        # В гибридном режиме НЕ сохраняем на Яндекс.Диск автоматически!
-        if self.mode == 'yandex' and self.has_yandex:
-            try:
-                results['yandex'] = self.yandex_storage.save(data)
-                if not results['yandex']:
-                    self.log_error("Внимание: не удалось сохранить на Яндекс.Диск")
-            except Exception as e:
-                self.log_error(f"Ошибка при сохранении на Яндекс.Диск: {e}")
-                results['yandex'] = False
-        elif self.mode == 'hybrid':
-            # В гибридном режиме явно указываем, что на Яндекс.Диск не сохраняем
-            self.log_info("ℹ️ Гибридный режим: сохранено только локально")
-            results['yandex'] = None
+        # Режим только локальный
         else:
-            results['yandex'] = None
+            return self.local_storage.load()
+
+    def save(self, data):
+        """Сохранение данных"""
+        results = {'local': False, 'yandex': False}
+
+        # На Vercel в гибридном режиме: только Яндекс.Диск
+        if self.is_vercel and self.mode == 'hybrid':
+            if self.has_yandex:
+                results['yandex'] = self.yandex_storage.save(data)
+            else:
+                # На Vercel без Яндекс.Диска сохраняем локально (в /tmp)
+                results['local'] = self.local_storage.save(data)
+
+        # Локально в гибридном режиме: сохраняем и локально, и на Яндекс.Диск
+        elif self.mode == 'hybrid':
+            results['local'] = self.local_storage.save(data)
+            if self.has_yandex:
+                results['yandex'] = self.yandex_storage.save(data)
+
+        # Режим только Яндекс.Диск
+        elif self.mode == 'yandex' and self.has_yandex:
+            results['yandex'] = self.yandex_storage.save(data)
+
+        # Режим только локальный
+        else:
+            results['local'] = self.local_storage.save(data)
 
         return results
 

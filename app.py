@@ -115,14 +115,47 @@ def save_cards(data):
     try:
         results = storage.save(data)
 
-        if results.get('local') is True:
-            flash('Данные успешно сохранены', 'success')
-            return True
+        # На Vercel в гибридном режиме
+        if storage.is_vercel and storage.mode == 'hybrid':
+            success = results.get('yandex', False)
+            if success:
+                flash('✅ Данные сохранены на Яндекс.Диск', 'success')
+            else:
+                flash('❌ Ошибка сохранения на Яндекс.Диск на Vercel', 'error')
+
+        # Локально в гибридном режиме
+        elif storage.mode == 'hybrid':
+            success = results.get('local', False)
+            if success:
+                if results.get('yandex', False):
+                    flash('✅ Данные сохранены локально и на Яндекс.Диск', 'success')
+                elif storage.has_yandex:
+                    flash('⚠️ Данные сохранены локально (не удалось на Яндекс.Диск)', 'warning')
+                else:
+                    flash('✅ Данные сохранены локально', 'success')
+            else:
+                flash('❌ Ошибка сохранения данных', 'error')
+
+        # Режим только Яндекс.Диск
+        elif storage.mode == 'yandex':
+            success = results.get('yandex', False)
+            if success:
+                flash('✅ Данные сохранены на Яндекс.Диск', 'success')
+            else:
+                flash('❌ Ошибка сохранения на Яндекс.Диск', 'error')
+
+        # Режим только локальный
         else:
-            flash('Ошибка сохранения данных', 'error')
-            return False
+            success = results.get('local', False)
+            if success:
+                flash('✅ Данные сохранены локально', 'success')
+            else:
+                flash('❌ Ошибка локального сохранения', 'error')
+
+        return success
+
     except Exception as e:
-        flash(f'Ошибка: {str(e)}', 'error')
+        flash(f'❌ Ошибка: {str(e)}', 'error')
         return False
 
 
