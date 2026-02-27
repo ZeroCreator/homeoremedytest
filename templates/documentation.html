@@ -2,6 +2,8 @@
 
 {% block title %}Инструкция - HomeoRemedyTest{% endblock %}
 
+{% block body_class %} class="documentation-page"{% endblock %}
+
 {% block sidebar %}{% endblock %}
 
 {% block content %}
@@ -213,9 +215,24 @@
 
 {% block styles %}
 <style>
+/* Скрываем стандартный sidebar и делаем content-area на всю ширину для документации */
+.documentation-page .sidebar {
+    display: none !important;
+}
+
+.documentation-page .content-area {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.documentation-page .content-wrapper {
+    display: block !important;
+}
+
 /* Общие стили для документации */
 .documentation-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: 280px 1fr;
     gap: 40px;
     max-width: var(--max-content-width);
     margin: 0 auto;
@@ -225,8 +242,7 @@
 
 /* Левая панель навигации */
 .docs-sidebar {
-    width: 280px;
-    flex-shrink: 0;
+    width: 100%;
     position: sticky;
     top: 100px;
     align-self: flex-start;
@@ -357,13 +373,11 @@
 
 /* Основная область контента */
 .docs-content {
-    flex: 1;
     background: var(--bg-primary);
     border-radius: var(--border-radius);
     padding: 30px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
-    max-width: calc(100% - 320px); /* Чтобы не было слишком широко */
 }
 
 .docs-header {
@@ -616,7 +630,8 @@
 
 @media (max-width: 992px) {
     .documentation-container {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
 
     .docs-sidebar {
@@ -627,7 +642,6 @@
     }
 
     .docs-content {
-        max-width: 100%;
         padding: 20px;
     }
 

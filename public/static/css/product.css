@@ -1,0 +1,98 @@
+/* product.css - СТИЛИ СТРАНИЦЫ ТОВАРА/КАРТОЧКИ */
+/* Версия: 1.0.0 | Дата: 2026-02-26 */
+/* CSS Refactoring: 001-css-base-css */
+
+/* ==========================================================================
+   КОНТЕЙНЕР КАРТОЧКИ
+   ========================================================================== */
+.card-detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   НАВИГАЦИЯ МЕЖДУ КАРТОЧКАМИ
+   ========================================================================== */
+.card-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.card-nav-btn:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.card-nav-btn.disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   ХЛЕБНЫЕ КРОШКИ
+   ========================================================================== */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.breadcrumb .separator {
+    color: var(--text-light);
+}
+
+.breadcrumb .current {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   АДАПТИВНЫЙ ДИЗАЙН
+   ========================================================================== */
+@media (max-width: 768px) {
+    .card-detail-container {
+        padding: 0 15px;
+    }
+
+    .card-navigation {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .card-nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .breadcrumb {
+        flex-wrap: wrap;
+    }
+}

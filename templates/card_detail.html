@@ -2,6 +2,11 @@
 
 {% block title %}{{ card.question }} - Тесты по гомеопатии{% endblock %}
 
+{% block styles %}
+<!-- Стили для страницы карточки -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/product.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="card-detail-container">
     {% if card.hidden %}

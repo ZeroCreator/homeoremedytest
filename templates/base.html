@@ -4,12 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Тесты по гомеопатии{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- Модульный CSS (CSS Refactoring: 001-css-base-css) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    
+    <!-- Стили для режима стопки (загружаются только в режиме stack) -->
+    {% if request.args.get('view') == 'stack' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/stack_style.css') }}">
+    {% endif %}
+    
+    <!-- Иконки Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Дополнительные стили для конкретных страниц -->
     {% block styles %}{% endblock %}
 </head>
-<body>
+<body{% block body_class %}{% endblock %}>
     <div class="app-container">
         <!-- Шапка -->
         <header class="header">
@@ -17,18 +29,18 @@
                 <div class="logo">
                     <a href="{{ url_for('index') }}">
                         <i class="fas fa-pills"></i>
-                        <span>HomeoRemedyTest</span>
+                        <span class="logo-text">HomeoRemedyTest</span>
                     </a>
                 </div>
 
                 <nav class="main-nav">
-                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}" title="Главная">
                         <i class="fas fa-home"></i>
                         <span class="nav-text">Главная</span>
                     </a>
-                    <a href="{{ url_for('create_card') }}" class="nav-link {% if request.path == '/create' %}active{% endif %}">
+                    <a href="{{ url_for('create_card') }}" class="nav-link {% if request.path == '/create' %}active{% endif %}" title="Добавить вопрос">
                         <i class="fas fa-plus-circle"></i>
-                        <span class="nav-text">Добавить вопрос</span>
+                        <span class="nav-text">Добавить</span>
                     </a>
                 </nav>
 
@@ -83,11 +95,10 @@
                 </div>
 
                 {% if has_yandex %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('system_status') }}">
-                        <i class="fas fa-info-circle"></i> Статус
-                    </a>
-                </li>
+                <a class="nav-link" href="{{ url_for('system_status') }}" title="Статус">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="nav-text">Статус</span>
+                </a>
                 {% endif %}
 
             </div>
@@ -332,11 +343,9 @@
                         <h4>HomeoRemedyTest</h4>
                         <p>Платформа для тестирования знаний по гомеопатии</p>
                     </div>
-                    <div class="footer-section">
-                        <h4></h4>
-                        <a href="{{ url_for('index') }}"></a>
-                        <a href="{{ url_for('create_card') }}"></a>
-                        <a href="{{ url_for('import_cards') }}"></a>
+                    <div class="footer-section footer-section-empty">
+                        <h4>&nbsp;</h4>
+                        <p>&nbsp;</p>
                     </div>
                     <div class="footer-section">
                         <h4>Контакты</h4>
