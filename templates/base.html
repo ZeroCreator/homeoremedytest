@@ -179,14 +179,20 @@
                                 {% set current_view = request.args.get('view', 'grid') %}
                                 <a href="?view={{ current_view }}&difficulty={{ current_difficulty }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if not current_theme %}active{% endif %}">
-                                    <i class="fas fa-layer-group"></i> Все темы
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span>Все темы</span>
+                                    </div>
                                     <span class="filter-count">{{ total_cards }}</span>
                                 </a>
 
                                 {% for theme in all_themes %}
                                 <a href="{{ url_for('index') }}?view={{ current_view }}&theme={{ theme }}&difficulty={{ current_difficulty }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if current_theme == theme %}active{% endif %}">
-                                    <i class="fas fa-tag"></i> {{ theme }}
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-tag"></i>
+                                        <span>{{ theme }}</span>
+                                    </div>
                                     <span class="filter-count">{{ theme_counts.get(theme, 0) }}</span>
                                 </a>
                                 {% endfor %}
@@ -204,25 +210,37 @@
                                 {% set current_view = request.args.get('view', 'grid') %}
                                 <a href="?view={{ current_view }}&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if not current_difficulty %}active{% endif %}">
-                                    <i class="fas fa-bars"></i> Все уровни
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-bars"></i>
+                                        <span>Все уровни</span>
+                                    </div>
                                     <span class="filter-count">{{ total_cards }}</span>
                                 </a>
 
                                 <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=easy&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if current_difficulty == 'easy' %}active{% endif %}">
-                                    <i class="fas fa-leaf"></i> Легкие
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-leaf"></i>
+                                        <span>Легкие</span>
+                                    </div>
                                     <span class="filter-count">{{ difficulty_counts.get('easy', 0) }}</span>
                                 </a>
 
                                 <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=medium&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if current_difficulty == 'medium' %}active{% endif %}">
-                                    <i class="fas fa-balance-scale"></i> Средние
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-balance-scale"></i>
+                                        <span>Средние</span>
+                                    </div>
                                     <span class="filter-count">{{ difficulty_counts.get('medium', 0) }}</span>
                                 </a>
 
                                 <a href="{{ url_for('index') }}?view={{ current_view }}&difficulty=hard&theme={{ current_theme }}&version={{ current_version }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if current_difficulty == 'hard' %}active{% endif %}">
-                                    <i class="fas fa-fire"></i> Сложные
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-fire"></i>
+                                        <span>Сложные</span>
+                                    </div>
                                     <span class="filter-count">{{ difficulty_counts.get('hard', 0) }}</span>
                                 </a>
                             </div>
@@ -239,14 +257,20 @@
                                 {% set current_view = request.args.get('view', 'grid') %}
                                 <a href="?view={{ current_view }}&theme={{ current_theme }}&difficulty={{ current_difficulty }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if not current_version %}active{% endif %}">
-                                    <i class="fas fa-layer-group"></i> Все версии
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span>Все версии</span>
+                                    </div>
                                     <span class="filter-count">{{ total_cards }}</span>
                                 </a>
 
                                 {% for version in all_versions %}
                                 <a href="{{ url_for('index') }}?view={{ current_view }}&version={{ version }}&theme={{ current_theme }}&difficulty={{ current_difficulty }}&show_hidden={{ show_hidden|lower }}"
                                    class="filter-item {% if current_version == version %}active{% endif %}">
-                                    <i class="fas fa-code-branch"></i> Версия {{ version }}
+                                    <div class="filter-item-text">
+                                        <i class="fas fa-code-branch"></i>
+                                        <span>Версия {{ version }}</span>
+                                    </div>
                                     <span class="filter-count">{{ version_counts.get(version, 0) }}</span>
                                 </a>
                                 {% endfor %}

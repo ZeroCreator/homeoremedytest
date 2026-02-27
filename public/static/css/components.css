@@ -79,6 +79,21 @@
     justify-content: space-between;
     background-color: var(--bg-light);
     border: 1px solid transparent;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.filter-item-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.filter-item-text i {
+    flex-shrink: 0;
+    width: 18px;
 }
 
 .filter-item:hover {
@@ -104,6 +119,8 @@
     min-width: 28px;
     text-align: center;
     transition: all var(--transition-fast);
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .filter-item.active .filter-count {
