@@ -738,9 +738,10 @@ textarea.form-control {
     /* На десктопе аккордеон с темами открыт по умолчанию */
     #themes-accordion:not(.collapsed) .accordion-content {
         display: block !important;
-        max-height: none !important;
+        max-height: calc(100vh - 300px) !important;
         opacity: 1 !important;
         padding: 20px !important;
+        overflow-y: auto !important;
     }
 
     /* Остальные аккордеоны на десктопе закрыты по умолчанию */
