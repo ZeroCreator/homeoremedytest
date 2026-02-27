@@ -69,7 +69,7 @@
 }
 
 .filter-item {
-    padding: 12px 15px;
+    padding: 10px 12px;
     text-decoration: none;
     color: var(--text-primary);
     border-radius: var(--border-radius);
@@ -79,8 +79,9 @@
     justify-content: space-between;
     background-color: var(--bg-light);
     border: 1px solid transparent;
-    gap: 12px;
+    gap: 10px;
     white-space: nowrap;
+    font-size: 0.9rem;
 }
 
 .filter-item-text {
@@ -88,12 +89,12 @@
     align-items: center;
     gap: 8px;
     flex: 1;
-    min-width: 0;
 }
 
 .filter-item-text i {
     flex-shrink: 0;
-    width: 18px;
+    width: 16px;
+    text-align: center;
 }
 
 .filter-item:hover {
