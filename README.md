@@ -43,7 +43,7 @@ ___
 
 Полное руководство пользователя доступно по ссылке:
 
-🌐 Документация [HomeoRemedyTest](https://zerocreator.github.io/homeoremedytest/)
+🌐 Документация [HomeoRemedyTest](https://zerocreator.github.io/HomeoRemedyTest/)
 
 В документации вы найдете:
 
